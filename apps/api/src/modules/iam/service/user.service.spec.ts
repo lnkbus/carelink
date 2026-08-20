@@ -6,7 +6,7 @@ describe('UserService.toScopes', () => {
   it('역할에서 self를 만들지 않는다', () => {
     // self는 역할이 아니라 관계다. DTO의 @ScopeOwner가 viewer.userId와 일치할 때만
     // 직렬화 시점에 붙는다. 여기서 고정으로 주면 기관 담당자가 남의 프로필을 self로 연다.
-    expect(service.toScopes([])).toEqual([]);
+    expect(service.toScopes([])).toEqual(['public']);
     expect(service.toScopes(['ORG_MEMBER'])).not.toContain('self');
   });
 
@@ -29,7 +29,7 @@ describe('UserService.toScopes', () => {
 
   it('간병사는 caregiver scope만 받는다', () => {
     const scopes = service.toScopes(['CAREGIVER']);
-    expect(scopes).toEqual(['caregiver']);
+    expect(scopes).toEqual(['public', 'caregiver']);
     expect(scopes).not.toContain('admin');
     expect(scopes).not.toContain('org');
   });

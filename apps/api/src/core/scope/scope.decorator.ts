@@ -3,6 +3,7 @@ import type { ScopeName } from './scope.types';
 
 const SCOPE_META = Symbol('carelink:scope');
 const OWNER_META = Symbol('carelink:scopeOwner');
+const UNLOCK_META = Symbol('carelink:scopeUnlock');
 
 interface ScopeFieldMeta {
   property: string;
@@ -44,6 +45,34 @@ export function ScopeOwner(): PropertyDecorator {
   return (target, propertyKey) => {
     Reflect.defineMetadata(OWNER_META, String(propertyKey), target.constructor);
   };
+}
+
+/**
+ * 조건부 scope 승격. 표시한 boolean 필드가 참이면 그 scope가 부여된다.
+ *
+ * 'org'(실명·연락처)가 대표적이다. 기관은 **검증 완료 + 후보자의 면접 수락**이라는
+ * 두 조건을 통과한 뒤에야 특정 후보자에 한해 열린다 (docs/02 §5.2). 이건 역할이
+ * 아니라 그 후보자와의 관계이므로 뷰어의 고정 scope로 둘 수 없다.
+ *
+ * 판정은 리소스를 아는 서비스가 하고, 강제는 직렬화 단계가 한다.
+ * 표시한 필드 자체는 @Scope를 따로 붙이지 않는 한 응답에 나가지 않는다.
+ */
+export function ScopeUnlock(scope: string): PropertyDecorator {
+  return (target, propertyKey) => {
+    const ctor = target.constructor;
+    const existing: { property: string; scope: string }[] = Reflect.getOwnMetadata(UNLOCK_META, ctor) ?? [];
+    existing.push({ property: String(propertyKey), scope });
+    Reflect.defineMetadata(UNLOCK_META, existing, ctor);
+  };
+}
+
+export function getScopeUnlocks(ctor: Function): { property: string; scope: string }[] {
+  const own: { property: string; scope: string }[] = Reflect.getOwnMetadata(UNLOCK_META, ctor) ?? [];
+  const parent = Object.getPrototypeOf(ctor);
+  if (parent && parent !== Function.prototype && typeof parent === 'function') {
+    return [...getScopeUnlocks(parent), ...own];
+  }
+  return own;
 }
 
 export function getScopeOwnerProperty(ctor: Function): string | null {

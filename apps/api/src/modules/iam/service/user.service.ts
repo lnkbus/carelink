@@ -60,7 +60,9 @@ export class UserService {
     // 'self'는 여기서 주지 않는다. 역할이 아니라 "이 레코드가 내 것인가"라는
     // 관계이므로, DTO의 @ScopeOwner 값과 viewer.userId가 일치할 때
     // 직렬화 시점에 부여된다 (core/scope/scope.serializer.ts).
-    const scopes = new Set<ScopeName>();
+    // 인증된 사용자면 누구나 보는 값(기관명, 트랙 라벨 등)에 쓴다.
+    // 개인정보는 여기 걸지 않는다 — 이 scope는 사실상 '로그인한 전원'이다.
+    const scopes = new Set<ScopeName>(['public']);
     for (const role of roles) {
       switch (role) {
         case 'ADMIN':

@@ -1,4 +1,4 @@
-import { getScopeMeta, getScopeOwnerProperty, hasScopeMeta } from './scope.decorator';
+import { getScopeMeta, getScopeOwnerProperty, getScopeUnlocks, hasScopeMeta } from './scope.decorator';
 import type { ScopeName, Viewer } from './scope.types';
 
 /**
@@ -44,6 +44,14 @@ function serializeObject(
   if (ownerProp && viewer.userId) {
     const ownerId = (instance as Record<string, unknown>)[ownerProp];
     if (typeof ownerId === 'string' && ownerId === viewer.userId) allowed.add('self');
+  }
+
+  // 조건부 승격. 서비스가 판정한 결과가 참일 때만 그 scope가 붙는다.
+  // 예: 기관은 검증 완료 + 면접 수락 후에만 org로 올라간다.
+  for (const unlock of getScopeUnlocks(ctor)) {
+    if ((instance as Record<string, unknown>)[unlock.property] === true) {
+      allowed.add(unlock.scope as ScopeName);
+    }
   }
 
   // self를 쓰면서 소유자를 알 길이 없는 DTO는 본인에게도 빈 객체로 나간다.

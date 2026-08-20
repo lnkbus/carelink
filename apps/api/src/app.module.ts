@@ -11,6 +11,7 @@ import { IamModule } from './modules/iam/iam.module';
 import { JwtAuthGuard } from './modules/iam/guard/jwt-auth.guard';
 import { RolesGuard } from './modules/iam/guard/roles.guard';
 import { OpsModule } from './modules/ops/ops.module';
+import { OrgModule } from './modules/org/org.module';
 import { TalentModule } from './modules/talent/talent.module';
 import { TracksModule } from './modules/tracks/tracks.module';
 
@@ -33,8 +34,9 @@ import { TracksModule } from './modules/tracks/tracks.module';
     IamModule,
     TracksModule,
     TalentModule,
+    OrgModule,
     // 이후 단계에서 순서대로 붙는다 (docs/02 §12):
-    //   OrgModule · MatchingModule
+    //   MatchingModule
     //   RecruitingModule · QualityModule · EngagementModule
     //   CareModule (V2) · PayrollModule (V3 — U1·U2·U5 해결 전 착수 금지)
   ],

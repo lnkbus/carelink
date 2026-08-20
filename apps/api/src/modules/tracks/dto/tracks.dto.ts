@@ -1,28 +1,28 @@
 import { Scope } from '../../../core/scope/scope.decorator';
 
 export class IndustryDto {
-  @Scope('self', 'admin', 'org', 'org_masked', 'partner') id: string;
-  @Scope('self', 'admin', 'org', 'org_masked', 'partner') code: string;
-  @Scope('self', 'admin', 'org', 'org_masked', 'partner') labelKo: string;
-  @Scope('self', 'admin', 'org', 'org_masked', 'partner') isActive: boolean;
+  @Scope('public', 'admin') id: string;
+  @Scope('public', 'admin') code: string;
+  @Scope('public', 'admin') labelKo: string;
+  @Scope('public', 'admin') isActive: boolean;
 }
 
 export class TrackRequirementDto {
-  @Scope('self', 'admin', 'org', 'org_masked', 'partner') kind: string;
-  @Scope('self', 'admin', 'org', 'org_masked', 'partner') refCode: string;
-  @Scope('self', 'admin', 'org', 'org_masked', 'partner') mandatory: boolean;
-  @Scope('self', 'admin', 'org', 'org_masked', 'partner') note: string | null;
+  @Scope('public', 'admin') kind: string;
+  @Scope('public', 'admin') refCode: string;
+  @Scope('public', 'admin') mandatory: boolean;
+  @Scope('public', 'admin') note: string | null;
 }
 
 export class TrackDto {
-  @Scope('self', 'admin', 'org', 'org_masked', 'partner') id: string;
-  @Scope('self', 'admin', 'org', 'org_masked', 'partner') code: string;
-  @Scope('self', 'admin', 'org', 'org_masked', 'partner') labelKo: string;
-  @Scope('self', 'admin', 'org', 'org_masked', 'partner') labelVi: string | null;
+  @Scope('public', 'admin') id: string;
+  @Scope('public', 'admin') code: string;
+  @Scope('public', 'admin') labelKo: string;
+  @Scope('public', 'admin') labelVi: string | null;
   /** NONE | TRAINING_REQUIRED | NATIONAL_LICENSE */
-  @Scope('self', 'admin', 'org', 'org_masked', 'partner') qualificationType: string;
-  @Scope('self', 'admin', 'org', 'org_masked', 'partner') isActive: boolean;
-  @Scope('self', 'admin', 'org', 'org_masked', 'partner') requirements?: TrackRequirementDto[];
+  @Scope('public', 'admin') qualificationType: string;
+  @Scope('public', 'admin') isActive: boolean;
+  @Scope('public', 'admin') requirements?: TrackRequirementDto[];
   /**
    * 체류자격 코드 목록은 운영자에게만 나간다.
    * 기관에는 '취업 가능 여부'만 노출한다 (CLAUDE.md §6-12 · docs/11 §1.2).

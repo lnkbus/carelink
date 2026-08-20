@@ -1,4 +1,4 @@
-import { Scope, ScopeOwner } from './scope.decorator';
+import { Scope, ScopeOwner, ScopeUnlock } from './scope.decorator';
 import { applyScope } from './scope.serializer';
 import type { Viewer } from './scope.types';
 
@@ -134,3 +134,37 @@ describe('applyScope', () => {
     for (const item of out.items) expect('nationality' in item).toBe(false);
   });
 });
+
+describe('ScopeUnlock — 조건부 승격', () => {
+  it('기관은 해제되기 전까지 실명을 보지 못한다', () => {
+    const locked = Object.assign(new UnlockableDto(), { orgUnlocked: false, displayCode: 'C-00102', legalName: '흐엉' });
+    const out = applyScope(locked, viewer(['org_masked'], 'org-user'));
+    expect(out.displayCode).toBe('C-00102');
+    expect('legalName' in out).toBe(false);
+  });
+
+  it('검증 완료 + 면접 수락이면 실명이 열린다', () => {
+    const unlocked = Object.assign(new UnlockableDto(), { orgUnlocked: true, displayCode: 'C-00102', legalName: '흐엉' });
+    const out = applyScope(unlocked, viewer(['org_masked'], 'org-user'));
+    expect(out.legalName).toBe('흐엉');
+  });
+
+  it('해제 플래그만으로는 다른 scope가 열리지 않는다', () => {
+    // org가 열려도 admin 전용 필드(국적 등)는 그대로 닫혀 있어야 한다.
+    const unlocked = Object.assign(new UnlockableDto(), { orgUnlocked: true, displayCode: 'C', legalName: '흐엉', nationality: 'VN' });
+    const out = applyScope(unlocked, viewer(['org_masked'], 'org-user'));
+    expect('nationality' in out).toBe(false);
+  });
+
+  it('해제 플래그 자체는 응답에 나가지 않는다', () => {
+    const unlocked = Object.assign(new UnlockableDto(), { orgUnlocked: true, displayCode: 'C', legalName: '흐엉' });
+    expect('orgUnlocked' in applyScope(unlocked, viewer(['org_masked'], 'org-user'))).toBe(false);
+  });
+});
+
+class UnlockableDto {
+  @ScopeUnlock('org') orgUnlocked: boolean;
+  @Scope('org_masked', 'org', 'admin') displayCode: string;
+  @Scope('org', 'admin') legalName: string;
+  @Scope('admin') nationality: string;
+}

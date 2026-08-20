@@ -78,12 +78,13 @@ export class UpdateProgressDto {
   @IsOptional() @IsString() certificateKey?: string;
 }
 
+/** 교육 과정 마스터. 개인정보가 아니므로 로그인한 사용자면 누구나 본다. */
 export class TrainingProgramDto {
-  @Scope('self', 'admin', 'org', 'partner') code: string;
-  @Scope('self', 'admin', 'org', 'partner') name: string;
-  @Scope('self', 'admin', 'org', 'partner') programType: string;
-  @Scope('self', 'admin', 'org', 'partner') totalHours: number | null;
-  @Scope('self', 'admin', 'org', 'partner') isMandatory: boolean;
+  @Scope('public') code: string;
+  @Scope('public') name: string;
+  @Scope('public') programType: string;
+  @Scope('public') totalHours: number | null;
+  @Scope('public') isMandatory: boolean;
 }
 
 export class EnrollmentDto {
