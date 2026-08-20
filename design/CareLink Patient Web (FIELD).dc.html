@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+  html, body { margin: 0; padding: 0; background: #F2F4F6; }
+  a { color: #1B57E0; text-decoration: none; }
+  a:hover { color: #1544B8; }
+</style>
+</helmet>
+<div style="min-height:100vh;background:#F2F4F6;padding:40px;box-sizing:border-box;font-family:'Pretendard Variable',Pretendard,-apple-system,sans-serif;color:#191F28;text-wrap:pretty">
+
+  <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:32px;max-width:1000px">
+    <div style="font-size:26px;font-weight:700;letter-spacing:-0.02em">Patient / Family Web — SCR-301~307 · FIELD 트랙</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#6B7684">402×1096 (반응형 웹, 모바일 기준) · 탭 없음 · 단일 진입 → 선형 플로우 · 본문 18px · 버튼 64px+ · ko 전용</div>
+    <div style="font-size:15px;color:#6B7684">§3.3 — 처음 오는 사람이 급한 상황에서 씁니다. 학습을 요구하지 않고, 신청은 4단계로 끝냅니다. 자유 입력 대신 선택지.</div>
+  </div>
+
+  <div style="display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap">
+
+    <div data-screen-label="301" style="display:flex;flex-direction:column;gap:10px;width:402px">
+      <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700">SCR-301</span><span style="font-size:14px;color:#6B7684">홈 · 단일 진입</span></div>
+      <div style="width:402px;height:1096px;background:#FFFFFF;border:1px solid #E5E8EB;border-radius:14px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="height:64px;flex:none;padding:0 20px;display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:28px;height:28px;border-radius:8px;background:#2F6BFF;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.6-7-9.4A4.1 4.1 0 0 1 12 8a4.1 4.1 0 0 1 7 2.6C19 15.4 12 20 12 20z" fill="#FFFFFF"/></svg></span><span style="font-size:17px;font-weight:700">케어링크</span></div>
+          <div style="min-height:48px;display:flex;align-items:center;gap:8px;padding:0 4px"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="#4E5968" stroke-width="2"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.3v1.6" fill="none" stroke="#4E5968" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16.6" r="1.1" fill="#4E5968"/></svg><span style="font-size:17px;font-weight:600;color:#4E5968">도움말</span></div>
+        </div>
+        <div style="flex:1;padding:8px 20px 20px;display:flex;flex-direction:column;gap:20px">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <span style="font-size:28px;font-weight:700;letter-spacing:-0.02em;line-height:1.25">간병인이 필요하신가요?</span>
+            <span style="font-size:18px;line-height:1.5;color:#6B7684">병원과 기간만 알려주시면 자격을 확인한 간병사를 연결해 드립니다.</span>
+          </div>
+          <button type="button" style="min-height:88px;border:none;border-radius:18px;background:#2560E8;color:#FFFFFF;font-family:inherit;font-size:24px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px" style-hover="background:#1B4FCC"><svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="#FFFFFF"/><path d="M12 7.6v8.8M7.6 12h8.8" stroke="#2560E8" stroke-width="2.8" stroke-linecap="round"/></svg>간병 신청하기</button>
+          <div style="border:2px solid #2F6BFF;border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:16px;font-weight:700;color:#1B57E0">진행 중인 간병</span><span style="display:flex;align-items:center;gap:6px;background:#E6F7EF;border-radius:999px;padding:7px 12px"><span style="width:9px;height:9px;border-radius:999px;background:#00703A"></span><span style="font-size:15px;font-weight:700;color:#00703A">근무 중</span></span></div>
+            <div style="display:flex;align-items:center;gap:14px">
+              <span style="width:60px;height:60px;border-radius:999px;background:#EFF4FF;display:flex;align-items:center;justify-content:center;flex:none"><svg width="32" height="32" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8" fill="#2F6BFF"/><path d="M5 20c1.6-4.2 4-5.5 7-5.5s5.4 1.3 7 5.5z" fill="#2F6BFF"/></svg></span>
+              <div style="flex:1;display:flex;flex-direction:column;gap:4px"><span style="font-size:20px;font-weight:700">응우옌 티 흐엉 간병사</span><span style="font-family:'JetBrains Mono',monospace;font-size:16px;color:#6B7684">한빛재활병원 704호</span></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;background:#F2F4F6;border-radius:12px;padding:14px 16px"><svg width="24" height="24" viewBox="0 0 24 24" style="flex:none" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="#4E5968" stroke-width="2"/><path d="M12 7.4v5l3.4 2.2" fill="none" stroke="#4E5968" stroke-width="2" stroke-linecap="round"/></svg><span style="flex:1;font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700">오늘 09:00 ~ 18:00</span></div>
+            <div style="min-height:56px;border-radius:12px;background:#EFF4FF;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#1B57E0">오늘 기록 보기</div>
+          </div>
+          <div style="min-height:72px;border:1px solid #E5E8EB;border-radius:16px;padding:18px;display:flex;align-items:center;gap:14px">
+            <span style="width:44px;height:44px;border-radius:12px;background:#F2F4F6;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="2.5" fill="#4E5968"/><path d="M9 9h6M9 13h6" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+            <span style="flex:1;font-size:18px;font-weight:700">이용 내역</span>
+            <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="#8B95A1" stroke-width="2.4"/></svg>
+          </div>
+          <div style="flex:1"></div>
+          <div style="display:flex;align-items:center;gap:12px;background:#F2F4F6;border-radius:16px;padding:18px">
+            <svg width="26" height="26" viewBox="0 0 24 24" style="flex:none" aria-hidden="true"><path d="M6.5 4.5h4l2 4-2.5 1.5a9 9 0 0 0 4 4L15.5 11.5l4 2v4a1.5 1.5 0 0 1-1.7 1.5C11 18 6 13 5 6.2A1.5 1.5 0 0 1 6.5 4.5z" fill="#4E5968"/></svg>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:17px;font-weight:700">전화 상담</span><span style="font-family:'JetBrains Mono',monospace;font-size:17px;color:#4E5968">1588-0000 · 09~18시</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="302" style="display:flex;flex-direction:column;gap:10px;width:402px">
+      <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700">SCR-302</span><span style="font-size:14px;color:#6B7684">병원 선택 · 1/4</span></div>
+      <div style="width:402px;height:1096px;background:#FFFFFF;border:1px solid #E5E8EB;border-radius:14px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="height:64px;flex:none;padding:0 12px 0 8px;display:flex;align-items:center;gap:4px">
+          <span style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="#191F28" stroke-width="2.6"/></svg></span>
+          <span style="font-size:18px;font-weight:700;flex:1">간병 신청</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:#1B57E0;padding-right:8px">1 / 4</span>
+        </div>
+        <div style="flex:none;padding:0 20px 18px;display:flex;gap:6px">
+          <span style="flex:1;height:6px;border-radius:999px;background:#2F6BFF"></span>
+          <span style="flex:1;height:6px;border-radius:999px;background:#E5E8EB"></span>
+          <span style="flex:1;height:6px;border-radius:999px;background:#E5E8EB"></span>
+          <span style="flex:1;height:6px;border-radius:999px;background:#E5E8EB"></span>
+        </div>
+        <div style="flex:1;padding:0 20px 20px;display:flex;flex-direction:column;gap:18px;overflow:hidden">
+          <span style="font-size:24px;font-weight:700;letter-spacing:-0.02em">어느 병원인가요?</span>
+          <div style="min-height:64px;border:2px solid #2F6BFF;border-radius:14px;padding:0 16px;display:flex;align-items:center;gap:10px">
+            <svg width="24" height="24" viewBox="0 0 24 24" style="flex:none" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="#4E5968" stroke-width="2.2"/><path d="M16 16l4 4" stroke="#4E5968" stroke-width="2.2" stroke-linecap="round"/></svg>
+            <span style="flex:1;font-size:18px;font-weight:600">한빛</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="min-height:88px;border:2px solid #2F6BFF;background:#EFF4FF;border-radius:16px;padding:18px;display:flex;align-items:center;gap:14px">
+              <span style="width:52px;height:52px;border-radius:14px;background:#FFFFFF;display:flex;align-items:center;justify-content:center;flex:none"><svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="6" width="17" height="14" rx="2.5" fill="#2F6BFF"/><path d="M12 9.5v7M8.5 13h7" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"/></svg></span>
+              <div style="flex:1;display:flex;flex-direction:column;gap:3px"><span style="font-size:19px;font-weight:700">한빛재활병원</span><span style="font-size:16px;color:#4E5968">서울 강북구 도봉로 12</span></div>
+              <span style="width:28px;height:28px;border-radius:999px;background:#2F6BFF;display:flex;align-items:center;justify-content:center;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4.5 4.5L19 7" fill="none" stroke="#FFFFFF" stroke-width="3.4"/></svg></span>
+            </div>
+            <div style="min-height:88px;border:1px solid #E5E8EB;border-radius:16px;padding:18px;display:flex;align-items:center;gap:14px">
+              <span style="width:52px;height:52px;border-radius:14px;background:#F2F4F6;display:flex;align-items:center;justify-content:center;flex:none"><svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="6" width="17" height="14" rx="2.5" fill="#8B95A1"/><path d="M12 9.5v7M8.5 13h7" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"/></svg></span>
+              <div style="flex:1;display:flex;flex-direction:column;gap:3px"><span style="font-size:19px;font-weight:700">한빛요양병원 성북</span><span style="font-size:16px;color:#4E5968">서울 성북구 화랑로 88</span></div>
+            </div>
+            <div style="min-height:88px;border:1px solid #E5E8EB;border-radius:16px;padding:18px;display:flex;align-items:center;gap:14px">
+              <span style="width:52px;height:52px;border-radius:14px;background:#F2F4F6;display:flex;align-items:center;justify-content:center;flex:none"><svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="6" width="17" height="14" rx="2.5" fill="#8B95A1"/><path d="M12 9.5v7M8.5 13h7" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"/></svg></span>
+              <div style="flex:1;display:flex;flex-direction:column;gap:3px"><span style="font-size:19px;font-weight:700">한빛의료재단 부속의원</span><span style="font-size:16px;color:#4E5968">경기 고양시 중앙로 210</span></div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;background:#F2F4F6;border-radius:12px;padding:16px">
+            <svg width="22" height="22" viewBox="0 0 24 24" style="flex:none" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="#8B95A1"/><path d="M12 10.5v6" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="7.6" r="1.2" fill="#FFFFFF"/></svg>
+            <span style="flex:1;font-size:16px;line-height:1.5;color:#4E5968">목록에 없으면 전화로 도와드립니다</span>
+          </div>
+        </div>
+        <div style="flex:none;padding:16px 20px 20px;border-top:1px solid #E5E8EB">
+          <button type="button" style="width:100%;min-height:72px;border:none;border-radius:14px;background:#2560E8;color:#FFFFFF;font-family:inherit;font-size:20px;font-weight:700;cursor:pointer" style-hover="background:#1B4FCC">다음</button>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="303" style="display:flex;flex-direction:column;gap:10px;width:402px">
+      <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700">SCR-303</span><span style="font-size:14px;color:#6B7684">조건 입력 · 2/4 · 선택지만</span></div>
+      <div style="width:402px;height:1096px;background:#FFFFFF;border:1px solid #E5E8EB;border-radius:14px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="height:64px;flex:none;padding:0 12px 0 8px;display:flex;align-items:center;gap:4px">
+          <span style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="#191F28" stroke-width="2.6"/></svg></span>
+          <span style="font-size:18px;font-weight:700;flex:1">간병 신청</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:#1B57E0;padding-right:8px">2 / 4</span>
+        </div>
+        <div style="flex:none;padding:0 20px 18px;display:flex;gap:6px">
+          <span style="flex:1;height:6px;border-radius:999px;background:#2F6BFF"></span>
+          <span style="flex:1;height:6px;border-radius:999px;background:#2F6BFF"></span>
+          <span style="flex:1;height:6px;border-radius:999px;background:#E5E8EB"></span>
+          <span style="flex:1;height:6px;border-radius:999px;background:#E5E8EB"></span>
+        </div>
+        <div style="flex:1;padding:0 20px 20px;display:flex;flex-direction:column;gap:20px;overflow:hidden">
+          <span style="font-size:24px;font-weight:700;letter-spacing:-0.02em">언제, 어떻게 필요하세요?</span>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:17px;font-weight:700">기간</span>
+            <div style="display:flex;gap:8px">
+              <span style="flex:1;min-height:64px;border-radius:14px;background:#2560E8;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700">1주일</span>
+              <span style="flex:1;min-height:64px;border-radius:14px;border:1px solid #E5E8EB;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600">2주일</span>
+              <span style="flex:1;min-height:64px;border-radius:14px;border:1px solid #E5E8EB;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600">1개월</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:17px;font-weight:700">시작일</span>
+            <div style="min-height:64px;border:1px solid #E5E8EB;border-radius:14px;padding:0 16px;display:flex;align-items:center;gap:12px">
+              <svg width="24" height="24" viewBox="0 0 24 24" style="flex:none" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="15" rx="2.5" fill="none" stroke="#4E5968" stroke-width="2"/><path d="M3.5 10h17" stroke="#4E5968" stroke-width="2"/></svg>
+              <span style="flex:1;font-family:'JetBrains Mono',monospace;font-size:19px;font-weight:700">2026-08-22 (토)</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="#8B95A1" stroke-width="2.4"/></svg>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:17px;font-weight:700">돌봄 시간</span>
+            <div style="display:flex;gap:8px">
+              <span style="flex:1;min-height:64px;border-radius:14px;border:1px solid #E5E8EB;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px"><span style="font-size:18px;font-weight:600">주간</span><span style="font-family:'JetBrains Mono',monospace;font-size:15px;color:#6B7684">09~18</span></span>
+              <span style="flex:1;min-height:64px;border-radius:14px;background:#2560E8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px"><span style="font-size:18px;font-weight:700;color:#FFFFFF">24시간</span><span style="font-family:'JetBrains Mono',monospace;font-size:15px;color:#E4EDFF">상주</span></span>
+              <span style="flex:1;min-height:64px;border-radius:14px;border:1px solid #E5E8EB;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px"><span style="font-size:18px;font-weight:600">야간</span><span style="font-family:'JetBrains Mono',monospace;font-size:15px;color:#6B7684">20~08</span></span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:17px;font-weight:700">필요한 도움 (여러 개 선택)</span>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              <span style="min-height:56px;padding:0 18px;border-radius:999px;background:#2560E8;color:#FFFFFF;display:flex;align-items:center;gap:8px;font-size:17px;font-weight:700"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4.5 4.5L19 7" fill="none" stroke="#FFFFFF" stroke-width="3.2"/></svg>식사 보조</span>
+              <span style="min-height:56px;padding:0 18px;border-radius:999px;background:#2560E8;color:#FFFFFF;display:flex;align-items:center;gap:8px;font-size:17px;font-weight:700"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4.5 4.5L19 7" fill="none" stroke="#FFFFFF" stroke-width="3.2"/></svg>보행 보조</span>
+              <span style="min-height:56px;padding:0 18px;border-radius:999px;border:1px solid #E5E8EB;display:flex;align-items:center;font-size:17px;font-weight:600">위생 · 목욕</span>
+              <span style="min-height:56px;padding:0 18px;border-radius:999px;border:1px solid #E5E8EB;display:flex;align-items:center;font-size:17px;font-weight:600">치매 케어</span>
+              <span style="min-height:56px;padding:0 18px;border-radius:999px;border:1px solid #E5E8EB;display:flex;align-items:center;font-size:17px;font-weight:600">투약 확인</span>
+            </div>
+          </div>
+        </div>
+        <div style="flex:none;padding:16px 20px 20px;border-top:1px solid #E5E8EB">
+          <button type="button" style="width:100%;min-height:72px;border:none;border-radius:14px;background:#2560E8;color:#FFFFFF;font-family:inherit;font-size:20px;font-weight:700;cursor:pointer" style-hover="background:#1B4FCC">간병사 찾기</button>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="304" style="display:flex;flex-direction:column;gap:10px;width:402px">
+      <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700">SCR-304</span><span style="font-size:14px;color:#6B7684">간병사 선택 · 3/4</span></div>
+      <div style="width:402px;height:1096px;background:#FFFFFF;border:1px solid #E5E8EB;border-radius:14px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="height:64px;flex:none;padding:0 12px 0 8px;display:flex;align-items:center;gap:4px">
+          <span style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="#191F28" stroke-width="2.6"/></svg></span>
+          <span style="font-size:18px;font-weight:700;flex:1">간병사 선택</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:#1B57E0;padding-right:8px">3 / 4</span>
+        </div>
+        <div style="flex:none;padding:0 20px 18px;display:flex;gap:6px">
+          <span style="flex:1;height:6px;border-radius:999px;background:#2F6BFF"></span>
+          <span style="flex:1;height:6px;border-radius:999px;background:#2F6BFF"></span>
+          <span style="flex:1;height:6px;border-radius:999px;background:#2F6BFF"></span>
+          <span style="flex:1;height:6px;border-radius:999px;background:#E5E8EB"></span>
+        </div>
+        <div style="flex:1;padding:0 20px 20px;display:flex;flex-direction:column;gap:14px;overflow:hidden">
+          <span style="font-size:17px;color:#6B7684">조건에 맞는 간병사 <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:#191F28">6명</span></span>
+          <div style="border:2px solid #2F6BFF;border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:center;gap:14px">
+              <span style="width:64px;height:64px;border-radius:999px;background:#EFF4FF;display:flex;align-items:center;justify-content:center;flex:none"><svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8" fill="#2F6BFF"/><path d="M5 20c1.6-4.2 4-5.5 7-5.5s5.4 1.3 7 5.5z" fill="#2F6BFF"/></svg></span>
+              <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+                <span style="font-size:20px;font-weight:700">응우옌 티 흐엉</span>
+                <span style="font-size:16px;color:#6B7684">경력 3년 2개월 · 베트남</span>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px"><span style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700">4.9</span><span style="font-size:15px;color:#6B7684">리뷰 42</span></div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              <span style="background:#E6F7EF;border-radius:8px;padding:8px 12px;font-size:16px;font-weight:600;color:#00703A">신원 확인</span>
+              <span style="background:#E6F7EF;border-radius:8px;padding:8px 12px;font-size:16px;font-weight:600;color:#00703A">치매 케어</span>
+              <span style="background:#F2F4F6;border-radius:8px;padding:8px 12px;font-size:16px;font-weight:600;color:#4E5968">한국어 3급</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700">₩128,000 / 일</span><span style="min-height:56px;padding:0 22px;border-radius:12px;background:#2560E8;color:#FFFFFF;display:flex;align-items:center;font-size:18px;font-weight:700">선택</span></div>
+          </div>
+          <div style="border:1px solid #E5E8EB;border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:center;gap:14px">
+              <span style="width:64px;height:64px;border-radius:999px;background:#F2F4F6;display:flex;align-items:center;justify-content:center;flex:none"><svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8" fill="#8B95A1"/><path d="M5 20c1.6-4.2 4-5.5 7-5.5s5.4 1.3 7 5.5z" fill="#8B95A1"/></svg></span>
+              <div style="flex:1;display:flex;flex-direction:column;gap:4px"><span style="font-size:20px;font-weight:700">김미영</span><span style="font-size:16px;color:#6B7684">경력 7년 · 대한민국</span></div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px"><span style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700">4.8</span><span style="font-size:15px;color:#6B7684">리뷰 88</span></div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              <span style="background:#E6F7EF;border-radius:8px;padding:8px 12px;font-size:16px;font-weight:600;color:#00703A">신원 확인</span>
+              <span style="background:#F2F4F6;border-radius:8px;padding:8px 12px;font-size:16px;font-weight:600;color:#4E5968">재활 보조</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700">₩145,000 / 일</span><span style="min-height:56px;padding:0 22px;border-radius:12px;background:#EFF4FF;color:#1B57E0;display:flex;align-items:center;font-size:18px;font-weight:700">선택</span></div>
+          </div>
+          <div style="border:1px solid #E5E8EB;border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:center;gap:14px">
+              <span style="width:64px;height:64px;border-radius:999px;background:#F2F4F6;display:flex;align-items:center;justify-content:center;flex:none"><svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8" fill="#8B95A1"/><path d="M5 20c1.6-4.2 4-5.5 7-5.5s5.4 1.3 7 5.5z" fill="#8B95A1"/></svg></span>
+              <div style="flex:1;display:flex;flex-direction:column;gap:4px"><span style="font-size:20px;font-weight:700">이라리사</span><span style="font-size:16px;color:#6B7684">경력 5년 · 우즈베키스탄</span></div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px"><span style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700">4.7</span><span style="font-size:15px;color:#6B7684">리뷰 31</span></div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700">₩132,000 / 일</span><span style="min-height:56px;padding:0 22px;border-radius:12px;background:#EFF4FF;color:#1B57E0;display:flex;align-items:center;font-size:18px;font-weight:700">선택</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="305" style="display:flex;flex-direction:column;gap:10px;width:402px">
+      <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700">SCR-305</span><span style="font-size:14px;color:#6B7684">예약 확인 · 4/4</span></div>
+      <div style="width:402px;height:1096px;background:#FFFFFF;border:1px solid #E5E8EB;border-radius:14px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="height:64px;flex:none;padding:0 12px 0 8px;display:flex;align-items:center;gap:4px">
+          <span style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="#191F28" stroke-width="2.6"/></svg></span>
+          <span style="font-size:18px;font-weight:700;flex:1">예약 확인</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:#1B57E0;padding-right:8px">4 / 4</span>
+        </div>
+        <div style="flex:none;padding:0 20px 18px;display:flex;gap:6px">
+          <span style="flex:1;height:6px;border-radius:999px;background:#2F6BFF"></span>
+          <span style="flex:1;height:6px;border-radius:999px;background:#2F6BFF"></span>
+          <span style="flex:1;height:6px;border-radius:999px;background:#2F6BFF"></span>
+          <span style="flex:1;height:6px;border-radius:999px;background:#2F6BFF"></span>
+        </div>
+        <div style="flex:1;padding:0 20px 20px;display:flex;flex-direction:column;gap:18px;overflow:hidden">
+          <span style="font-size:24px;font-weight:700;letter-spacing:-0.02em">이대로 신청할까요?</span>
+          <div style="border:1px solid #E5E8EB;border-radius:16px;padding:18px;display:flex;align-items:center;gap:14px">
+            <span style="width:60px;height:60px;border-radius:999px;background:#EFF4FF;display:flex;align-items:center;justify-content:center;flex:none"><svg width="32" height="32" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8" fill="#2F6BFF"/><path d="M5 20c1.6-4.2 4-5.5 7-5.5s5.4 1.3 7 5.5z" fill="#2F6BFF"/></svg></span>
+            <div style="flex:1;display:flex;flex-direction:column;gap:3px"><span style="font-size:20px;font-weight:700">응우옌 티 흐엉</span><span style="font-size:16px;color:#6B7684">경력 3년 2개월 · 평점 4.9</span></div>
+          </div>
+          <div style="border:1px solid #E5E8EB;border-radius:16px;padding:4px 18px">
+            <div style="min-height:64px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #E5E8EB"><span style="width:88px;font-size:17px;color:#6B7684">병원</span><span style="flex:1;font-size:18px;font-weight:600">한빛재활병원 704호</span></div>
+            <div style="min-height:64px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #E5E8EB"><span style="width:88px;font-size:17px;color:#6B7684">기간</span><span style="flex:1;font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700">08-22 ~ 08-28 (7일)</span></div>
+            <div style="min-height:64px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #E5E8EB"><span style="width:88px;font-size:17px;color:#6B7684">시간</span><span style="flex:1;font-size:18px;font-weight:600">24시간 상주</span></div>
+            <div style="min-height:64px;display:flex;align-items:center;gap:12px"><span style="width:88px;font-size:17px;color:#6B7684">도움</span><span style="flex:1;font-size:18px;font-weight:600">식사 · 보행 보조</span></div>
+          </div>
+          <div style="background:#F2F4F6;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between"><span style="font-size:17px;color:#4E5968">일당 × 7일</span><span style="font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:600">₩896,000</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="font-size:17px;color:#4E5968">플랫폼 이용료</span><span style="font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:600">₩44,800</span></div>
+            <div style="height:1px;background:#E5E8EB"></div>
+            <div style="display:flex;align-items:baseline;justify-content:space-between"><span style="font-size:18px;font-weight:700">합계</span><span style="font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:700">₩940,800</span></div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:10px;background:#FFF6E5;border-radius:12px;padding:16px">
+            <svg width="22" height="22" viewBox="0 0 24 24" style="flex:none" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="#8A5300" stroke-width="2.2"/><path d="M12 7.5v6" stroke="#8A5300" stroke-width="2.4"/><circle cx="12" cy="16.6" r="1.2" fill="#8A5300"/></svg>
+            <span style="flex:1;font-size:16px;line-height:1.5;color:#8A5300">간병사 확인 후 확정됩니다. 확정 전에는 결제되지 않습니다.</span>
+          </div>
+        </div>
+        <div style="flex:none;padding:16px 20px 20px;border-top:1px solid #E5E8EB">
+          <button type="button" style="width:100%;min-height:76px;border:none;border-radius:14px;background:#2560E8;color:#FFFFFF;font-family:inherit;font-size:21px;font-weight:700;cursor:pointer" style-hover="background:#1B4FCC">신청 보내기</button>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="306" style="display:flex;flex-direction:column;gap:10px;width:402px">
+      <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700">SCR-306</span><span style="font-size:14px;color:#6B7684">진행 중 서비스</span></div>
+      <div style="width:402px;height:1096px;background:#FFFFFF;border:1px solid #E5E8EB;border-radius:14px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="height:64px;flex:none;padding:0 12px 0 8px;display:flex;align-items:center;gap:4px">
+          <span style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="#191F28" stroke-width="2.6"/></svg></span>
+          <span style="font-size:18px;font-weight:700;flex:1">진행 중 간병</span>
+          <span style="display:flex;align-items:center;gap:6px;background:#E6F7EF;border-radius:999px;padding:8px 12px;flex:none"><span style="width:9px;height:9px;border-radius:999px;background:#00703A"></span><span style="font-size:15px;font-weight:700;color:#00703A">근무 중</span></span>
+        </div>
+        <div style="flex:1;padding:0 20px 20px;display:flex;flex-direction:column;gap:18px;overflow:hidden">
+          <div style="border:1px solid #E5E8EB;border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:center;gap:14px">
+              <span style="width:64px;height:64px;border-radius:999px;background:#EFF4FF;display:flex;align-items:center;justify-content:center;flex:none"><svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8" fill="#2F6BFF"/><path d="M5 20c1.6-4.2 4-5.5 7-5.5s5.4 1.3 7 5.5z" fill="#2F6BFF"/></svg></span>
+              <div style="flex:1;display:flex;flex-direction:column;gap:3px"><span style="font-size:21px;font-weight:700">응우옌 티 흐엉</span><span style="font-family:'JetBrains Mono',monospace;font-size:16px;color:#6B7684">08-22 ~ 08-28 · 4일차</span></div>
+            </div>
+            <div style="display:flex;gap:10px">
+              <span style="flex:1;min-height:64px;border-radius:14px;background:#2560E8;color:#FFFFFF;display:flex;align-items:center;justify-content:center;gap:8px;font-size:18px;font-weight:700"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 4.5h4l2 4-2.5 1.5a9 9 0 0 0 4 4L15.5 11.5l4 2v4a1.5 1.5 0 0 1-1.7 1.5C11 18 6 13 5 6.2A1.5 1.5 0 0 1 6.5 4.5z" fill="#FFFFFF"/></svg>전화</span>
+              <span style="flex:1;min-height:64px;border-radius:14px;border:1px solid #E5E8EB;display:flex;align-items:center;justify-content:center;gap:8px;font-size:18px;font-weight:700"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="12" rx="2.5" fill="none" stroke="#4E5968" stroke-width="2"/><path d="M7 20l3-2.5" stroke="#4E5968" stroke-width="2" stroke-linecap="round"/></svg>메시지</span>
+            </div>
+          </div>
+          <span style="font-size:18px;font-weight:700">오늘 기록</span>
+          <div style="border:1px solid #E5E8EB;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-family:'JetBrains Mono',monospace;font-size:16px;color:#6B7684">08-25</span><span style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:#1B57E0">18:04 저장</span></div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;align-items:center;gap:12px"><span style="width:30px;height:30px;border-radius:999px;background:#E6F7EF;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4.5 4.5L19 7" fill="none" stroke="#00703A" stroke-width="3.2"/></svg></span><span style="flex:1;font-size:18px">식사 보조 (아침·점심·저녁)</span></div>
+              <div style="display:flex;align-items:center;gap:12px"><span style="width:30px;height:30px;border-radius:999px;background:#E6F7EF;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4.5 4.5L19 7" fill="none" stroke="#00703A" stroke-width="3.2"/></svg></span><span style="flex:1;font-size:18px">투약 확인 <span style="font-family:'JetBrains Mono',monospace;font-weight:700">13:00</span></span></div>
+              <div style="display:flex;align-items:center;gap:12px"><span style="width:30px;height:30px;border-radius:999px;background:#E6F7EF;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4.5 4.5L19 7" fill="none" stroke="#00703A" stroke-width="3.2"/></svg></span><span style="flex:1;font-size:18px">보행 보조 2회</span></div>
+            </div>
+            <div style="background:#F2F4F6;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:4px"><span style="font-size:16px;font-weight:700;color:#4E5968">특이사항</span><span style="font-size:17px;line-height:1.5">식사량이 어제보다 늘었습니다. 오후 산책 20분 하셨습니다.</span></div>
+          </div>
+          <div style="border:1px solid #E5E8EB;border-radius:16px;padding:18px;display:flex;align-items:center;gap:14px">
+            <span style="width:44px;height:44px;border-radius:12px;background:#F2F4F6;display:flex;align-items:center;justify-content:center;flex:none"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="15" rx="2.5" fill="#4E5968"/><path d="M3.5 10h17" stroke="#FFFFFF" stroke-width="1.8"/></svg></span>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:18px;font-weight:700">지난 기록 3일</span><span style="font-size:16px;color:#6B7684">날짜별로 보기</span></div>
+            <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="#8B95A1" stroke-width="2.4"/></svg>
+          </div>
+          <div style="flex:1"></div>
+          <span style="min-height:56px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600;color:#C7302A">간병 중단 요청</span>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="307" style="display:flex;flex-direction:column;gap:10px;width:402px">
+      <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700">SCR-307</span><span style="font-size:14px;color:#6B7684">이용 내역</span></div>
+      <div style="width:402px;height:1096px;background:#FFFFFF;border:1px solid #E5E8EB;border-radius:14px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="height:64px;flex:none;padding:0 12px 0 8px;display:flex;align-items:center;gap:4px">
+          <span style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="#191F28" stroke-width="2.6"/></svg></span>
+          <span style="font-size:18px;font-weight:700;flex:1">이용 내역</span>
+        </div>
+        <div style="flex:1;padding:0 20px 20px;display:flex;flex-direction:column;gap:14px;overflow:hidden">
+          <div style="background:#F2F4F6;border-radius:16px;padding:18px;display:flex;align-items:center;justify-content:space-between">
+            <div style="display:flex;flex-direction:column;gap:3px"><span style="font-size:17px;color:#4E5968">올해 이용</span><span style="font-size:20px;font-weight:700">3건 · 26일</span></div>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700">₩3,412,000</span>
+          </div>
+          <div style="border:1px solid #E5E8EB;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:#4E5968">08-22 ~ 08-28</span><span style="display:flex;align-items:center;gap:6px;background:#EFF4FF;border-radius:999px;padding:7px 12px"><span style="font-size:15px;font-weight:700;color:#1B57E0">진행 중</span></span></div>
+            <div style="display:flex;align-items:center;gap:14px">
+              <span style="width:52px;height:52px;border-radius:999px;background:#EFF4FF;display:flex;align-items:center;justify-content:center;flex:none"><svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8" fill="#2F6BFF"/><path d="M5 20c1.6-4.2 4-5.5 7-5.5s5.4 1.3 7 5.5z" fill="#2F6BFF"/></svg></span>
+              <div style="flex:1;display:flex;flex-direction:column;gap:3px"><span style="font-size:19px;font-weight:700">응우옌 티 흐엉</span><span style="font-size:16px;color:#6B7684">한빛재활병원 · 24시간</span></div>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:700">₩940,800</span>
+            </div>
+          </div>
+          <div style="border:1px solid #E5E8EB;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:#4E5968">05-14 ~ 05-27</span><span style="display:flex;align-items:center;gap:6px;background:#E6F7EF;border-radius:999px;padding:7px 12px"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4.5 4.5L19 7" fill="none" stroke="#00703A" stroke-width="3"/></svg><span style="font-size:15px;font-weight:700;color:#00703A">완료</span></span></div>
+            <div style="display:flex;align-items:center;gap:14px">
+              <span style="width:52px;height:52px;border-radius:999px;background:#F2F4F6;display:flex;align-items:center;justify-content:center;flex:none"><svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8" fill="#8B95A1"/><path d="M5 20c1.6-4.2 4-5.5 7-5.5s5.4 1.3 7 5.5z" fill="#8B95A1"/></svg></span>
+              <div style="flex:1;display:flex;flex-direction:column;gap:3px"><span style="font-size:19px;font-weight:700">김미영</span><span style="font-size:16px;color:#6B7684">한빛재활병원 · 주간</span></div>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:700">₩1,890,000</span>
+            </div>
+            <div style="min-height:56px;border-radius:12px;background:#F2F4F6;display:flex;align-items:center;justify-content:center;gap:8px;font-size:17px;font-weight:700;color:#4E5968">영수증 보기</div>
+          </div>
+          <div style="border:1px solid #E5E8EB;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:#4E5968">02-03 ~ 02-08</span><span style="display:flex;align-items:center;gap:6px;background:#E6F7EF;border-radius:999px;padding:7px 12px"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4.5 4.5L19 7" fill="none" stroke="#00703A" stroke-width="3"/></svg><span style="font-size:15px;font-weight:700;color:#00703A">완료</span></span></div>
+            <div style="display:flex;align-items:center;gap:14px">
+              <span style="width:52px;height:52px;border-radius:999px;background:#F2F4F6;display:flex;align-items:center;justify-content:center;flex:none"><svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8" fill="#8B95A1"/><path d="M5 20c1.6-4.2 4-5.5 7-5.5s5.4 1.3 7 5.5z" fill="#8B95A1"/></svg></span>
+              <div style="flex:1;display:flex;flex-direction:column;gap:3px"><span style="font-size:19px;font-weight:700">이라리사</span><span style="font-size:16px;color:#6B7684">서울시립요양원 · 야간</span></div>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:700">₩581,200</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+  html, body { margin: 0; padding: 0; background: #F2F4F6; }
+  a { color: #1B57E0; text-decoration: none; }
+  a:hover { color: #1544B8; }
+</style>
+</helmet>
+<div style="min-height:100vh;background:#F2F4F6;padding:40px;box-sizing:border-box;font-family:'Pretendard Variable',Pretendard,-apple-system,sans-serif;color:#191F28;text-wrap:pretty">
+
+  <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:32px;max-width:1000px">
+    <div style="font-size:26px;font-weight:700;letter-spacing:-0.02em">공통 진입 SCR-001~003 · Caregiver App SCR-401~405 · FIELD 트랙</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#6B7684">402×1096 · Caregiver 스케일 상향: 본문 18px · 주요 버튼 64~72px · 아이콘 28px+ · 상태=색+아이콘+텍스트</div>
+    <div style="font-size:15px;color:#6B7684">§3.2 — 40~65세, 병실에서 한 손으로, 급하게. 한 화면에 과업 하나, 큰 버튼 하나. 오프라인 큐를 화면에 노출합니다.</div>
+  </div>
+
+  <div style="display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap">
+
+    <div data-screen-label="001" style="display:flex;flex-direction:column;gap:10px;width:402px">
+      <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700">SCR-001</span><span style="font-size:14px;color:#6B7684">스플래시</span></div>
+      <div style="width:402px;height:1096px;background:#2560E8;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;position:relative">
+        <span style="width:96px;height:96px;border-radius:28px;background:#FFFFFF;display:flex;align-items:center;justify-content:center"><svg width="56" height="56" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.6-7-9.4A4.1 4.1 0 0 1 12 8a4.1 4.1 0 0 1 7 2.6C19 15.4 12 20 12 20z" fill="#2560E8"/></svg></span>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+          <span style="font-size:30px;font-weight:700;color:#FFFFFF;letter-spacing:-0.02em">케어링크</span>
+          <span style="font-size:17px;color:#C9DAFF">돌봄 인력과 현장을 잇습니다</span>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <span style="width:10px;height:10px;border-radius:999px;background:#FFFFFF"></span>
+          <span style="width:10px;height:10px;border-radius:999px;background:rgba(255,255,255,0.45)"></span>
+          <span style="width:10px;height:10px;border-radius:999px;background:rgba(255,255,255,0.45)"></span>
+        </div>
+        <div style="position:absolute;bottom:32px;display:flex;flex-direction:column;align-items:center;gap:6px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#C9DAFF">v1.0.0 · 토큰 확인 중</span>
+        </div>
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;color:#8B95A1">토큰 유효 → 마지막 역할 홈 / 무효 → SCR-002</div>
+    </div>
+
+    <div data-screen-label="002" style="display:flex;flex-direction:column;gap:10px;width:402px">
+      <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700">SCR-002</span><span style="font-size:14px;color:#6B7684">로그인 · 입력 최소화</span></div>
+      <div style="width:402px;height:1096px;background:#FFFFFF;border:1px solid #E5E8EB;border-radius:14px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="height:64px;flex:none;padding:0 20px;display:flex;align-items:center;justify-content:flex-end">
+          <div style="height:48px;padding:0 14px;border-radius:999px;background:#F2F4F6;display:flex;align-items:center;gap:6px"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="#4E5968" stroke-width="1.7"/><path d="M3.2 9.5h17.6M3.2 14.5h17.6M12 3c-3 3.4-3 14.2 0 18M12 3c3 3.4 3 14.2 0 18" fill="none" stroke="#4E5968" stroke-width="1.3"/></svg><span style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:500">KO</span><svg width="12" height="12" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 3.5 5 7.5 9 3.5" fill="none" stroke="#4E5968" stroke-width="1.6"/></svg></div>
+        </div>
+        <div style="flex:1;padding:20px;display:flex;flex-direction:column;gap:20px">
+          <span style="width:64px;height:64px;border-radius:20px;background:#2560E8;display:flex;align-items:center;justify-content:center"><svg width="38" height="38" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.6-7-9.4A4.1 4.1 0 0 1 12 8a4.1 4.1 0 0 1 7 2.6C19 15.4 12 20 12 20z" fill="#FFFFFF"/></svg></span>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:26px;font-weight:700;letter-spacing:-0.02em">휴대폰 번호로 시작</span>
+            <span style="font-size:17px;line-height:1.5;color:#6B7684">번호를 입력하면 인증 문자를 보냅니다. 비밀번호는 없습니다.</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:16px;font-weight:600;color:#4E5968">휴대폰 번호</span>
+            <div style="min-height:64px;border:2px solid #2F6BFF;border-radius:12px;padding:0 16px;display:flex;align-items:center;gap:10px">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:19px;font-weight:600;color:#6B7684">+82</span>
+              <span style="width:1px;height:26px;background:#E5E8EB"></span>
+              <span style="flex:1;font-family:'JetBrains Mono',monospace;font-size:19px;font-weight:700">010 4821 8821</span>
+              <span style="width:28px;height:28px;border-radius:999px;background:#F2F4F6;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8l8 8M16 8l-8 8" stroke="#4E5968" stroke-width="2.4" stroke-linecap="round"/></svg></span>
+            </div>
+          </div>
+          <button type="button" style="min-height:64px;border:none;border-radius:12px;background:#2560E8;color:#FFFFFF;font-family:inherit;font-size:19px;font-weight:700;cursor:pointer" style-hover="background:#1B4FCC">인증 문자 받기</button>
+          <div style="display:flex;align-items:flex-start;gap:10px;background:#F2F4F6;border-radius:12px;padding:16px">
+            <svg width="22" height="22" viewBox="0 0 24 24" style="flex:none" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="#8B95A1"/><path d="M12 10.5v6" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="7.6" r="1.2" fill="#FFFFFF"/></svg>
+            <span style="flex:1;font-size:16px;line-height:1.5;color:#4E5968">문자가 오지 않으면 통신사 스팸 차단을 확인해 주세요.</span>
+          </div>
+          <div style="flex:1"></div>
+          <div style="min-height:56px;display:flex;align-items:center;justify-content:center;gap:8px"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="#1B57E0" stroke-width="2"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.3v1.6" fill="none" stroke="#1B57E0" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16.6" r="1.1" fill="#1B57E0"/></svg><span style="font-size:17px;font-weight:600;color:#1B57E0">도움이 필요해요</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="003" style="display:flex;flex-direction:column;gap:10px;width:402px">
+      <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700">SCR-003</span><span style="font-size:14px;color:#6B7684">역할 선택</span></div>
+      <div style="width:402px;height:1096px;background:#FFFFFF;border:1px solid #E5E8EB;border-radius:14px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="height:64px;flex:none;padding:0 20px;display:flex;align-items:center"><span style="font-family:'JetBrains Mono',monospace;font-size:15px;color:#6B7684">010-4821-8821</span></div>
+        <div style="flex:1;padding:20px;display:flex;flex-direction:column;gap:20px">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:26px;font-weight:700;letter-spacing:-0.02em">어떤 일로 오셨나요?</span>
+            <span style="font-size:17px;line-height:1.5;color:#6B7684">나중에 언제든 바꿀 수 있습니다.</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="min-height:104px;border:2px solid #2F6BFF;border-radius:16px;padding:18px;display:flex;align-items:center;gap:16px">
+              <span style="width:64px;height:64px;border-radius:18px;background:#EFF4FF;display:flex;align-items:center;justify-content:center;flex:none"><svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="3.6" fill="#2F6BFF"/><path d="M5 20c1.6-4 4-5.2 7-5.2s5.4 1.2 7 5.2z" fill="#2F6BFF"/></svg></span>
+              <div style="flex:1;display:flex;flex-direction:column;gap:4px"><span style="font-size:20px;font-weight:700">일자리를 찾아요</span><span style="font-size:16px;color:#6B7684">해외 취업 준비 · 후보자</span></div>
+              <span style="width:28px;height:28px;border-radius:999px;background:#2F6BFF;display:flex;align-items:center;justify-content:center;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4.5 4.5L19 7" fill="none" stroke="#FFFFFF" stroke-width="3.4"/></svg></span>
+            </div>
+            <div style="min-height:104px;border:1px solid #E5E8EB;border-radius:16px;padding:18px;display:flex;align-items:center;gap:16px">
+              <span style="width:64px;height:64px;border-radius:18px;background:#EFF4FF;display:flex;align-items:center;justify-content:center;flex:none"><svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.8-7.5-10a4.4 4.4 0 0 1 7.5-3 4.4 4.4 0 0 1 7.5 3c0 5.2-7.5 10-7.5 10z" fill="#2F6BFF"/></svg></span>
+              <div style="flex:1;display:flex;flex-direction:column;gap:4px"><span style="font-size:20px;font-weight:700">간병 일을 해요</span><span style="font-size:16px;color:#6B7684">근무 일정 · 근무 기록</span></div>
+              <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="#8B95A1" stroke-width="2.4"/></svg>
+            </div>
+            <div style="min-height:104px;border:1px solid #E5E8EB;border-radius:16px;padding:18px;display:flex;align-items:center;gap:16px">
+              <span style="width:64px;height:64px;border-radius:18px;background:#EFF4FF;display:flex;align-items:center;justify-content:center;flex:none"><svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V9l8-5 8 5v11z" fill="#2F6BFF"/><path d="M10.5 12.5h3v5h-3z" fill="#FFFFFF"/></svg></span>
+              <div style="flex:1;display:flex;flex-direction:column;gap:4px"><span style="font-size:20px;font-weight:700">간병인이 필요해요</span><span style="font-size:16px;color:#6B7684">환자 · 보호자</span></div>
+              <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="#8B95A1" stroke-width="2.4"/></svg>
+            </div>
+          </div>
+          <div style="flex:1"></div>
+          <button type="button" style="min-height:64px;border:none;border-radius:12px;background:#2560E8;color:#FFFFFF;font-family:inherit;font-size:19px;font-weight:700;cursor:pointer" style-hover="background:#1B4FCC">시작하기</button>
+        </div>
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;color:#8B95A1">역할 2개+ 보유 시 홈 앱바에 역할 스위처 노출</div>
+    </div>
+
+    <div data-screen-label="401" style="display:flex;flex-direction:column;gap:10px;width:402px">
+      <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700">SCR-401</span><span style="font-size:14px;color:#6B7684">오늘 · 기본 진입</span></div>
+      <div style="width:402px;height:1096px;background:#FFFFFF;border:1px solid #E5E8EB;border-radius:14px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="height:64px;flex:none;padding:0 20px;display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;flex-direction:column"><span style="font-size:20px;font-weight:700">오늘</span></div>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:700;color:#4E5968">8월 20일 목</span>
+        </div>
+        <div style="flex:1;padding:4px 20px 20px;display:flex;flex-direction:column;gap:18px">
+          <div style="background:#2560E8;border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:16px;font-weight:600;color:#E4EDFF">오늘 근무</span>
+              <span style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.22);border-radius:999px;padding:8px 12px"><span style="width:9px;height:9px;border-radius:999px;background:#FFFFFF"></span><span style="font-size:15px;font-weight:700;color:#FFFFFF">시작 전</span></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px">
+              <span style="width:64px;height:64px;border-radius:18px;background:#FFFFFF;display:flex;align-items:center;justify-content:center;flex:none"><svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8" fill="#2560E8"/><path d="M5 20c1.6-4.2 4-5.5 7-5.5s5.4 1.3 7 5.5z" fill="#2560E8"/></svg></span>
+              <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+                <span style="font-size:24px;font-weight:700;color:#FFFFFF;letter-spacing:-0.02em">김영수 어르신</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:17px;color:#E4EDFF">한빛재활병원 · 7층 704호</span>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.16);border-radius:12px;padding:14px 16px">
+              <svg width="26" height="26" viewBox="0 0 24 24" style="flex:none" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="#FFFFFF" stroke-width="2.2"/><path d="M12 7.4v5l3.4 2.2" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/></svg>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:#FFFFFF">09:00 ~ 18:00</span>
+            </div>
+            <button type="button" style="min-height:76px;border:none;border-radius:14px;background:#FFFFFF;color:#1B57E0;font-family:inherit;font-size:22px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px" style-hover="background:#EFF4FF"><svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="#1B57E0"/><path d="M8 12.4l2.8 2.8 5.4-6" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round"/></svg>출근 체크</button>
+          </div>
+          <div style="border:1px solid #E5E8EB;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px">
+            <span style="font-size:18px;font-weight:700">오늘 확인할 것</span>
+            <div style="display:flex;align-items:center;gap:12px"><span style="width:36px;height:36px;border-radius:10px;background:#FFF6E5;display:flex;align-items:center;justify-content:center;flex:none"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l9 15H3z" fill="#C77700"/><path d="M12 10v4" stroke="#FFFFFF" stroke-width="2"/></svg></span><span style="flex:1;font-size:18px">보행 보조 필요 · 낙상 주의</span></div>
+            <div style="display:flex;align-items:center;gap:12px"><span style="width:36px;height:36px;border-radius:10px;background:#EFF4FF;display:flex;align-items:center;justify-content:center;flex:none"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="16" rx="2" fill="#2F6BFF"/><path d="M9 9h6M9 13h4" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round"/></svg></span><span style="flex:1;font-size:18px">식사 후 투약 <span style="font-family:'JetBrains Mono',monospace;font-weight:700">13:00</span></span></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;border:1px solid #E5E8EB;border-radius:16px;padding:18px">
+            <span style="width:48px;height:48px;border-radius:14px;background:#F2F4F6;display:flex;align-items:center;justify-content:center;flex:none"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" stroke="#4E5968" stroke-width="2.2" stroke-linecap="round"/></svg></span>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:18px;font-weight:700">이번 주 근무 4건</span><span style="font-size:16px;color:#6B7684">다음 근무 <span style="font-family:'JetBrains Mono',monospace;font-weight:700">8월 22일</span></span></div>
+            <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="#8B95A1" stroke-width="2.4"/></svg>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;background:#F2F4F6;border-radius:12px;padding:14px 16px">
+            <svg width="22" height="22" viewBox="0 0 24 24" style="flex:none" aria-hidden="true"><path d="M5 13.5a7 7 0 0 1 14 0" fill="none" stroke="#4E5968" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="1.6" fill="#4E5968"/></svg>
+            <span style="flex:1;font-size:16px;color:#4E5968">인터넷이 끊겨도 기록은 저장됩니다</span>
+          </div>
+        </div>
+        <div style="height:84px;flex:none;border-top:1px solid #E5E8EB;display:flex">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px"><svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" fill="#2F6BFF"/><path d="M8 3v3.6M16 3v3.6" stroke="#2F6BFF" stroke-width="2.4" stroke-linecap="round"/></svg><span style="font-size:15px;font-weight:700;color:#1B57E0">오늘</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px"><svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" fill="none" stroke="#8B95A1" stroke-width="2"/><path d="M3.5 10h17" stroke="#8B95A1" stroke-width="2"/></svg><span style="font-size:15px;color:#6B7684">일정</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px"><svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="#8B95A1" stroke-width="2"/><path d="M9.5 9.5h5M9.5 12.5h5M12 9.5v7" stroke="#8B95A1" stroke-width="2" stroke-linecap="round"/></svg><span style="font-size:15px;color:#6B7684">정산</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px"><svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="3.6" fill="none" stroke="#8B95A1" stroke-width="2"/><path d="M5 20c1.6-4 4-5.2 7-5.2s5.4 1.2 7 5.2" fill="none" stroke="#8B95A1" stroke-width="2" stroke-linecap="round"/></svg><span style="font-size:15px;color:#6B7684">내 정보</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="402" style="display:flex;flex-direction:column;gap:10px;width:402px">
+      <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700">SCR-402</span><span style="font-size:14px;color:#6B7684">일정</span></div>
+      <div style="width:402px;height:1096px;background:#FFFFFF;border:1px solid #E5E8EB;border-radius:14px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="height:64px;flex:none;padding:0 20px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:20px;font-weight:700">일정</span><span style="font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:700;color:#4E5968">2026-08</span></div>
+        <div style="flex:none;padding:0 20px 16px;display:flex;gap:6px">
+          <div style="flex:1;min-height:76px;border-radius:14px;background:#F2F4F6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><span style="font-size:15px;color:#6B7684">월</span><span style="font-family:'JetBrains Mono',monospace;font-size:19px;font-weight:700">18</span></div>
+          <div style="flex:1;min-height:76px;border-radius:14px;background:#F2F4F6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><span style="font-size:15px;color:#6B7684">화</span><span style="font-family:'JetBrains Mono',monospace;font-size:19px;font-weight:700">19</span></div>
+          <div style="flex:1;min-height:76px;border-radius:14px;background:#2560E8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><span style="font-size:15px;color:#E4EDFF">목</span><span style="font-family:'JetBrains Mono',monospace;font-size:19px;font-weight:700;color:#FFFFFF">20</span><span style="width:6px;height:6px;border-radius:999px;background:#FFFFFF"></span></div>
+          <div style="flex:1;min-height:76px;border-radius:14px;background:#F2F4F6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><span style="font-size:15px;color:#6B7684">금</span><span style="font-family:'JetBrains Mono',monospace;font-size:19px;font-weight:700">21</span></div>
+          <div style="flex:1;min-height:76px;border-radius:14px;background:#EFF4FF;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><span style="font-size:15px;color:#1B57E0">토</span><span style="font-family:'JetBrains Mono',monospace;font-size:19px;font-weight:700;color:#1B57E0">22</span><span style="width:6px;height:6px;border-radius:999px;background:#2F6BFF"></span></div>
+        </div>
+        <div style="flex:1;padding:0 20px 20px;display:flex;flex-direction:column;gap:12px;overflow:hidden">
+          <span style="font-size:16px;color:#6B7684">이번 주 <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:#191F28">4건</span> · <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:#191F28">32시간</span></span>
+          <div style="border:2px solid #2F6BFF;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:700;color:#1B57E0">오늘 · 08-20</span><span style="display:flex;align-items:center;gap:6px;background:#EFF4FF;border-radius:999px;padding:7px 12px"><span style="font-size:15px;font-weight:700;color:#1B57E0">진행 예정</span></span></div>
+            <div style="display:flex;align-items:center;gap:12px">
+              <span style="width:52px;height:52px;border-radius:14px;background:#EFF4FF;display:flex;align-items:center;justify-content:center;flex:none"><svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.6" fill="#2F6BFF"/><path d="M5.5 20c1.5-4 3.8-5.2 6.5-5.2s5 1.2 6.5 5.2z" fill="#2F6BFF"/></svg></span>
+              <div style="flex:1;display:flex;flex-direction:column;gap:3px"><span style="font-size:19px;font-weight:700">김영수 어르신</span><span style="font-family:'JetBrains Mono',monospace;font-size:16px;color:#6B7684">704호 · 09:00~18:00</span></div>
+            </div>
+          </div>
+          <div style="border:1px solid #E5E8EB;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:700;color:#4E5968">토 · 08-22</span></div>
+            <div style="display:flex;align-items:center;gap:12px">
+              <span style="width:52px;height:52px;border-radius:14px;background:#F2F4F6;display:flex;align-items:center;justify-content:center;flex:none"><svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.6" fill="#8B95A1"/><path d="M5.5 20c1.5-4 3.8-5.2 6.5-5.2s5 1.2 6.5 5.2z" fill="#8B95A1"/></svg></span>
+              <div style="flex:1;display:flex;flex-direction:column;gap:3px"><span style="font-size:19px;font-weight:700">박순자 어르신</span><span style="font-family:'JetBrains Mono',monospace;font-size:16px;color:#6B7684">302호 · 08:00~20:00</span></div>
+            </div>
+          </div>
+          <div style="border:1px solid #E5E8EB;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:700;color:#4E5968">화 · 08-19</span><span style="display:flex;align-items:center;gap:6px;background:#E6F7EF;border-radius:999px;padding:7px 12px"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4.5 4.5L19 7" fill="none" stroke="#00703A" stroke-width="3"/></svg><span style="font-size:15px;font-weight:700;color:#00703A">기록 완료</span></span></div>
+            <div style="display:flex;align-items:center;gap:12px">
+              <span style="width:52px;height:52px;border-radius:14px;background:#E6F7EF;display:flex;align-items:center;justify-content:center;flex:none"><svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.6" fill="#00703A"/><path d="M5.5 20c1.5-4 3.8-5.2 6.5-5.2s5 1.2 6.5 5.2z" fill="#00703A"/></svg></span>
+              <div style="flex:1;display:flex;flex-direction:column;gap:3px"><span style="font-size:19px;font-weight:700">김영수 어르신</span><span style="font-family:'JetBrains Mono',monospace;font-size:16px;color:#6B7684">704호 · 09:00~18:00</span></div>
+            </div>
+          </div>
+          <div style="border:1px solid #E5E8EB;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:700;color:#4E5968">월 · 08-18</span><span style="display:flex;align-items:center;gap:6px;background:#FFF6E5;border-radius:999px;padding:7px 12px"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="#8A5300" stroke-width="2.4"/><path d="M12 7.5v6" stroke="#8A5300" stroke-width="2.4"/><circle cx="12" cy="16.6" r="1.2" fill="#8A5300"/></svg><span style="font-size:15px;font-weight:700;color:#8A5300">기록 필요</span></span></div>
+            <div style="display:flex;align-items:center;gap:12px">
+              <span style="width:52px;height:52px;border-radius:14px;background:#FFF6E5;display:flex;align-items:center;justify-content:center;flex:none"><svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.6" fill="#C77700"/><path d="M5.5 20c1.5-4 3.8-5.2 6.5-5.2s5 1.2 6.5 5.2z" fill="#C77700"/></svg></span>
+              <div style="flex:1;display:flex;flex-direction:column;gap:3px"><span style="font-size:19px;font-weight:700">박순자 어르신</span><span style="font-family:'JetBrains Mono',monospace;font-size:16px;color:#6B7684">302호 · 08:00~20:00</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="height:84px;flex:none;border-top:1px solid #E5E8EB;display:flex">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px"><svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" fill="none" stroke="#8B95A1" stroke-width="2"/></svg><span style="font-size:15px;color:#6B7684">오늘</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px"><svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" fill="#2F6BFF"/><path d="M3.5 10h17" stroke="#FFFFFF" stroke-width="2"/></svg><span style="font-size:15px;font-weight:700;color:#1B57E0">일정</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px"><svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="#8B95A1" stroke-width="2"/><path d="M9.5 9.5h5M9.5 12.5h5M12 9.5v7" stroke="#8B95A1" stroke-width="2" stroke-linecap="round"/></svg><span style="font-size:15px;color:#6B7684">정산</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px"><svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="3.6" fill="none" stroke="#8B95A1" stroke-width="2"/><path d="M5 20c1.6-4 4-5.2 7-5.2s5.4 1.2 7 5.2" fill="none" stroke="#8B95A1" stroke-width="2" stroke-linecap="round"/></svg><span style="font-size:15px;color:#6B7684">내 정보</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="403" style="display:flex;flex-direction:column;gap:10px;width:402px">
+      <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700">SCR-403</span><span style="font-size:14px;color:#6B7684">근무 상세</span></div>
+      <div style="width:402px;height:1096px;background:#FFFFFF;border:1px solid #E5E8EB;border-radius:14px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="height:64px;flex:none;padding:0 12px 0 8px;display:flex;align-items:center;gap:4px">
+          <span style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="#191F28" stroke-width="2.6"/></svg></span>
+          <span style="font-size:20px;font-weight:700;flex:1">근무 상세</span>
+        </div>
+        <div style="flex:1;padding:0 20px 20px;display:flex;flex-direction:column;gap:18px;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:14px">
+            <span style="width:72px;height:72px;border-radius:20px;background:#EFF4FF;display:flex;align-items:center;justify-content:center;flex:none"><svg width="38" height="38" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8" fill="#2F6BFF"/><path d="M5 20c1.6-4.2 4-5.5 7-5.5s5.4 1.3 7 5.5z" fill="#2F6BFF"/></svg></span>
+            <div style="flex:1;display:flex;flex-direction:column;gap:4px"><span style="font-size:24px;font-weight:700;letter-spacing:-0.02em">김영수 어르신</span><span style="font-size:17px;color:#6B7684">82세 · 남성</span></div>
+          </div>
+          <div style="border:1px solid #E5E8EB;border-radius:16px;padding:4px 18px">
+            <div style="min-height:64px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #E5E8EB"><span style="width:96px;font-size:17px;color:#6B7684">병원</span><span style="flex:1;font-size:18px;font-weight:600">한빛재활병원</span></div>
+            <div style="min-height:64px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #E5E8EB"><span style="width:96px;font-size:17px;color:#6B7684">병실</span><span style="flex:1;font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700">7층 704호</span></div>
+            <div style="min-height:64px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #E5E8EB"><span style="width:96px;font-size:17px;color:#6B7684">시간</span><span style="flex:1;font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700">09:00 ~ 18:00</span></div>
+            <div style="min-height:64px;display:flex;align-items:center;gap:12px"><span style="width:96px;font-size:17px;color:#6B7684">일당</span><span style="flex:1;font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700">₩128,000</span></div>
+          </div>
+          <div style="background:#FFF6E5;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;gap:10px"><svg width="26" height="26" viewBox="0 0 24 24" style="flex:none" aria-hidden="true"><path d="M12 3.5l9.5 16H2.5z" fill="#C77700"/><path d="M12 10v4.4" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1.1" fill="#FFFFFF"/></svg><span style="font-size:18px;font-weight:700;color:#8A5300">주의사항 2건</span></div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:18px;line-height:1.5;color:#191F28">보행 시 반드시 부축 · 낙상 위험 높음</span>
+              <span style="font-size:18px;line-height:1.5;color:#191F28">당뇨 · 식사 후 <span style="font-family:'JetBrains Mono',monospace;font-weight:700">13:00</span> 투약 확인</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <span style="flex:1;min-height:64px;border:1px solid #E5E8EB;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:17px;font-weight:700"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 4.5h4l2 4-2.5 1.5a9 9 0 0 0 4 4L15.5 11.5l4 2v4a1.5 1.5 0 0 1-1.7 1.5C11 18 6 13 5 6.2A1.5 1.5 0 0 1 6.5 4.5z" fill="#4E5968"/></svg>병원 연락</span>
+            <span style="flex:1;min-height:64px;border:1px solid #E5E8EB;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:17px;font-weight:700"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-10.2A6.5 6.5 0 0 1 12 4.3a6.5 6.5 0 0 1 6.5 6.5C18.5 15.4 12 21 12 21z" fill="none" stroke="#4E5968" stroke-width="2"/><circle cx="12" cy="10.6" r="2.4" fill="#4E5968"/></svg>길찾기</span>
+          </div>
+        </div>
+        <div style="flex:none;padding:16px 20px 20px;border-top:1px solid #E5E8EB">
+          <button type="button" style="width:100%;min-height:76px;border:none;border-radius:14px;background:#2560E8;color:#FFFFFF;font-family:inherit;font-size:21px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px" style-hover="background:#1B4FCC"><svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="3.5" width="15" height="17" rx="2.5" fill="#FFFFFF"/><path d="M8.5 12.4l2.4 2.4 4.6-5" fill="none" stroke="#2560E8" stroke-width="2.4" stroke-linecap="round"/></svg>근무 기록 작성</button>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="404" style="display:flex;flex-direction:column;gap:10px;width:402px">
+      <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700">SCR-404</span><span style="font-size:14px;color:#6B7684">근무 기록 · 오프라인 큐</span></div>
+      <div style="width:402px;height:1096px;background:#FFFFFF;border:1px solid #E5E8EB;border-radius:14px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="height:64px;flex:none;padding:0 12px 0 8px;display:flex;align-items:center;gap:4px">
+          <span style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="#191F28" stroke-width="2.6"/></svg></span>
+          <div style="flex:1;display:flex;flex-direction:column"><span style="font-size:20px;font-weight:700">근무 기록</span><span style="font-family:'JetBrains Mono',monospace;font-size:15px;color:#6B7684">08-20 · 704호</span></div>
+        </div>
+        <div style="flex:none;padding:0 20px 14px">
+          <div style="background:#FFF6E5;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:10px">
+            <svg width="24" height="24" viewBox="0 0 24 24" style="flex:none" aria-hidden="true"><path d="M5 13.5a7 7 0 0 1 14 0" fill="none" stroke="#8A5300" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="17" r="1.7" fill="#8A5300"/><path d="M18 5L6 19" stroke="#8A5300" stroke-width="2.2" stroke-linecap="round"/></svg>
+            <span style="flex:1;font-size:17px;font-weight:600;color:#8A5300">오프라인 · 저장 후 자동 전송</span>
+          </div>
+        </div>
+        <div style="flex:1;padding:0 20px 20px;display:flex;flex-direction:column;gap:14px;overflow:hidden">
+          <span style="font-size:18px;font-weight:700">오늘 한 일</span>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="min-height:72px;border:2px solid #2F6BFF;background:#EFF4FF;border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px">
+              <span style="width:32px;height:32px;border-radius:8px;background:#2F6BFF;display:flex;align-items:center;justify-content:center;flex:none"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4.5 4.5L19 7" fill="none" stroke="#FFFFFF" stroke-width="3.2"/></svg></span>
+              <span style="flex:1;font-size:19px;font-weight:600">식사 보조 (아침·점심)</span>
+            </div>
+            <div style="min-height:72px;border:2px solid #2F6BFF;background:#EFF4FF;border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px">
+              <span style="width:32px;height:32px;border-radius:8px;background:#2F6BFF;display:flex;align-items:center;justify-content:center;flex:none"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4.5 4.5L19 7" fill="none" stroke="#FFFFFF" stroke-width="3.2"/></svg></span>
+              <span style="flex:1;font-size:19px;font-weight:600">투약 확인 <span style="font-family:'JetBrains Mono',monospace;font-weight:700">13:00</span></span>
+            </div>
+            <div style="min-height:72px;border:1px solid #E5E8EB;border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px">
+              <span style="width:32px;height:32px;border-radius:8px;border:2px solid #C6CCD6;flex:none"></span>
+              <span style="flex:1;font-size:19px;font-weight:600;color:#4E5968">체위 변경 · 보행 보조</span>
+            </div>
+            <div style="min-height:72px;border:1px solid #E5E8EB;border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px">
+              <span style="width:32px;height:32px;border-radius:8px;border:2px solid #C6CCD6;flex:none"></span>
+              <span style="flex:1;font-size:19px;font-weight:600;color:#4E5968">위생 · 세면 보조</span>
+            </div>
+          </div>
+          <span style="font-size:18px;font-weight:700;margin-top:2px">특이사항</span>
+          <div style="min-height:96px;border:1px solid #E5E8EB;border-radius:14px;padding:16px;display:flex"><span style="font-size:18px;color:#8B95A1">필요할 때만 적어주세요</span></div>
+          <div style="display:flex;gap:10px">
+            <span style="width:96px;height:96px;border-radius:14px;background:#F2F4F6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;flex:none"><svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6.5" width="18" height="13.5" rx="2.5" fill="#4E5968"/><path d="M9 6.5l1.4-2.5h3.2L15 6.5" fill="#4E5968"/><circle cx="12" cy="13.2" r="3.6" fill="#FFFFFF"/></svg><span style="font-size:15px;font-weight:600;color:#4E5968">사진</span></span>
+            <div style="flex:1;height:96px;border-radius:14px;background:#EFF4FF;display:flex;align-items:center;justify-content:center;gap:8px"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="#1B57E0" stroke-width="2"/><path d="M12 8v8M8 12h8" stroke="#1B57E0" stroke-width="2.2" stroke-linecap="round"/></svg><span style="font-size:17px;font-weight:700;color:#1B57E0">항목 추가</span></div>
+          </div>
+        </div>
+        <div style="flex:none;padding:16px 20px 20px;border-top:1px solid #E5E8EB">
+          <button type="button" style="width:100%;min-height:76px;border:none;border-radius:14px;background:#2560E8;color:#FFFFFF;font-family:inherit;font-size:21px;font-weight:700;cursor:pointer" style-hover="background:#1B4FCC">저장하기</button>
+        </div>
+      </div>
+    </div>
+
+    <div data-screen-label="405" style="display:flex;flex-direction:column;gap:10px;width:402px">
+      <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700">SCR-405</span><span style="font-size:14px;color:#6B7684">정산 · V3</span></div>
+      <div style="width:402px;height:1096px;background:#FFFFFF;border:1px solid #E5E8EB;border-radius:14px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="height:64px;flex:none;padding:0 20px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:20px;font-weight:700">정산</span><span style="background:#F2F4F6;border-radius:999px;padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:#4E5968">V3</span></div>
+        <div style="flex:1;padding:4px 20px 20px;display:flex;flex-direction:column;gap:18px;overflow:hidden">
+          <div style="border:1px solid #E5E8EB;border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:17px;color:#6B7684">8월 예정 금액</span><span style="display:flex;align-items:center;gap:6px;background:#FFF6E5;border-radius:999px;padding:7px 12px"><span style="font-size:15px;font-weight:700;color:#8A5300">정산 대기</span></span></div>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:34px;font-weight:700;letter-spacing:-0.02em">₩1,792,000</span>
+            <div style="height:1px;background:#E5E8EB"></div>
+            <div style="display:flex;justify-content:space-between"><span style="font-size:17px;color:#6B7684">근무 14일 · 112시간</span><span style="font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:700;color:#1B57E0">09-05 지급</span></div>
+          </div>
+          <span style="font-size:18px;font-weight:700">근무 내역</span>
+          <div style="border:1px solid #E5E8EB;border-radius:16px;padding:4px 18px">
+            <div style="min-height:72px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #E5E8EB"><div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:18px;font-weight:600">김영수 어르신</span><span style="font-family:'JetBrains Mono',monospace;font-size:15px;color:#6B7684">08-19 · 9h</span></div><span style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700">₩128,000</span></div>
+            <div style="min-height:72px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #E5E8EB"><div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:18px;font-weight:600">박순자 어르신</span><span style="font-family:'JetBrains Mono',monospace;font-size:15px;color:#6B7684">08-18 · 12h</span></div><span style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700">₩168,000</span></div>
+            <div style="min-height:72px;display:flex;align-items:center;gap:12px"><div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:18px;font-weight:600">김영수 어르신</span><span style="font-family:'JetBrains Mono',monospace;font-size:15px;color:#6B7684">08-15 · 9h</span></div><span style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700">₩128,000</span></div>
+          </div>
+          <div style="border:1px solid #E5E8EB;border-radius:16px;padding:18px;display:flex;align-items:center;gap:12px">
+            <span style="width:48px;height:48px;border-radius:14px;background:#F2F4F6;display:flex;align-items:center;justify-content:center;flex:none"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="2.5" fill="#4E5968"/><path d="M9 9h6M9 13h6M9 17h3" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:18px;font-weight:700">7월 정산 완료</span><span style="font-family:'JetBrains Mono',monospace;font-size:16px;color:#6B7684">₩1,664,000 · 08-05 지급</span></div>
+            <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="#8B95A1" stroke-width="2.4"/></svg>
+          </div>
+        </div>
+        <div style="height:84px;flex:none;border-top:1px solid #E5E8EB;display:flex">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px"><svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" fill="none" stroke="#8B95A1" stroke-width="2"/></svg><span style="font-size:15px;color:#6B7684">오늘</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px"><svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" fill="none" stroke="#8B95A1" stroke-width="2"/><path d="M3.5 10h17" stroke="#8B95A1" stroke-width="2"/></svg><span style="font-size:15px;color:#6B7684">일정</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px"><svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="#2F6BFF"/><path d="M9.5 9.5h5M9.5 12.5h5M12 9.5v7" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/></svg><span style="font-size:15px;font-weight:700;color:#1B57E0">정산</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px"><svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="3.6" fill="none" stroke="#8B95A1" stroke-width="2"/><path d="M5 20c1.6-4 4-5.2 7-5.2s5.4 1.2 7 5.2" fill="none" stroke="#8B95A1" stroke-width="2" stroke-linecap="round"/></svg><span style="font-size:15px;color:#6B7684">내 정보</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
