@@ -40,6 +40,27 @@ CREATE TYPE journey_step AS ENUM (
   'MATCHED','INTERVIEW','PLACED','ACTIVE'
 );
 
+-- 체류자격 확보 절차. 커리어 여정(journey_step)과는 별개의 축이다.
+--
+-- 왜 나누는가: 두 축은 순서도 의미도 다르다. 커리어 여정에서 계약(PLACED)은
+-- 매칭·면접을 거친 8번째 단계지만, 체류자격 절차에서 고용계약은 2번째다 —
+-- E-7-2 심사가 고용주를 전제로 하기 때문에 계약이 먼저 있어야 신청이 된다.
+-- 한 축에 우겨넣으면 둘 중 하나는 반드시 거짓이 된다.
+--
+-- 모든 후보자에게 붙는 축이 아니다. F-5·F-6·F-4처럼 이미 취업 가능한 자격을
+-- 가진 국내 인력은 이 절차가 없다. track_visa_eligibility 조회 결과가
+-- REQUIRES_CONVERSION 이거나 해외 신규 발급 건일 때만 시작한다.
+-- 국적으로 판정하지 않는다 (docs/07 §2.2).
+CREATE TYPE visa_process_step AS ENUM (
+  'CONTRACT_SIGNED',       -- 고용계약 체결. E-7-2는 고용주 없이 신청이 되지 않는다
+  'DOCUMENT_REVIEW',       -- 제출 서류 준비·심사
+  'APPLICATION_SUBMITTED', -- 출입국·재외공관 접수
+  'APPROVED',              -- 발급 또는 자격 변경 승인. 국내 변경 건은 여기가 종착점
+  'ENTERED',               -- 입국 완료. 해외 신규 발급 건에만 해당
+  'REJECTED',              -- 불허. 사유 기록 필수
+  'WITHDRAWN'              -- 본인 철회·이탈
+);
+
 CREATE TYPE document_type AS ENUM (
   'IDENTITY',        -- 신분 (여권·외국인등록증·신분증)
   'CRIMINAL_RECORD', -- 범죄경력 회보서. 배치 전 필수. 2년마다 갱신.
@@ -415,6 +436,29 @@ CREATE TABLE candidate_journey_steps (
   note          TEXT
 );
 CREATE INDEX idx_journey_candidate ON candidate_journey_steps(candidate_id, entered_at DESC);
+
+-- 체류자격 절차 이력. candidate_journey_steps와 같은 append-only 형태다.
+-- 정정은 UPDATE가 아니라 새 행으로 남긴다 — 어느 단계에서 얼마나 걸렸는지가
+-- 세그먼트별 리드타임(docs/06 §3.4)의 유일한 실측 근거이기 때문이다.
+CREATE TABLE candidate_visa_process_steps (
+  id             UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  candidate_id   UUID NOT NULL REFERENCES candidates(id) ON DELETE CASCADE,
+  step           visa_process_step NOT NULL,
+  -- 이 절차가 목표하는 체류자격. track_visa_eligibility.target_visa_code에서 온다.
+  -- 예: D-10 보유자가 요양보호 트랙으로 가면 E-7-2.
+  target_visa_code VARCHAR(16) REFERENCES visa_statuses(code),
+  entered_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  -- 판정은 사람이 하고 결과만 기록한다 (CLAUDE.md §6-1, §6-11).
+  actor_id       UUID REFERENCES users(id),
+  -- REJECTED면 사유가 반드시 있어야 한다. 이탈 시점만 세고 사유를 안 남기면
+  -- 개선이 불가능하다 (docs/08 §7.4와 같은 이유).
+  reason         TEXT,
+  note           TEXT,
+  CONSTRAINT visa_process_rejected_needs_reason
+    CHECK (step <> 'REJECTED' OR reason IS NOT NULL)
+);
+CREATE INDEX idx_visa_process_candidate
+  ON candidate_visa_process_steps(candidate_id, entered_at DESC);
 
 -- 교육: MVP에서 LMS를 직접 만들지 않는다. 파트너가 올리는 진도율을 저장만 한다.
 CREATE TABLE training_programs (
