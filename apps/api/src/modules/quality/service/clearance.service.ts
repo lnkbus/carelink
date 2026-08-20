@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { DomainError } from '../../../core/errors/domain-error';
 import { AuditService } from '../../ops/service/audit.service';
-import { ClearanceRepository, type ClearanceRow } from '../repository/clearance.repository';
+import {
+  ClearanceRepository, type ClearanceRow, type ConsoleClearanceRow, type RestrictedFlagRow,
+} from '../repository/clearance.repository';
 import {
   clearanceMachine, isCleared, REQUIRED_CLEARANCES,
   type ClearanceResult, type ClearanceType,
@@ -30,6 +32,39 @@ export class ClearanceService {
 
   list(workerUserId: string): Promise<ClearanceRow[]> {
     return this.repo.listByWorker(workerUserId);
+  }
+
+  /** SCR-509 목록. 결과·만료임박 필터만 받는다 — 국적은 조회 조건이 아니다 (§5.10). */
+  listForConsole(filter: { result?: string; expiringDays?: number }): Promise<ConsoleClearanceRow[]> {
+    return this.repo.listForConsole(filter);
+  }
+
+  listRestrictedFlags(): Promise<RestrictedFlagRow[]> {
+    return this.repo.listRestrictedFlags();
+  }
+
+  async getById(id: string): Promise<ClearanceRow> {
+    const row = await this.repo.findById(id);
+    if (!row) throw new DomainError('COMMON_NOT_FOUND', { targetType: 'worker_clearance', targetId: id });
+    return row;
+  }
+
+  /**
+   * 인력 한 명의 6개 항목 현황 + 배치 가능 여부.
+   *
+   * 기록이 없는 항목도 PENDING으로 채워서 돌려준다 — 빠진 줄이 화면에서 안 보이면
+   * 운영자는 '통과했는데 표시가 안 되는 것'과 '아직 검사조차 안 한 것'을 구분하지 못한다.
+   */
+  async workerSummary(workerUserId: string): Promise<{
+    rows: (ClearanceRow | { clearance_type: ClearanceType; result: 'PENDING'; recorded: false })[];
+    readiness: DeploymentReadiness;
+  }> {
+    const existing = await this.repo.listByWorker(workerUserId);
+    const byType = new Map(existing.map((r) => [r.clearance_type, r]));
+    const rows = REQUIRED_CLEARANCES.map(
+      (type) => byType.get(type) ?? { clearance_type: type, result: 'PENDING' as const, recorded: false as const },
+    );
+    return { rows, readiness: this.evaluate(existing) };
   }
 
   async isReadyForDeployment(workerUserId: string): Promise<DeploymentReadiness> {

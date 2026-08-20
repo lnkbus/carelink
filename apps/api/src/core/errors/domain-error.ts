@@ -46,6 +46,13 @@ export const DOMAIN_ERRORS = {
   QUALITY_RESTRICTED_ACT:     { status: HttpStatus.CONFLICT,     message: 'Text contains a restricted medical act; routed to OPS_REVIEW' },
   QUALITY_SHIFT_NEEDS_APPROVAL:{ status: HttpStatus.FORBIDDEN,   message: 'Shift pattern requires operator approval' },
 
+  // ── recruiting ─────────────────────────────────────────────────────────
+  RECRUITING_CHANNEL_UNKNOWN: { status: HttpStatus.NOT_FOUND,    message: 'Recruiting channel code does not exist' },
+  RECRUITING_CAMPAIGN_MISMATCH:{ status: HttpStatus.CONFLICT,    message: 'Campaign does not belong to the given channel' },
+  RECRUITING_REFERRER_UNKNOWN:{ status: HttpStatus.NOT_FOUND,    message: 'Referral code does not match any candidate' },
+  RECRUITING_SELF_REFERRAL:   { status: HttpStatus.CONFLICT,     message: 'A candidate cannot refer themselves' },
+  RECRUITING_ATTRIBUTION_LOCKED:{ status: HttpStatus.CONFLICT,   message: 'Acquisition source is already recorded and cannot be overwritten' },
+
   // ── engagement ─────────────────────────────────────────────────────────
   ENGAGEMENT_COMPLIANCE_INCOMPLETE: { status: HttpStatus.FORBIDDEN, message: 'Compliance checks are not all PASS' },
   ENGAGEMENT_MODEL_IMMUTABLE: { status: HttpStatus.CONFLICT,     message: 'Employment model cannot be updated; end this engagement and create a new one' },
