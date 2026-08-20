@@ -66,6 +66,34 @@ export class CandidateRepository {
     return (await this.findById(row!.id))!;
   }
 
+  findByDisplayCode(displayCode: string): Promise<CandidateRow | null> {
+    return this.db.one<CandidateRow>(`${SELECT_CANDIDATE} WHERE c.display_code = $1`, [displayCode]);
+  }
+
+  /**
+   * 유입 출처 기록. COALESCE로 '먼저 기록된 값이 이긴다'.
+   *
+   * 첫 접점이 진실이다. 나중 값으로 덮어쓰면 채널별 CAC가 마지막으로 만진 채널에
+   * 몰려 예산 배분이 틀어진다 (§5.13 · docs/08 §7.4).
+   * 반환값은 실제로 채워진 컬럼 — 이미 값이 있던 컬럼은 조용히 무시된 것이므로
+   * 호출부가 사용자에게 그대로 알려줄 수 있어야 한다.
+   */
+  async setAttribution(
+    id: string, channelId: string | null, campaignId: string | null, referredBy: string | null,
+  ): Promise<{ channel_id: string | null; campaign_id: string | null; referred_by: string | null }> {
+    const row = await this.db.one<{ channel_id: string | null; campaign_id: string | null; referred_by: string | null }>(
+      `UPDATE candidates
+          SET channel_id  = COALESCE(channel_id,  $2::uuid),
+              campaign_id = COALESCE(campaign_id, $3::uuid),
+              referred_by = COALESCE(referred_by, $4::uuid),
+              updated_at  = now()
+        WHERE id = $1
+        RETURNING channel_id, campaign_id, referred_by`,
+      [id, channelId, campaignId, referredBy],
+    );
+    return row!;
+  }
+
   async updateProfile(id: string, patch: Record<string, unknown>): Promise<void> {
     const cols = Object.keys(patch);
     if (cols.length === 0) return;

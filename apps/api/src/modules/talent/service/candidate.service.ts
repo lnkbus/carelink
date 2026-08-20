@@ -29,6 +29,50 @@ export class CandidateService {
     return this.repo.create(userId, null, null, null);
   }
 
+  async getByDisplayCode(displayCode: string): Promise<CandidateRow | null> {
+    return this.repo.findByDisplayCode(displayCode);
+  }
+
+  /**
+   * 유입 출처 기록 (§5.13). recruiting 모듈이 코드를 id로 해석한 뒤 호출한다.
+   *
+   * 이미 기록된 항목은 덮어쓰지 않고 ignored로 돌려준다 — 첫 접점이 진실이기 때문이다.
+   * 요청한 항목이 전부 무시됐다면 조용히 성공시키지 않고 에러로 알린다.
+   */
+  async applyAttribution(
+    candidateId: string,
+    input: { channelId?: string | null; campaignId?: string | null; referredBy?: string | null },
+    actorUserId: string | null,
+  ): Promise<{ applied: string[]; ignored: string[] }> {
+    const before = await this.getById(candidateId);
+    if (input.referredBy && input.referredBy === before.user_id) {
+      throw new DomainError('RECRUITING_SELF_REFERRAL', { candidateId });
+    }
+
+    const requested: [string, string | null | undefined, string | null][] = [
+      ['channelId', input.channelId, before.channel_id],
+      ['campaignId', input.campaignId, before.campaign_id],
+      ['referredBy', input.referredBy, before.referred_by],
+    ];
+    const asked = requested.filter(([, v]) => v != null);
+    const applied = asked.filter(([, , existing]) => existing == null).map(([k]) => k);
+    const ignored = asked.filter(([, , existing]) => existing != null).map(([k]) => k);
+
+    if (asked.length > 0 && applied.length === 0) {
+      throw new DomainError('RECRUITING_ATTRIBUTION_LOCKED', { candidateId, ignored });
+    }
+
+    await this.repo.setAttribution(
+      candidateId, input.channelId ?? null, input.campaignId ?? null, input.referredBy ?? null,
+    );
+    await this.audit.record({
+      actorUserId, action: 'STATUS_CHANGE', targetType: 'candidate', targetId: candidateId,
+      before: { channelId: before.channel_id, campaignId: before.campaign_id, referredBy: before.referred_by },
+      after: { applied, ignored },
+    });
+    return { applied, ignored };
+  }
+
   async updateProfile(candidateId: string, patch: Record<string, unknown>, actorUserId: string | null): Promise<CandidateRow> {
     const before = await this.getById(candidateId);
     await this.repo.updateProfile(candidateId, patch);
