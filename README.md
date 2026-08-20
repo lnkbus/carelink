@@ -26,11 +26,19 @@ PostgreSQL 16 + Redis 실환경에서 인증 → 프로필 → 서류 → 여정
 | 10.5 | `engagement` | SCR-508 | ✅ 모델 3종 골격 · 컴플라이언스 게이트 (급여 계산은 차단) |
 | — | `packages/ui` | — | ✅ 토큰 + 신규 컴포넌트 5종 (DESK) |
 | — | `web-admin` | SCR-501·502·503·504·508·509·510·511 | ✅ Next.js 14 · 8화면 실데이터 렌더 확인 |
+| — | `web-org` | SCR-201·202·203·204·205 | ✅ Next.js 14 · 5화면 · 개인정보 게이트 3조건 검증 |
 
-단위 테스트 138건 통과. 상태머신 전이는 전부 테스트가 있습니다.
+단위 테스트 143건 통과. 상태머신 전이는 전부 테스트가 있습니다.
 
-**남은 것**: `web-org`(SCR-201~205) · `mobile-candidate`(Flutter, SCR-101~110) ·
-`care`(V2, 11~13단계) · `payroll`(V3, U1·U2·U5 선행) · 백그라운드 잡 5종
+**개인정보 게이트 실측** (`GET /candidates/{id}`, 같은 후보자·다른 뷰어):
+
+| 뷰어 | 실명·연락처 | 국적·체류자격 |
+|---|---|---|
+| 검증 완료 기관 + 면접 수락함 | ✅ 열림 | ❌ 어느 경우에도 안 나감 |
+| 검증 완료 기관 + 면접 없음 | ❌ 키 자체가 없음 | ❌ |
+| 검증 대기 기관 + 면접 수락함 | ❌ 키 자체가 없음 | ❌ |
+
+**남은 것**: `mobile-candidate`(Flutter, SCR-101~110) · `care`(V2, 11~13단계) · `payroll`(V3, U1·U2·U5 선행) · 백그라운드 잡 5종
 (`scope-keyword-scan` · `data-retention-purge` · `care-assignment-sla` ·
 `ticket-sla` · `shift-24h-review` — 전부 care/V2에 붙는 잡).
 
@@ -227,22 +235,31 @@ MVP 초기 공급의 주력)는 절차가 없고, `REQUIRES_CONVERSION`(D-10→E
 ✅ 1~10.5  스키마 → iam → talent → org → matching → ops
            → recruiting → quality → engagement           V1 백엔드 완료
 ✅         packages/ui + web-admin 8화면                 Admin Console 완료
+✅         web-org 5화면                                 기관 웹 완료
 ──────────────────────────────────────────────────────────
-1. web-org — SCR-201~205 (기관 웹, DESK)
-   ※ 후보자 목록·매칭 API는 이미 있고 scope만 다릅니다
-2. mobile-candidate — SCR-101~110 (Flutter, FIELD, ko/vi/ru/en)
-3. C3 · C5 판정                                   ← care 착수 직전
+1. mobile-candidate — SCR-101~110 (Flutter, FIELD, ko/vi/ru/en)
+   ※ FIELD 규격: 최소 폰트 16px · 터치 타깃 48px · next_action 화면당 1개
+2. C3 · C5 판정                                   ← care 착수 직전
 ─────────────── 파일럿 투입 ───────────────
-4. care(11~13) + 잡 5종 → V2
-5. payroll — U1·U2·U5 해결 전 착수 금지
+3. care(11~13) + 잡 5종 → V2
+4. payroll — U1·U2·U5 해결 전 착수 금지
 ```
+
+### 아직 없는 엔드포인트
+
+| 화면 | `SCREENS`가 적은 api | 상태 |
+|---|---|---|
+| SCR-204 | `POST /organizations/{id}/saved-candidates` | 스키마에 `saved_candidates` 테이블이 없습니다. 편의 기능이라 `docs/03`을 고치기 전에는 만들지 않았습니다 |
+| SCR-201 | `GET /organizations/{id}/summary` | 별도 엔드포인트 대신 `/organizations/me` + `/me/funnel` + `/jobs` + `/interviews`로 조립했습니다 |
+| SCR-201 | `GET /care-requests?org_id=` | V2 (`care` 모듈) |
 
 ### 실행
 
 ```bash
 pnpm db:migrate && pnpm db:seed
 pnpm api:dev        # :3000/api/v1
-pnpm admin:dev      # :3100  (apps/web-admin/.env.example 참고)
+pnpm admin:dev      # :3100  운영 콘솔  (apps/web-admin/.env.example 참고)
+pnpm org:dev        # :3200  기관 웹    (apps/web-org/.env.example 참고)
 ```
 
 ### 구현 시 확정 사항 메모
