@@ -1,4 +1,4 @@
-import { getScopeMeta, hasScopeMeta } from './scope.decorator';
+import { getScopeMeta, getScopeOwnerProperty, hasScopeMeta } from './scope.decorator';
 import type { ScopeName, Viewer } from './scope.types';
 
 /**
@@ -17,6 +17,15 @@ export function applyScope<T extends object>(instance: T, viewer: Viewer): Recor
   }
 
   const allowed = new Set<ScopeName>(viewer.scopes);
+
+  // 'self'는 역할이 아니라 관계다. 이 레코드의 소유자가 요청자 본인일 때만 붙는다.
+  // 뷰어에 고정으로 달아 두면 기관 담당자가 남의 프로필을 self로 열어 본다.
+  const ownerProp = getScopeOwnerProperty(ctor);
+  if (ownerProp && viewer.userId) {
+    const ownerId = (instance as Record<string, unknown>)[ownerProp];
+    if (typeof ownerId === 'string' && ownerId === viewer.userId) allowed.add('self');
+  }
+
   const meta = getScopeMeta(ctor);
   const out: Record<string, unknown> = {};
 

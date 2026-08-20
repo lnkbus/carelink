@@ -1,6 +1,6 @@
 import { IsBoolean, IsIn, IsOptional, IsString, Length, Matches, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { Scope } from '../../../core/scope/scope.decorator';
+import { Scope, ScopeOwner } from '../../../core/scope/scope.decorator';
 import { CONSENT_CODES, SELF_SELECTABLE_ROLES, SUPPORTED_LOCALES, type ConsentCode, type Locale, type SelfSelectableRole } from '../iam.types';
 
 export class SendOtpDto {
@@ -44,6 +44,7 @@ export class SelectRoleDto {
 // ── 응답 DTO ────────────────────────────────────────────────────────────────
 
 export class UserRoleDto {
+  @ScopeOwner() ownerUserId: string;
   @Scope('self', 'admin') role: string;
   @Scope('self', 'admin') organizationId: string | null;
   @Scope('self', 'admin') isPrimary: boolean;
@@ -52,6 +53,8 @@ export class UserRoleDto {
 }
 
 export class MeDto {
+  /** 이 레코드의 주인. self scope 판정에만 쓰이고 응답에는 나가지 않는다. */
+  @ScopeOwner() ownerUserId: string;
   @Scope('self', 'admin') id: string;
   /** [PII] 본인과 운영자만. 기관은 어떤 단계에서도 users.phone을 보지 않는다. */
   @Scope('self', 'admin') phone: string | null;
@@ -64,6 +67,7 @@ export class MeDto {
 }
 
 export class TokenPairDto {
+  @ScopeOwner() ownerUserId: string;
   @Scope('self') accessToken: string;
   @Scope('self') refreshToken: string;
   @Scope('self') expiresIn: string;
@@ -85,6 +89,7 @@ export interface OtpSentDto {
 }
 
 export class ConsentDto {
+  @ScopeOwner() ownerUserId: string;
   @Scope('self', 'admin') code: string;
   @Scope('self', 'admin') version: string;
   @Scope('self', 'admin') required: boolean;

@@ -1,8 +1,9 @@
-import { Scope } from './scope.decorator';
+import { Scope, ScopeOwner } from './scope.decorator';
 import { applyScope } from './scope.serializer';
 import type { Viewer } from './scope.types';
 
 class CandidateDto {
+  @ScopeOwner() ownerUserId: string;
   @Scope('self', 'admin', 'org') legalName: string;
   @Scope('self', 'admin', 'org') phone: string;
   @Scope('self', 'admin', 'org', 'org_masked') displayCode: string;
@@ -14,10 +15,11 @@ class CandidateDto {
   internalNote: string; // @Scope 없음 — 아무에게도 나가면 안 된다
 }
 
-const viewer = (scopes: Viewer['scopes']): Viewer => ({ userId: 'u1', roles: [], scopes, locale: 'ko' });
+const viewer = (scopes: Viewer['scopes'], userId = 'u1'): Viewer => ({ userId, roles: [], scopes, locale: 'ko' });
 
 function makeCandidate(): CandidateDto {
   return Object.assign(new CandidateDto(), {
+    ownerUserId: 'owner-1',
     legalName: '응우옌 티 흐엉',
     phone: '01048218821',
     displayCode: 'Candidate #102',
@@ -64,6 +66,20 @@ describe('applyScope', () => {
 
   it('scope가 비면 아무것도 나가지 않는다', () => {
     expect(applyScope(makeCandidate(), viewer([]))).toEqual({});
+  });
+
+  it('self는 소유자가 본인일 때만 붙는다', () => {
+    // 남의 레코드를 self로 열 수 없다. 기관 담당자도 사람이므로 이 구분이 없으면
+    // 자기 계정 권한으로 남의 실명·연락처를 그대로 본다.
+    const mine = applyScope(makeCandidate(), viewer([], 'owner-1'));
+    expect(mine.legalName).toBe('응우옌 티 흐엉');
+    const others = applyScope(makeCandidate(), viewer([], 'someone-else'));
+    expect(others).toEqual({});
+  });
+
+  it('기관 담당자가 남의 프로필을 볼 때 self가 새지 않는다', () => {
+    const out = applyScope(makeCandidate(), viewer(['org_masked'], 'org-user'));
+    expect(Object.keys(out)).toEqual(['displayCode', 'experienceMonths']);
   });
 
   it('중첩 DTO에도 같은 규칙이 적용된다', () => {

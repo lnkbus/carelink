@@ -57,10 +57,10 @@ export class UserService {
    * matching/talent 쪽에서 내리고, 여기서는 기본값으로 'org_masked'만 준다.
    */
   toScopes(roles: UserRole[]): ScopeName[] {
-    // 인증된 사람은 역할이 없어도 자기 데이터는 본다.
-    // SCR-003(역할 선택) 이전의 신규 가입자가 여기 해당한다 — 역할을 조건으로 걸면
-    // 방금 발급한 토큰조차 응답에서 잘려 나가 로그인이 끝나지 않는다.
-    const scopes = new Set<ScopeName>(['self']);
+    // 'self'는 여기서 주지 않는다. 역할이 아니라 "이 레코드가 내 것인가"라는
+    // 관계이므로, DTO의 @ScopeOwner 값과 viewer.userId가 일치할 때
+    // 직렬화 시점에 부여된다 (core/scope/scope.serializer.ts).
+    const scopes = new Set<ScopeName>();
     for (const role of roles) {
       switch (role) {
         case 'ADMIN':

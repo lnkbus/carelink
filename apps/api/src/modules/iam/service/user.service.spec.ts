@@ -3,9 +3,11 @@ import { UserService } from './user.service';
 describe('UserService.toScopes', () => {
   const service = new UserService(null as never);
 
-  it('역할이 없어도 self는 붙는다', () => {
-    // SCR-003 이전의 신규 가입자. self가 없으면 방금 받은 토큰도 응답에서 잘린다.
-    expect(service.toScopes([])).toEqual(['self']);
+  it('역할에서 self를 만들지 않는다', () => {
+    // self는 역할이 아니라 관계다. DTO의 @ScopeOwner가 viewer.userId와 일치할 때만
+    // 직렬화 시점에 붙는다. 여기서 고정으로 주면 기관 담당자가 남의 프로필을 self로 연다.
+    expect(service.toScopes([])).toEqual([]);
+    expect(service.toScopes(['ORG_MEMBER'])).not.toContain('self');
   });
 
   it('운영자는 admin scope를 받는다', () => {
@@ -27,7 +29,7 @@ describe('UserService.toScopes', () => {
 
   it('간병사는 caregiver scope만 받는다', () => {
     const scopes = service.toScopes(['CAREGIVER']);
-    expect(scopes).toEqual(expect.arrayContaining(['self', 'caregiver']));
+    expect(scopes).toEqual(['caregiver']);
     expect(scopes).not.toContain('admin');
     expect(scopes).not.toContain('org');
   });
@@ -41,6 +43,6 @@ describe('UserService.toScopes', () => {
   it('역할을 겸하면 scope가 합쳐진다', () => {
     // 요양보호사가 간병사를 겸하는 경우가 흔하다 (docs/02 §5.1).
     const scopes = service.toScopes(['CANDIDATE', 'CAREGIVER']);
-    expect(scopes).toEqual(expect.arrayContaining(['self', 'caregiver']));
+    expect(scopes).toEqual(expect.arrayContaining(['caregiver']));
   });
 });

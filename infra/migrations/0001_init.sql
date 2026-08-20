@@ -298,6 +298,11 @@ CREATE TABLE refresh_tokens (
 -- =============================================================================
 -- 2. TALENT
 -- =============================================================================
+-- 기관에 노출되는 유일한 후보자 식별자. UUID를 그대로 보여주면 화면에서 읽히지 않고
+-- 운영자가 전화로 부를 수도 없다. 'C-00102' 형태의 순번으로 발급한다.
+-- 실명 게이트가 열리기 전까지 이 값이 후보자를 가리키는 이름 역할을 한다.
+CREATE SEQUENCE candidate_display_seq START 101;
+
 CREATE TABLE candidates (
   id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id           UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,

@@ -64,6 +64,7 @@ export class AuthController {
     }
 
     const out = Object.assign(new LoginDto(), {
+      ownerUserId: result.user.id,
       accessToken: result.accessToken,
       refreshToken: result.refreshToken,
       expiresIn: result.expiresIn,
@@ -81,7 +82,7 @@ export class AuthController {
     const userId = await this.auth.resolveRefreshOwner(dto.refreshToken);
     const pair = await this.auth.refresh(dto.refreshToken, dto.deviceId ?? null);
     req.viewer = await this.users.buildViewer(userId);
-    return Object.assign(new TokenPairDto(), pair);
+    return Object.assign(new TokenPairDto(), pair, { ownerUserId: userId });
   }
 
   @Public()
@@ -120,6 +121,7 @@ export class AuthController {
     const rows = await this.consents.latest(viewer.userId);
     return rows.map((r) =>
       Object.assign(new ConsentDto(), {
+        ownerUserId: viewer.userId!,
         code: r.consent_code,
         version: r.version,
         required: r.is_required,
@@ -132,6 +134,7 @@ export class AuthController {
   private toMeDto(user: UserRow, roles: UserRoleRow[]): MeDto {
     const roleDtos = roles.map((r) =>
       Object.assign(new UserRoleDto(), {
+        ownerUserId: user.id,
         role: r.role,
         organizationId: r.organization_id,
         isPrimary: r.is_primary,
@@ -139,6 +142,7 @@ export class AuthController {
       }),
     );
     return Object.assign(new MeDto(), {
+      ownerUserId: user.id,
       id: user.id,
       phone: user.phone,
       locale: user.locale,

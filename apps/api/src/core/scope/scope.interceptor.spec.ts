@@ -1,10 +1,11 @@
 import { lastValueFrom, of } from 'rxjs';
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
-import { Scope } from './scope.decorator';
+import { Scope, ScopeOwner } from './scope.decorator';
 import { ScopeInterceptor } from './scope.interceptor';
 import type { Viewer } from './scope.types';
 
 class TokenDto {
+  @ScopeOwner() ownerUserId: string;
   @Scope('self') accessToken: string;
 }
 
@@ -16,7 +17,7 @@ describe('ScopeInterceptor', () => {
   const interceptor = new ScopeInterceptor();
 
   it('viewer가 없으면 scope 대상 필드를 모두 제거한다', async () => {
-    const body = Object.assign(new TokenDto(), { accessToken: 'jwt' });
+    const body = Object.assign(new TokenDto(), { ownerUserId: 'u1', accessToken: 'jwt' });
     const out = await lastValueFrom(
       interceptor.intercept(contextFor({}), { handle: () => of(body) } as CallHandler),
     );
@@ -30,7 +31,7 @@ describe('ScopeInterceptor', () => {
     const handler: CallHandler = {
       handle: () => {
         req.viewer = { userId: 'u1', roles: ['CANDIDATE'], scopes: ['self'], locale: 'ko' };
-        return of(Object.assign(new TokenDto(), { accessToken: 'jwt' }));
+        return of(Object.assign(new TokenDto(), { ownerUserId: 'u1', accessToken: 'jwt' }));
       },
     };
     const out = await lastValueFrom(interceptor.intercept(contextFor(req), handler));

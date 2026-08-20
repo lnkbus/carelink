@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import type { ScopeName } from './scope.types';
 
 const SCOPE_META = Symbol('carelink:scope');
+const OWNER_META = Symbol('carelink:scopeOwner');
 
 interface ScopeFieldMeta {
   property: string;
@@ -27,6 +28,32 @@ export function Scope(...scopes: ScopeName[]): PropertyDecorator {
     existing.push({ property: String(propertyKey), scopes });
     Reflect.defineMetadata(SCOPE_META, existing, ctor);
   };
+}
+
+/**
+ * 이 DTO가 누구의 것인지를 담은 필드를 표시한다.
+ *
+ * 'self' scope는 역할이 아니라 **관계**다 — "이 레코드가 내 것인가". 뷰어의 고정
+ * 속성으로 두면, 기관 담당자도 사람이므로 self를 갖게 되고 남의 프로필에까지
+ * 적용된다. 그래서 self는 이 데코레이터가 가리키는 값과 viewer.userId가
+ * 일치할 때만 직렬화 시점에 부여된다.
+ *
+ * 표시한 필드 자체는 @Scope를 따로 붙이지 않는 한 응답에 나가지 않는다.
+ */
+export function ScopeOwner(): PropertyDecorator {
+  return (target, propertyKey) => {
+    Reflect.defineMetadata(OWNER_META, String(propertyKey), target.constructor);
+  };
+}
+
+export function getScopeOwnerProperty(ctor: Function): string | null {
+  let cur: Function | null = ctor;
+  while (cur && cur !== Function.prototype) {
+    const own = Reflect.getOwnMetadata(OWNER_META, cur) as string | undefined;
+    if (own) return own;
+    cur = Object.getPrototypeOf(cur);
+  }
+  return null;
 }
 
 export function getScopeMeta(ctor: Function): ScopeFieldMeta[] {
