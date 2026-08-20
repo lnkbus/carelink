@@ -329,13 +329,33 @@ CREATE TABLE experiences (
   role_title    VARCHAR(120),
   started_on    DATE,
   ended_on      DATE,
+  -- 종료된 경력의 개월 수. 재직 중(ended_on IS NULL)이면 NULL이다.
+  -- 원래는 COALESCE(ended_on, CURRENT_DATE)였으나 두 가지 이유로 바꿨다.
+  --   1) CURRENT_DATE는 immutable이 아니라 STORED 생성 컬럼에 쓸 수 없다 (PostgreSQL이 거부).
+  --   2) 설령 됐더라도 STORED는 INSERT 시점에 고정되므로, 재직 중인 경력은
+  --      시간이 지나도 그 값에 머물러 실제보다 짧게 집계된다.
+  -- 재직 중을 포함한 현재 기준 경력은 아래 experiences_current 뷰를 쓴다.
+  -- ::timestamp 캐스팅은 필수다. age(date,date)는 age(timestamptz,timestamptz)로 해석되는데
+  -- date→timestamptz 캐스트가 TimeZone 설정에 의존해 stable이므로 생성 컬럼에 쓸 수 없다.
   months        INT GENERATED ALWAYS AS (
-                  GREATEST(0, (EXTRACT(YEAR FROM age(COALESCE(ended_on, CURRENT_DATE), started_on))*12
-                             + EXTRACT(MONTH FROM age(COALESCE(ended_on, CURRENT_DATE), started_on)))::INT)
+                  CASE WHEN started_on IS NOT NULL AND ended_on IS NOT NULL
+                    THEN GREATEST(0, (EXTRACT(YEAR  FROM age(ended_on::timestamp, started_on::timestamp)) * 12
+                                    + EXTRACT(MONTH FROM age(ended_on::timestamp, started_on::timestamp)))::INT)
+                  END
                 ) STORED,
   verified      BOOLEAN NOT NULL DEFAULT false,
   description   TEXT
 );
+
+-- 조회 시점 기준 경력 개월 수. 재직 중이면 오늘까지로 계산한다.
+-- 매칭 엔진의 EXPERIENCE 규칙은 이 뷰를 사용한다 (experiences.months 직접 참조 금지).
+CREATE VIEW experiences_current AS
+SELECT e.*,
+       CASE WHEN e.started_on IS NULL THEN NULL
+            ELSE GREATEST(0, (EXTRACT(YEAR  FROM age(COALESCE(e.ended_on, CURRENT_DATE), e.started_on)) * 12
+                            + EXTRACT(MONTH FROM age(COALESCE(e.ended_on, CURRENT_DATE), e.started_on)))::INT)
+       END AS months_to_date
+FROM experiences e;
 
 CREATE TABLE educations (
   id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -396,7 +416,9 @@ CREATE TABLE training_programs (
   name          VARCHAR(200) NOT NULL,
   program_type  training_type NOT NULL,
   track_id      UUID REFERENCES tracks(id),
-  partner_id    UUID REFERENCES partners(id),
+  -- partner_id의 FK는 partners 테이블 정의 이후 ALTER로 붙인다 (아래 6절 끝).
+  -- 이 테이블(talent)이 partners(recruiting)보다 먼저 정의되므로 인라인 REFERENCES는 전방 참조가 된다.
+  partner_id    UUID,
   total_hours   INT,
   is_mandatory  BOOLEAN NOT NULL DEFAULT false
 );
@@ -587,6 +609,11 @@ CREATE TABLE partners (
   note           TEXT,
   created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- training_programs.partner_id 지연 FK (docs/08 §7.2)
+ALTER TABLE training_programs
+  ADD CONSTRAINT training_programs_partner_id_fkey
+  FOREIGN KEY (partner_id) REFERENCES partners(id);
 CREATE INDEX idx_partners_type ON partners(partner_type, status);
 
 -- 세그먼트별 채널 마스터 (A~F). docs/08 §1 세그먼트 지도와 1:1 대응.
