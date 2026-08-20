@@ -11,6 +11,13 @@
     "db:reset": "psql \"$DATABASE_URL\" -c 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;' && pnpm db:migrate && pnpm db:seed",
     "api:dev": "pnpm --filter @carelink/api start:dev",
     "api:test": "pnpm --filter @carelink/api test",
-    "db:split": "bash infra/migrations/split.sh"
+    "db:split": "bash infra/migrations/split.sh",
+    "admin:dev": "pnpm --filter @carelink/web-admin dev",
+    "admin:build": "pnpm --filter @carelink/web-admin build",
+    "admin:start": "pnpm --filter @carelink/web-admin start",
+    "typecheck": "pnpm -r --filter \"./apps/**\" --filter \"./packages/**\" exec tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "5.6.3"
   }
 }

@@ -1,6 +1,6 @@
 import { Type } from 'class-transformer';
 import {
-  IsArray, IsBoolean, IsDateString, IsOptional, IsString, IsUUID, Length, ValidateNested,
+  IsArray, IsBoolean, IsDateString, IsIn, IsOptional, IsString, IsUUID, Length, ValidateNested,
 } from 'class-validator';
 import { Scope, ScopeOwner } from '../../../core/scope/scope.decorator';
 
@@ -98,8 +98,24 @@ export class SelectTrackDto {
   @IsOptional() @IsBoolean() isPrimary?: boolean;
 }
 
+const CANDIDATE_STATUS = [
+  'DRAFT', 'DOC_REVIEW', 'TRAINING', 'READY', 'MATCHED', 'PLACED', 'INACTIVE', 'SUSPENDED',
+] as const;
+
+/** SCR-502 단건 상태 변경. */
+export class CandidateStatusDto {
+  @IsIn(CANDIDATE_STATUS) status: (typeof CANDIDATE_STATUS)[number];
+}
+
+/**
+ * 목록 필터.
+ *
+ * SCREENS의 SCR-502는 `nationality=`도 적고 있지만 넣지 않았다. 국적으로 사람을
+ * 거르는 조회 경로가 생기면 그것이 운영 관행이 된다 (§5.10 · §6-13 · README §4 C5).
+ */
 export class CandidateListQueryDto {
-  @IsOptional() @IsString() status?: string;
+  @IsOptional() @IsString() @Length(1, 64) q?: string;
+  @IsOptional() @IsIn(CANDIDATE_STATUS) status?: (typeof CANDIDATE_STATUS)[number];
   @IsOptional() @IsUUID() trackId?: string;
   @IsOptional() @IsString() region?: string;
   @IsOptional() @Type(() => Number) page?: number;

@@ -64,7 +64,9 @@ export class PartnerDto {
   @Scope('admin') status: string;
   @Scope('admin') contactName: string | null;
   @Scope('admin') contactPhone: string | null;
-  @Scope('admin') contractSignedOn: Date | null;
+  /** MOU 체결일. 대학 협상의 레버가 MOU라 계약이 아니라 MOU로 부른다. */
+  @Scope('admin') mouSignedOn: Date | null;
+  @Scope('admin') mouExpiresOn: Date | null;
 }
 
 export class ChannelCacDto {

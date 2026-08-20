@@ -1,17 +1,24 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import type { Viewer } from '../../../core/scope/scope.types';
 import { Roles } from '../../iam/guard/roles.guard';
 import { CurrentViewer } from '../../iam/guard/viewer.decorator';
 import {
   BulkCandidateDto, BulkResultDto, ChannelInflowDto, OpsDashboardDto, QueueItemDto, TrackMetricDto,
 } from '../dto/ops.dto';
+import {
+  CandidateDto, CandidateListQueryDto, CandidateStatusDto, PagedDto,
+} from '../../talent/dto/candidate.dto';
+import { CandidateService } from '../../talent/service/candidate.service';
 import { OpsService } from '../service/ops.service';
 
 /** SCR-501 운영 대시보드 · SCR-502 후보자 관리 */
 @Controller('admin')
 @Roles('ADMIN', 'SUPER_ADMIN')
 export class OpsController {
-  constructor(private readonly ops: OpsService) {}
+  constructor(
+    private readonly ops: OpsService,
+    private readonly candidates: CandidateService,
+  ) {}
 
   /** GET /api/v1/admin/metrics — 모든 지표가 트랙별로 나뉘어 나온다 (§5.8). */
   @Get('metrics')
@@ -43,6 +50,32 @@ export class OpsController {
       ),
       exclusionBreakdown: d.exclusionBreakdown.map((e) => ({ reason: e.reason, count: Number(e.count) })),
     });
+  }
+
+  /**
+   * GET /api/v1/admin/candidates — SCR-502 목록.
+   *
+   * /candidates(SCR-203)와 같은 서비스를 부른다. 운영자 전용 경로를 따로 두는 이유는
+   * SCREENS가 두 화면에 서로 다른 경로를 적고 있어서일 뿐, 조회 로직은 하나다.
+   * 보이는 필드는 여기서도 DTO scope가 정한다.
+   */
+  @Get('candidates')
+  async candidateList(
+    @CurrentViewer() viewer: Viewer,
+    @Query() q: CandidateListQueryDto,
+  ): Promise<PagedDto<CandidateDto>> {
+    return Object.assign(new PagedDto<CandidateDto>(), await this.candidates.listForConsole(q, viewer));
+  }
+
+  /** PATCH /api/v1/admin/candidates/{id}/status — SCR-502 단건 상태 변경. */
+  @Patch('candidates/:id/status')
+  async candidateStatus(
+    @CurrentViewer() viewer: Viewer,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CandidateStatusDto,
+  ): Promise<CandidateDto> {
+    await this.candidates.changeStatus(id, dto.status, viewer.userId!);
+    return this.candidates.toDto(await this.candidates.getById(id), viewer);
   }
 
   /** POST /api/v1/admin/candidates/bulk — SCR-502 일괄 처리 바 */

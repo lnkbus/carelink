@@ -132,6 +132,23 @@ export class CandidateService {
    * matching 모듈이 candidates 테이블이나 CandidateRepository를 직접 만지지 않는다 (§5.1).
    * 나중에 서비스로 분리하더라도 호출부가 바뀌지 않아야 한다.
    */
+  /**
+   * SCR-502 · SCR-203 목록. 필드 노출은 DTO scope가 정한다 —
+   * 기관은 같은 엔드포인트를 불러도 display_code까지만 본다 (§5.2).
+   */
+  async listForConsole(
+    filter: { q?: string; status?: string; trackId?: string; region?: string; page?: number; size?: number },
+    viewer: Viewer,
+  ): Promise<{ items: CandidateDto[]; total: number; page: number; size: number }> {
+    const page = Math.max(1, filter.page ?? 1);
+    const size = Math.min(100, Math.max(1, filter.size ?? 20));
+    const { items, total } = await this.repo.listForConsole({ ...filter, page, size });
+    return {
+      items: await Promise.all(items.map((row) => this.toDto(row, viewer))),
+      total, page, size,
+    };
+  }
+
   getCandidatesForMatching(trackId: string): Promise<MatchingCandidateRow[]> {
     return this.repo.getCandidatesForMatching(trackId);
   }

@@ -1,0 +1,86 @@
+/*
+ * CARELINK 디자인 토큰 — design/README.md `## Design Tokens`가 유일한 기준입니다.
+ * docs/09 §5.1의 원본 팔레트(저채도 signal #1F6F5C)는 사용하지 않습니다.
+ *
+ * 시그널 컬러는 3개(초록·앰버·적)뿐입니다. 상태를 늘릴 때 색을 늘리지 말고
+ * 아이콘+텍스트로 구분하세요 — 색만으로 상태를 전달하는 구현은 반려 대상입니다.
+ */
+:root {
+  /* 액션 */
+  --cl-action:        #2F6BFF;
+  --cl-action-strong: #2560E8;
+  --cl-action-hover:  #1B4FCC;
+  --cl-action-text:   #1B57E0;
+  --cl-action-tint:   #EFF4FF;
+
+  /* 시그널 3종 */
+  --cl-signal:        #00703A;
+  --cl-signal-tint:   #E6F7EF;
+  --cl-flag:          #8A5300;
+  --cl-flag-icon:     #C77700;
+  --cl-flag-tint:     #FFF6E5;
+  --cl-flag-line:     #EBD9A8;
+  --cl-alert:         #C7302A;
+  --cl-alert-tint:    #FEECEA;
+  --cl-alert-line:    #FBD5D0;
+
+  /* 텍스트 */
+  --cl-text:          #191F28;
+  --cl-text-sub:      #4E5968;
+  --cl-text-muted:    #6B7684;
+  --cl-text-disabled: #8B95A1;
+
+  /* 면·선 */
+  --cl-line:          #E5E8EB;
+  --cl-line-strong:   #C6CCD6;
+  --cl-bg:            #FFFFFF;
+  --cl-bg-sub:        #F2F4F6;
+  --cl-bg-table-head: #F9FAFB;
+  --cl-row-selected:  #F9FBFF;
+  --cl-row-alert:     #FEF8F7;
+  --cl-row-hover:     #F9FAFB;
+
+  /* 간격 스케일 — 4·6·8·10·14·20·28·40 외의 값을 쓰지 마세요 */
+  --cl-s1: 4px;  --cl-s2: 6px;  --cl-s3: 8px;  --cl-s4: 10px;
+  --cl-s5: 14px; --cl-s6: 20px; --cl-s7: 28px; --cl-s8: 40px;
+
+  /* radius */
+  --cl-r-chip: 4px;   /* 칩·표 배지 */
+  --cl-r-desk: 8px;   /* DESK 버튼·카드 */
+  --cl-r-field: 14px; /* FIELD 카드 */
+  --cl-r-hero: 18px;
+  --cl-r-pill: 999px;
+
+  /* 타이포 — ID·시각·금액·카운트다운·날짜는 mono. 이 시스템의 시각적 서명입니다. */
+  --cl-font: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+             system-ui, 'Malgun Gothic', sans-serif;
+  --cl-font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+
+  /* DESK 스케일 */
+  --cl-display: 24px;
+  --cl-title:   19px;
+  --cl-subtitle:15px;
+  --cl-body:    14px;
+  --cl-caption: 12px;
+  --cl-micro:   10.5px; /* 라벨 전용. FIELD에는 존재하지 않습니다. */
+
+  /* 터치 타깃 — DESK 32px+ */
+  --cl-tap-desk: 32px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--cl-font);
+  font-size: var(--cl-body);
+  color: var(--cl-text);
+  background: var(--cl-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 그림자 없음. 경계는 1px 라인. */
+button { font-family: inherit; cursor: pointer; }
+table { border-collapse: collapse; width: 100%; }
+a { color: var(--cl-action-text); text-decoration: none; }

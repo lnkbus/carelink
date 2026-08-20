@@ -22,7 +22,7 @@ export class RecruitingController {
       Object.assign(new PartnerDto(), {
         id: p.id, partnerType: p.partner_type, name: p.name, region: p.region,
         status: p.status, contactName: p.contact_name, contactPhone: p.contact_phone,
-        contractSignedOn: p.contract_signed_on,
+        mouSignedOn: p.mou_signed_on, mouExpiresOn: p.mou_expires_on,
       }),
     );
   }

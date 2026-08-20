@@ -154,6 +154,52 @@ export class CandidateRepository {
   }
 
   /**
+   * 후보자 목록 (SCR-502 운영자 · SCR-203 기관 검색).
+   *
+   * 필터에 국적이 없다. SCREENS의 SCR-502는 `nationality=` 파라미터를 적고 있지만
+   * 국적으로 사람을 거르는 조회 경로를 만드는 순간 그것이 운영 관행이 된다 —
+   * 거르는 기준은 worker_clearances와 한국어 수준이다 (§5.10 · §6-13 · README §4 C5).
+   * 국적은 admin scope의 표시 필드로만 남는다.
+   */
+  async listForConsole(filter: {
+    q?: string; status?: string; trackId?: string; region?: string;
+    page: number; size: number;
+  }): Promise<{ items: CandidateRow[]; total: number }> {
+    const where: string[] = [];
+    const params: unknown[] = [];
+    /** 값을 한 번 넣고 자리표시자를 돌려준다. 같은 값을 두 곳에 쓰면 같은 번호를 재사용한다. */
+    const bind = (value: unknown): string => { params.push(value); return `$${params.length}`; };
+
+    if (filter.q) {
+      // 검색어는 display_code와 이름에만 건다. 전화번호 부분 일치 검색은
+      // 연락처를 역으로 훑는 경로가 되므로 열지 않는다 (docs/11 §5).
+      const q = bind(filter.q);
+      where.push(`(c.display_code ILIKE '%' || ${q} || '%' OR c.name ILIKE '%' || ${q} || '%')`);
+    }
+    if (filter.status) where.push(`c.status::text = ${bind(filter.status)}`);
+    if (filter.region) {
+      const r = bind(filter.region);
+      where.push(`(${r} = ANY(c.preferred_regions) OR c.current_location = ${r})`);
+    }
+    if (filter.trackId) {
+      where.push(`EXISTS (SELECT 1 FROM candidate_tracks ct
+                           WHERE ct.candidate_id = c.id AND ct.track_id = ${bind(filter.trackId)}::uuid)`);
+    }
+
+    const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
+    const totalRow = await this.db.one<{ count: string }>(
+      `SELECT count(*)::text AS count FROM candidates c ${whereSql}`, params,
+    );
+    const items = await this.db.query<CandidateRow>(
+      `${SELECT_CANDIDATE} ${whereSql}
+        ORDER BY c.last_activity_at DESC NULLS LAST, c.created_at DESC
+        LIMIT ${bind(filter.size)} OFFSET ${bind((filter.page - 1) * filter.size)}`,
+      params,
+    );
+    return { items, total: Number(totalRow?.count ?? 0) };
+  }
+
+  /**
    * 매칭 엔진에 넣을 후보자 사실. matching 모듈이 candidates를 직접 SELECT 하지 않고
    * 이 메서드를 통한다 (§5.1 · docs/02 §4).
    *

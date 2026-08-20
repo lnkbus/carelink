@@ -5,7 +5,7 @@ import type { CohortStage, CohortStatus } from '../state/cohort.state';
 export interface PartnerRow {
   id: string; partner_type: string; name: string; region: string | null;
   status: string; contact_name: string | null; contact_phone: string | null;
-  contract_signed_on: Date | null; note: string | null;
+  mou_signed_on: Date | null; mou_expires_on: Date | null; note: string | null;
 }
 
 export interface CohortRow {
@@ -27,8 +27,10 @@ export class RecruitingRepository {
 
   listPartners(type?: string): Promise<PartnerRow[]> {
     return this.db.query<PartnerRow>(
+      // 컬럼명은 mou_signed_on이다. 대학과의 레버가 MOU 자체이므로 스키마도
+      // 계약이 아니라 MOU로 부른다 (SCR-510 notes · docs/08 §7.1).
       `SELECT id, partner_type::text AS partner_type, name, region, status::text AS status,
-              contact_name, contact_phone, contract_signed_on, note
+              contact_name, contact_phone, mou_signed_on, mou_expires_on, note
          FROM partners WHERE ($1::text IS NULL OR partner_type::text = $1)
         ORDER BY name`,
       [type ?? null],

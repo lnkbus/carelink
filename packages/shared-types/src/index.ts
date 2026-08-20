@@ -1,0 +1,358 @@
+/**
+ * API 계약 타입.
+ *
+ * OpenAPI 자동 생성이 아니라 손으로 씁니다. 이유가 있습니다 —
+ * 응답 필드는 뷰어의 scope에 따라 **키 자체가 사라집니다**(마스킹이 아니라 삭제,
+ * `core/scope/scope.serializer.ts`). 생성된 타입은 모든 필드를 항상 존재하는 것으로
+ * 선언하므로, 기관 화면에서 `candidate.name`을 무심코 렌더하는 코드가 타입 검사를
+ * 통과해 버립니다. 그 순간 §5.2의 게이트가 타입 층에서 먼저 뚫립니다.
+ *
+ * 그래서 scope로 가려질 수 있는 필드는 전부 optional입니다. 화면 코드는
+ * `name ?? '—'`를 쓰도록 강제됩니다.
+ */
+
+// ── 공통 ────────────────────────────────────────────────────────────────────
+
+/** 백엔드는 코드만 반환하고 문구는 클라이언트가 번역한다 (§5.15). */
+export interface DomainErrorBody {
+  code: string;
+  message: string;
+  details?: Record<string, unknown>;
+}
+
+export interface Paged<T> {
+  items: T[];
+  total: number;
+  page: number;
+  size: number;
+}
+
+export type Locale = 'ko' | 'vi' | 'ru' | 'en';
+
+export type UserRole =
+  | 'CANDIDATE' | 'CAREGIVER' | 'PATIENT_GUARDIAN'
+  | 'ORG_MEMBER' | 'ORG_ADMIN' | 'PARTNER' | 'ADMIN' | 'SUPER_ADMIN';
+
+// ── iam ─────────────────────────────────────────────────────────────────────
+
+export interface Session {
+  accessToken: string;
+  refreshToken: string;
+  me: { id: string; roles: UserRole[]; primaryRole: UserRole | null; locale: Locale };
+}
+
+// ── talent ──────────────────────────────────────────────────────────────────
+
+export type CandidateStatus =
+  | 'DRAFT' | 'DOC_REVIEW' | 'TRAINING' | 'READY'
+  | 'MATCHED' | 'PLACED' | 'INACTIVE' | 'SUSPENDED';
+
+export interface CandidateTrack {
+  trackId: string;
+  trackCode: string;
+  labelKo: string;
+  isPrimary: boolean;
+  qualificationState: string;
+}
+
+export interface Candidate {
+  id: string;
+  displayCode: string;
+  status: CandidateStatus;
+  tracks: CandidateTrack[];
+
+  // self · admin · org(면접 수락 후)
+  name?: string | null;
+  birthDate?: string | null;
+  phone?: string | null;
+
+  // self · admin 전용. 기관에는 employable로 치환돼 나간다 (§6-12).
+  nationality?: string | null;
+  visaStatusCode?: string | null;
+  visaExpiresOn?: string | null;
+  visaExpiresInDays?: number | null;
+
+  // 기관용 치환값
+  employable?: boolean | null;
+  employabilityReasonKey?: string | null;
+
+  gender?: string | null;
+  currentLocation?: string | null;
+  preferredRegions?: string[] | null;
+  employmentTypes?: string[] | null;
+  dormRequired?: boolean;
+  availableFrom?: string | null;
+
+  // admin 전용
+  assigneeId?: string | null;
+  channelId?: string | null;
+  campaignId?: string | null;
+  referredBy?: string | null;
+  tags?: string[] | null;
+}
+
+// ── ops (SCR-501) ───────────────────────────────────────────────────────────
+
+export interface TrackMetric {
+  trackCode: string;
+  trackLabel: string;
+  candidates: number;
+  ready: number;
+  matched: number;
+  placed: number;
+  openJobs: number;
+  applications: number;
+  /** 단 하나만 본다면 이 값이다 (docs/01 §11). */
+  avgDaysToFill: number | null;
+}
+
+export interface QueueItem {
+  kind: string;
+  targetId: string;
+  label: string;
+  /** 음수면 SLA 초과 — 화면에 `-2h`로 표기한다. */
+  slaHoursLeft: number | null;
+}
+
+export interface ChannelInflow {
+  channelCode: string;
+  labelKo: string;
+  candidates: number;
+  placed: number;
+}
+
+export interface OpsDashboard {
+  byTrack: TrackMetric[];
+  supplyPipeline: { step: string; count: number }[];
+  channelInflow: ChannelInflow[];
+  referral: { referred: number; placed: number };
+  todayQueue: QueueItem[];
+  exclusionBreakdown: { reason: string; count: number }[];
+}
+
+export interface BulkResult {
+  requested: number;
+  succeeded: number;
+  /** 실패는 조용히 넘기지 않는다. 건별 사유가 온다. */
+  failures: { candidateId: string; code: string; detail?: unknown }[];
+}
+
+// ── quality (SCR-509) ───────────────────────────────────────────────────────
+
+export type ClearanceType =
+  | 'IDENTITY_VERIFIED' | 'CRIMINAL_RECORD_CLEAR' | 'HEALTH_CHECK'
+  | 'VISA_ELIGIBLE' | 'MANDATORY_TRAINING' | 'SCOPE_TRAINING';
+
+export type ClearanceResult = 'PENDING' | 'PASS' | 'FAIL' | 'EXPIRED' | 'N_A';
+
+export interface Clearance {
+  id: string;
+  workerUserId: string;
+  displayCode: string | null;
+  clearanceType: ClearanceType;
+  result: ClearanceResult;
+  expiresOn: string | null;
+  checkedAt: string | null;
+  note: string | null;
+  candidateStatus: string | null;
+  /** 음수면 이미 만료. 만료는 날짜가 아니라 카운트다운으로 보여준다. */
+  daysToExpiry: number | null;
+}
+
+export interface WorkerClearanceSummary {
+  workerUserId: string;
+  items: {
+    clearanceType: ClearanceType;
+    result: ClearanceResult;
+    /** false면 검사 기록 자체가 없다. PENDING과 구분해서 보여줘야 한다. */
+    recorded: boolean;
+    expiresOn: string | null;
+    id: string | null;
+  }[];
+  /** 6개 전부 통과해야 true. 운영자가 뒤집을 수 있는 값이 아니다 (§5.11). */
+  deployable: boolean;
+  missing: ClearanceType[];
+  expired: ClearanceType[];
+}
+
+export interface ScopeScanResult {
+  clean: boolean;
+  /** 감지돼도 거절이 아니다. OPS_REVIEW로 보내 사람이 설명한다 (§6-15). */
+  action: 'PASS' | 'OPS_REVIEW';
+  hits: { keyword: string; category: string; index: number }[];
+}
+
+// ── engagement (SCR-508) ────────────────────────────────────────────────────
+
+export type EngagementModel = 'DIRECT_EMPLOYMENT' | 'DELEGATION' | 'BROKERAGE';
+export type EngagementStatus =
+  | 'DRAFT' | 'CONTRACT_PENDING' | 'ACTIVE' | 'SUSPENDED' | 'ENDED' | 'TERMINATED';
+
+export interface Engagement {
+  id: string;
+  model: EngagementModel;
+  status: EngagementStatus;
+  workerUserId: string;
+  displayCode?: string | null;
+  organizationId: string;
+  organizationName?: string | null;
+  trackCode?: string | null;
+  startedOn: string | null;
+  endedOn: string | null;
+  endReason: string | null;
+  /** 모델 전환은 UPDATE가 아니라 새 행이다. 이 값이 앞 건을 가리킨다 (§5.7). */
+  previousEngagementId: string | null;
+}
+
+export interface ComplianceCheck {
+  checkCode: string;
+  result: ClearanceResult;
+  /** false면 통과하지 않아도 ACTIVE로 갈 수 있다. */
+  blocking?: boolean;
+  checkedAt: string | null;
+  note: string | null;
+}
+
+// ── recruiting (SCR-510 · 511) ──────────────────────────────────────────────
+
+export type CohortStage =
+  | 'APPLIED' | 'SELECTED' | 'IN_TRAINING' | 'COMPLETED'
+  | 'EXAM_PASSED' | 'PLACED' | 'DROPPED';
+
+export interface ChannelCac {
+  channelCode: string;
+  labelKo: string;
+  cost: number;
+  candidates: number;
+  placed: number;
+  /** 배치 0명이면 null. 0으로 나눈 값보다 '아직 없음'이 정직하다. */
+  cac: number | null;
+}
+
+export interface ReferralStats {
+  candidates: number;
+  placed: number;
+  referrers: number;
+}
+
+export interface Cohort {
+  id: string;
+  code: string;
+  name: string;
+  channelCode: string;
+  status: string;
+  targetSize: number | null;
+  startsOn: string | null;
+  expectedPlacementOn: string | null;
+}
+
+export interface FunnelRow {
+  stage: CohortStage;
+  /** 그 단계 이상 도달한 누적. 이탈자도 도달한 단계까지는 센다. */
+  count: number;
+  conversionPct: number;
+}
+
+export interface CohortDetail {
+  cohort: Cohort;
+  funnel: FunnelRow[];
+  /** 이 배열이 recruiting 모듈의 존재 이유다 (§5.13). */
+  dropAnalysis: { droppedStage: string; dropReason: string | null; count: number }[];
+  members: {
+    id: string;
+    displayCode: string;
+    candidateId: string;
+    stage: CohortStage;
+    joinedAt: string;
+    droppedStage: string | null;
+    dropReason: string | null;
+  }[];
+}
+
+export interface Partner {
+  id: string;
+  partnerType: string;
+  name: string;
+  region: string | null;
+  status: string;
+  contactName: string | null;
+  contactPhone: string | null;
+  mouSignedOn: string | null;
+  mouExpiresOn: string | null;
+}
+
+// ── org (SCR-503) ───────────────────────────────────────────────────────────
+
+export interface Organization {
+  id: string;
+  name: string;
+  orgType: string;
+  region: string | null;
+  verificationStatus: string;
+  dormitoryProvided: boolean;
+  koreanSupportStaff: boolean;
+  // admin · 소속 담당자만
+  businessRegNo?: string | null;
+  address?: string | null;
+  contactName?: string | null;
+  contactPhone?: string | null;
+  e7SponsorStatus?: string | null;
+}
+
+// ── matching (SCR-504) ──────────────────────────────────────────────────────
+
+export interface MatchReason {
+  ruleCode: string;
+  messageKey: string;
+  params?: Record<string, unknown>;
+  points: number;
+  maxPoints: number;
+}
+
+/** 점수만 주는 매칭은 기관도 후보자도 신뢰하지 않는다 (§5.6). */
+export interface MatchResult {
+  candidateId: string;
+  displayCode: string;
+  score: number;
+  reasons: MatchReason[];
+  missingRequirements: MatchReason[];
+  /** 면접 수락 전에는 키 자체가 없다. 마스킹이 아니라 미포함이다. */
+  candidateName?: string | null;
+}
+
+export interface MatchExclusion {
+  displayCode: string;
+  filterCode: string;
+  reasonKey: string;
+  params: Record<string, unknown>;
+  /** BLOCKED_FOR_REVIEW는 목록에는 남지만 자동 배정이 막힌 건이다. */
+  severity: 'EXCLUDED' | 'BLOCKED_FOR_REVIEW';
+  candidateId?: string;
+}
+
+export interface MatchRun {
+  jobId: string;
+  matched: MatchResult[];
+  excluded: MatchExclusion[];
+  scanned: number;
+  excludedCount: number;
+}
+
+export interface Job {
+  id: string;
+  title: string | null;
+  organizationId: string;
+  organizationName: string;
+  trackCode: string;
+  region: string;
+  employmentType: string | null;
+  startDate: string | null;
+  dormProvided: boolean;
+  headcount: number;
+  status: string;
+  minExperienceYrs: number;
+  languageLevel: string | null;
+  salaryMin: number | null;
+  salaryMax: number | null;
+  salaryVisibility: string;
+}

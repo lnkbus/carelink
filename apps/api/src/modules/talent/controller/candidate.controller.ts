@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { DomainError } from '../../../core/errors/domain-error';
 import type { Viewer } from '../../../core/scope/scope.types';
 import { Roles } from '../../iam/guard/roles.guard';
 import { CurrentViewer } from '../../iam/guard/viewer.decorator';
 import {
-  CandidateDto, CandidateTrackDto, SelectTrackDto, UpdateCandidateDto, VerifyVisaDto,
+  CandidateDto, CandidateListQueryDto, CandidateStatusDto, CandidateTrackDto, PagedDto,
+  SelectTrackDto, UpdateCandidateDto, VerifyVisaDto,
 } from '../dto/candidate.dto';
 import { CandidateService } from '../service/candidate.service';
 import type { CandidateTrackRow } from '../repository/candidate.repository';
@@ -34,6 +35,22 @@ export class CandidateController {
     return this.candidates.toDto(updated, viewer);
   }
 
+  /**
+   * GET /api/v1/candidates — 목록 (SCR-203 기관 검색).
+   *
+   * 기관과 운영자가 같은 엔드포인트를 쓴다. 보이는 필드는 컨트롤러가 아니라
+   * DTO의 @Scope가 정한다 — if 문으로 나누면 언젠가 한쪽이 빠진다 (§5.2).
+   */
+  @Get()
+  @Roles('ADMIN', 'SUPER_ADMIN', 'ORG_MEMBER', 'ORG_ADMIN')
+  async list(
+    @CurrentViewer() viewer: Viewer,
+    @Query() q: CandidateListQueryDto,
+  ): Promise<PagedDto<CandidateDto>> {
+    const result = await this.candidates.listForConsole(q, viewer);
+    return Object.assign(new PagedDto<CandidateDto>(), result);
+  }
+
   /** GET /api/v1/candidates/{id} — 기관·운영자 조회. scope에 따라 필드가 달라진다. */
   @Get(':id')
   async getOne(@CurrentViewer() viewer: Viewer, @Param('id', ParseUUIDPipe) id: string): Promise<CandidateDto> {
@@ -58,6 +75,21 @@ export class CandidateController {
     if (!viewer.userId) throw new DomainError('IAM_TOKEN_INVALID');
     const row = await this.candidates.getOrCreateForUser(viewer.userId);
     return (await this.candidates.removeTrack(row.id, trackId)).map(toDto);
+  }
+
+  /**
+   * PATCH /api/v1/candidates/{id}/status — SCR-502 단건 상태 변경.
+   * 전이 규칙은 candidateStatusMachine이 강제하고, 변경은 audit_logs에 남는다.
+   */
+  @Patch(':id/status')
+  @Roles('ADMIN', 'SUPER_ADMIN')
+  async changeStatus(
+    @CurrentViewer() viewer: Viewer,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CandidateStatusDto,
+  ): Promise<CandidateDto> {
+    await this.candidates.changeStatus(id, dto.status, viewer.userId!);
+    return this.candidates.toDto(await this.candidates.getById(id), viewer);
   }
 
   /**
