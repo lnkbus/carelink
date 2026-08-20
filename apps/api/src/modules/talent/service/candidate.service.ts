@@ -4,7 +4,7 @@ import type { Viewer } from '../../../core/scope/scope.types';
 import { AuditService } from '../../ops/service/audit.service';
 import { TracksService } from '../../tracks/service/tracks.service';
 import { CandidateDto, CandidateTrackDto } from '../dto/candidate.dto';
-import { CandidateRepository, type CandidateRow, type CandidateTrackRow } from '../repository/candidate.repository';
+import { CandidateRepository, type CandidateRow, type CandidateTrackRow, type MatchingCandidateRow } from '../repository/candidate.repository';
 import { candidateStatusMachine, type CandidateStatus } from '../state/candidate-status.state';
 
 @Injectable()
@@ -80,6 +80,16 @@ export class CandidateService {
 
   listTracks(candidateId: string): Promise<CandidateTrackRow[]> {
     return this.repo.listTracks(candidateId);
+  }
+
+  /**
+   * 매칭 엔진에 넣을 후보자 목록. docs/02 §4의 talent 노출 인터페이스다.
+   *
+   * matching 모듈이 candidates 테이블이나 CandidateRepository를 직접 만지지 않는다 (§5.1).
+   * 나중에 서비스로 분리하더라도 호출부가 바뀌지 않아야 한다.
+   */
+  getCandidatesForMatching(trackId: string): Promise<MatchingCandidateRow[]> {
+    return this.repo.getCandidatesForMatching(trackId);
   }
 
   /**

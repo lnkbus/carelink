@@ -2,6 +2,7 @@ import { Global, Module } from '@nestjs/common';
 import { TalentModule } from '../talent/talent.module';
 import { JobsController } from './controller/jobs.controller';
 import { ExpiryJobs } from './jobs/expiry.jobs';
+import { MatchingJobs } from './jobs/matching.jobs';
 import { AuditService } from './service/audit.service';
 import { NotificationService } from './service/notification.service';
 
@@ -15,7 +16,7 @@ import { NotificationService } from './service/notification.service';
 @Module({
   imports: [TalentModule],
   controllers: [JobsController],
-  providers: [AuditService, NotificationService, ExpiryJobs],
+  providers: [AuditService, NotificationService, ExpiryJobs, MatchingJobs],
   exports: [AuditService, NotificationService],
 })
 export class OpsModule {}

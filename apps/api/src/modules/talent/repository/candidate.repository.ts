@@ -17,6 +17,16 @@ export interface CandidateRow {
   phone?: string | null;
 }
 
+/** 매칭 입력. 국적 필드가 없는 것은 의도다 (§5.10). */
+export interface MatchingCandidateRow {
+  candidate_id: string; display_code: string; user_id: string; status: string;
+  regions: string[]; available_from: Date | null; dorm_required: boolean;
+  employment_types: string[]; visa_status_code: string | null; visa_expires_on: Date | null;
+  experience_months: number; korean_level_code: string | null;
+  mandatory_training_done: boolean;
+  documents_all_verified: boolean; documents_partially_verified: boolean;
+}
+
 export interface CandidateTrackRow {
   candidate_id: string; track_id: string; is_primary: boolean;
   track_code: string; label_ko: string; qualification_type: string;
@@ -113,6 +123,48 @@ export class CandidateRepository {
 
   async removeTrack(candidateId: string, trackId: string): Promise<void> {
     await this.db.query(`DELETE FROM candidate_tracks WHERE candidate_id = $1 AND track_id = $2`, [candidateId, trackId]);
+  }
+
+  /**
+   * 매칭 엔진에 넣을 후보자 사실. matching 모듈이 candidates를 직접 SELECT 하지 않고
+   * 이 메서드를 통한다 (§5.1 · docs/02 §4).
+   *
+   * 국적은 조회하지 않는다. 타입에도 없고 쿼리에도 없어야 실수로 쓰이지 않는다 (§5.10).
+   * 경력은 experiences_current 뷰를 쓴다 — 재직 중인 경력을 오늘까지로 계산해야
+   * 실제보다 짧게 집계되지 않는다.
+   */
+  getCandidatesForMatching(trackId: string): Promise<MatchingCandidateRow[]> {
+    return this.db.query<MatchingCandidateRow>(
+      `SELECT c.id                         AS candidate_id,
+              c.display_code,
+              c.user_id,
+              c.status::text               AS status,
+              COALESCE(c.preferred_regions, '{}')  AS regions,
+              c.available_from,
+              c.dorm_required,
+              COALESCE(c.employment_types, '{}')   AS employment_types,
+              c.visa_status_code,
+              c.visa_expires_on,
+              COALESCE((SELECT sum(e.months_to_date) FROM experiences_current e
+                         WHERE e.candidate_id = c.id), 0)::int AS experience_months,
+              (SELECT l.level_code FROM languages l
+                WHERE l.candidate_id = c.id AND l.language = 'ko' LIMIT 1) AS korean_level_code,
+              EXISTS (SELECT 1 FROM training_enrollments te
+                        JOIN training_programs tp ON tp.id = te.program_id
+                       WHERE te.candidate_id = c.id AND tp.is_mandatory
+                         AND te.status = 'COMPLETED'
+                       HAVING count(*) >= (SELECT count(*) FROM training_programs WHERE is_mandatory)
+                     ) AS mandatory_training_done,
+              NOT EXISTS (SELECT 1 FROM documents d
+                           WHERE d.candidate_id = c.id AND d.status <> 'VERIFIED')
+                AND EXISTS (SELECT 1 FROM documents d WHERE d.candidate_id = c.id) AS documents_all_verified,
+              EXISTS (SELECT 1 FROM documents d
+                       WHERE d.candidate_id = c.id AND d.status = 'VERIFIED') AS documents_partially_verified
+         FROM candidates c
+         JOIN candidate_tracks ct ON ct.candidate_id = c.id AND ct.track_id = $1
+        WHERE c.status NOT IN ('INACTIVE', 'SUSPENDED')`,
+      [trackId],
+    );
   }
 
   async primaryTrackId(candidateId: string): Promise<string | null> {
