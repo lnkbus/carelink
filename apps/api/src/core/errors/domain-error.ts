@@ -25,6 +25,8 @@ export const DOMAIN_ERRORS = {
   TALENT_DOC_NOT_VERIFIED:    { status: HttpStatus.CONFLICT,     message: 'Document is not verified yet' },
   TALENT_VISA_EXPIRED:        { status: HttpStatus.CONFLICT,     message: 'Residency status has expired' },
   TALENT_TRACK_NOT_ACTIVE:    { status: HttpStatus.BAD_REQUEST,  message: 'Track is not active' },
+  TALENT_DOC_VERDICT_REQUIRED:{ status: HttpStatus.BAD_REQUEST,  message: 'A verdict is required before the original is purged' },
+  TALENT_DOC_ORIGINAL_PURGED: { status: HttpStatus.GONE,         message: 'Original file was purged after review; only the verdict is retained' },
   TALENT_PRIMARY_TRACK_EXISTS:{ status: HttpStatus.CONFLICT,     message: 'Candidate already has a primary track' },
 
   // ── org ────────────────────────────────────────────────────────────────

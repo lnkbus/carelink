@@ -84,14 +84,25 @@ describe('applyScope', () => {
 
   it('중첩 DTO에도 같은 규칙이 적용된다', () => {
     class WrapperDto {
+      @ScopeOwner() ownerUserId: string;
       @Scope('self', 'admin', 'org', 'org_masked') candidate: CandidateDto;
       @Scope('self', 'admin', 'org', 'org_masked') total: number;
     }
-    const wrapper = Object.assign(new WrapperDto(), { candidate: makeCandidate(), total: 1 });
+    const wrapper = Object.assign(new WrapperDto(), { ownerUserId: 'owner-1', candidate: makeCandidate(), total: 1 });
     const out = applyScope(wrapper, viewer(['org_masked'])) as { candidate: Record<string, unknown> };
     expect('nationality' in out.candidate).toBe(false);
     expect('legalName' in out.candidate).toBe(false);
     expect(out.candidate.displayCode).toBe('Candidate #102');
+  });
+
+  it("self를 쓰면서 @ScopeOwner를 빠뜨리면 즉시 터진다", () => {
+    // 소유자 표시가 없으면 본인에게도 빈 객체가 나간다. 조용히 넘기면
+    // 원인을 찾는 데 오래 걸리므로 개발 중에는 예외로 드러낸다.
+    class BrokenDto {
+      @Scope('self') secret: string;
+    }
+    const broken = Object.assign(new BrokenDto(), { secret: 'x' });
+    expect(() => applyScope(broken, viewer([], 'anyone'))).toThrow(/@ScopeOwner/);
   });
 
   it('배열 필드의 각 요소도 잘린다', () => {

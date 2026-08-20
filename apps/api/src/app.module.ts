@@ -3,6 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import configuration from './core/config/configuration';
 import { DbModule } from './core/db/db.module';
+import { QueueModule } from './core/queue/queue.module';
+import { StorageModule } from './core/storage/storage.module';
 import { DomainExceptionFilter } from './core/errors/domain-exception.filter';
 import { ScopeInterceptor } from './core/scope/scope.interceptor';
 import { IamModule } from './modules/iam/iam.module';
@@ -25,6 +27,8 @@ import { TracksModule } from './modules/tracks/tracks.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true, load: [configuration] }),
     DbModule,
+    QueueModule,
+    StorageModule,
     OpsModule,
     IamModule,
     TracksModule,

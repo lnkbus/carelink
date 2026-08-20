@@ -410,7 +410,9 @@ CREATE TABLE documents (
   id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   candidate_id  UUID NOT NULL REFERENCES candidates(id) ON DELETE CASCADE,
   doc_type      document_type NOT NULL,
-  file_key      VARCHAR(512) NOT NULL,     -- S3 object key
+  -- S3 object key. 원본 파기 후에는 NULL이 된다 (아래 original_purged_at 참조).
+  -- NOT NULL로 두면 docs/11 §1.2가 요구하는 파기 자체가 불가능해진다.
+  file_key      VARCHAR(512),
   file_name     VARCHAR(255),
   status        document_status NOT NULL DEFAULT 'PENDING',
   reviewer_id   UUID REFERENCES users(id),
@@ -422,7 +424,10 @@ CREATE TABLE documents (
   -- 유출 시 피해 규모가 다른 항목과 비교되지 않는다.
   original_purged_at TIMESTAMPTZ,
   verdict       VARCHAR(32),               -- CLEAR | FLAGGED | FIT | UNFIT — 원본 대신 남기는 결과값
-  created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  -- 파일이 없는 서류는 파기된 것뿐이다. 업로드 실패로 키가 비는 것을 막는다.
+  CONSTRAINT documents_file_key_present
+    CHECK (file_key IS NOT NULL OR original_purged_at IS NOT NULL)
 );
 CREATE INDEX idx_documents_expiry ON documents(expires_at)
   WHERE status = 'VERIFIED';

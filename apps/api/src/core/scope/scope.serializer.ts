@@ -18,6 +18,8 @@ export function applyScope<T extends object>(instance: T, viewer: Viewer): Recor
 
   const allowed = new Set<ScopeName>(viewer.scopes);
 
+  const meta = getScopeMeta(ctor);
+
   // 'self'는 역할이 아니라 관계다. 이 레코드의 소유자가 요청자 본인일 때만 붙는다.
   // 뷰어에 고정으로 달아 두면 기관 담당자가 남의 프로필을 self로 열어 본다.
   const ownerProp = getScopeOwnerProperty(ctor);
@@ -26,7 +28,18 @@ export function applyScope<T extends object>(instance: T, viewer: Viewer): Recor
     if (typeof ownerId === 'string' && ownerId === viewer.userId) allowed.add('self');
   }
 
-  const meta = getScopeMeta(ctor);
+  // self를 쓰면서 소유자를 표시하지 않은 DTO는 본인에게도 빈 객체로 나간다.
+  // 조용히 넘기면 원인을 찾는 데 오래 걸리므로 개발 중에는 즉시 터뜨린다.
+  if (!ownerProp && meta.some((f) => f.scopes.includes('self'))) {
+    const message =
+      `${ctor.name}: @Scope('self')를 쓰면서 @ScopeOwner()가 없습니다. ` +
+      `소유자를 표시하지 않으면 self가 부여되지 않아 응답이 비어 나갑니다.`;
+    if (process.env.NODE_ENV === 'production') {
+      console.error(message);
+    } else {
+      throw new Error(message);
+    }
+  }
   const out: Record<string, unknown> = {};
 
   for (const field of meta) {
