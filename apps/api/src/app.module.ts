@@ -11,9 +11,11 @@ import { IamModule } from './modules/iam/iam.module';
 import { JwtAuthGuard } from './modules/iam/guard/jwt-auth.guard';
 import { RolesGuard } from './modules/iam/guard/roles.guard';
 import { OpsModule } from './modules/ops/ops.module';
+import { EngagementModule } from './modules/engagement/engagement.module';
 import { MatchingModule } from './modules/matching/matching.module';
 import { OrgModule } from './modules/org/org.module';
 import { QualityModule } from './modules/quality/quality.module';
+import { RecruitingModule } from './modules/recruiting/recruiting.module';
 import { TalentModule } from './modules/talent/talent.module';
 import { TracksModule } from './modules/tracks/tracks.module';
 
@@ -39,8 +41,9 @@ import { TracksModule } from './modules/tracks/tracks.module';
     OrgModule,
     QualityModule,
     MatchingModule,
-    // 이후 단계에서 순서대로 붙는다 (docs/02 §12):
-    //   RecruitingModule · EngagementModule
+    RecruitingModule,
+    EngagementModule,
+    // 남은 것 (docs/02 §12):
     //   CareModule (V2) · PayrollModule (V3 — U1·U2·U5 해결 전 착수 금지)
   ],
   providers: [

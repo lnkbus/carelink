@@ -1,6 +1,9 @@
 import { Global, Module } from '@nestjs/common';
 import { TalentModule } from '../talent/talent.module';
 import { JobsController } from './controller/jobs.controller';
+import { OpsController } from './controller/ops.controller';
+import { MetricsRepository } from './repository/metrics.repository';
+import { OpsService } from './service/ops.service';
 import { ExpiryJobs } from './jobs/expiry.jobs';
 import { MatchingJobs } from './jobs/matching.jobs';
 import { AuditService } from './service/audit.service';
@@ -15,8 +18,8 @@ import { NotificationService } from './service/notification.service';
 @Global()
 @Module({
   imports: [TalentModule],
-  controllers: [JobsController],
-  providers: [AuditService, NotificationService, ExpiryJobs, MatchingJobs],
+  controllers: [JobsController, OpsController],
+  providers: [AuditService, NotificationService, ExpiryJobs, MatchingJobs, MetricsRepository, OpsService],
   exports: [AuditService, NotificationService],
 })
 export class OpsModule {}
