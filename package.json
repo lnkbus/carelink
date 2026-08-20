@@ -1,0 +1,16 @@
+{
+  "name": "carelink",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "db:migrate": "psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f infra/migrations/0001_init.sql",
+    "db:seed": "psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f infra/migrations/0002_seed.sql",
+    "db:reset": "psql \"$DATABASE_URL\" -c 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;' && pnpm db:migrate && pnpm db:seed",
+    "api:dev": "pnpm --filter @carelink/api start:dev",
+    "api:test": "pnpm --filter @carelink/api test",
+    "db:split": "bash infra/migrations/split.sh"
+  }
+}
