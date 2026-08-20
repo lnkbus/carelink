@@ -76,6 +76,22 @@ export class UserRepository {
   }
 
   /**
+   * 기관 검증 여부. org scope 승격의 두 조건 중 하나다 (§6-6).
+   *
+   * iam이 organizations를 읽는 것은 §5.1의 예외다 — 뷰어 조립은 어느 도메인
+   * 모듈보다 앞서 일어나고, 여기서 org 모듈을 부르면 인증이 도메인에 의존하게 된다.
+   * 읽는 값은 검증 플래그 하나뿐이고 쓰기는 하지 않는다.
+   */
+  async isOrganizationVerified(organizationId: string): Promise<boolean> {
+    const row = await this.db.one<{ verified: boolean }>(
+      `SELECT (verification_status = 'VERIFIED') AS verified
+         FROM organizations WHERE id = $1`,
+      [organizationId],
+    );
+    return row?.verified ?? false;
+  }
+
+  /**
    * 역할 부여. ORG_MEMBER/ORG_ADMIN은 approved_at을 비워 승인 대기로 둔다.
    * UNIQUE(user_id, role, organization_id)라 중복은 DB가 막는다.
    */

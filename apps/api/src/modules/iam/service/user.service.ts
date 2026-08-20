@@ -90,11 +90,15 @@ export class UserService {
     const user = await this.getUser(userId);
     if (user.status === 'SUSPENDED') throw new DomainError('IAM_USER_SUSPENDED');
     const roles = await this.effectiveRoles(userId);
+    const organizationId = await this.primaryOrganizationId(userId);
     return {
       userId: user.id,
       roles,
       scopes: this.toScopes(roles),
-      organizationId: await this.primaryOrganizationId(userId),
+      organizationId,
+      // 검증 전 기관은 후보자 개인정보를 볼 수 없다 (§6-6). 요청 전체에 걸쳐
+      // 같은 값이므로 뷰어 조립 시점에 한 번만 확인한다.
+      organizationVerified: organizationId ? await this.users.isOrganizationVerified(organizationId) : false,
       locale: user.locale,
     };
   }

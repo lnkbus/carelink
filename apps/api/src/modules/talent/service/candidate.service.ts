@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { DomainError } from '../../../core/errors/domain-error';
+import { PII_UNLOCK, type PiiUnlockPort } from '../../../core/pii/pii-unlock.port';
 import type { Viewer } from '../../../core/scope/scope.types';
 import { AuditService } from '../../ops/service/audit.service';
 import { TracksService } from '../../tracks/service/tracks.service';
@@ -13,6 +14,7 @@ export class CandidateService {
     private readonly repo: CandidateRepository,
     private readonly tracks: TracksService,
     private readonly audit: AuditService,
+    @Inject(PII_UNLOCK) private readonly piiUnlock: PiiUnlockPort,
   ) {}
 
   async getById(id: string): Promise<CandidateRow> {
@@ -143,10 +145,30 @@ export class CandidateService {
     const page = Math.max(1, filter.page ?? 1);
     const size = Math.min(100, Math.max(1, filter.size ?? 20));
     const { items, total } = await this.repo.listForConsole({ ...filter, page, size });
+
+    // 후보자 수만큼 게이트를 물어보지 않는다. 한 번에 묻고 나눠 쓴다.
+    const unlocked = viewer.organizationId && viewer.organizationVerified
+      ? await this.piiUnlock.unlockedCandidateIds(viewer.organizationId, items.map((i) => i.id))
+      : new Set<string>();
+
     return {
-      items: await Promise.all(items.map((row) => this.toDto(row, viewer))),
+      items: await Promise.all(items.map((row) => this.toDto(row, viewer, unlocked.has(row.id)))),
       total, page, size,
     };
+  }
+
+  /**
+   * 실명·연락처가 이 뷰어에게 열렸는가.
+   *
+   * 검증되지 않은 기관은 면접 수락 여부를 조회하지도 않는다 — 검증이 첫 관문이고,
+   * 통과하지 못했으면 두 번째 조건을 물어볼 이유가 없다.
+   */
+  private async resolveOrgUnlock(
+    candidateId: string, viewer: Viewer, precomputed?: boolean,
+  ): Promise<boolean> {
+    if (precomputed !== undefined) return precomputed;
+    if (!viewer.organizationId || !viewer.organizationVerified) return false;
+    return this.piiUnlock.isCandidateUnlockedForOrg(candidateId, viewer.organizationId);
   }
 
   getCandidatesForMatching(trackId: string): Promise<MatchingCandidateRow[]> {
@@ -157,7 +179,7 @@ export class CandidateService {
    * 응답 DTO 조립. 필드 필터링은 여기서 하지 않는다 — @Scope가 직렬화 단계에서 자른다.
    * 여기서는 기관용 치환값(employable)만 만들어 넣는다.
    */
-  async toDto(row: CandidateRow, viewer: Viewer): Promise<CandidateDto> {
+  async toDto(row: CandidateRow, viewer: Viewer, orgUnlocked?: boolean): Promise<CandidateDto> {
     const tracks = await this.repo.listTracks(row.id);
     const primaryTrackId = tracks.find((t) => t.is_primary)?.track_id ?? tracks[0]?.track_id ?? null;
 
@@ -170,15 +192,21 @@ export class CandidateService {
       employabilityReasonKey = check.reasonKey;
     }
 
+    // 실명·연락처 공개 판정. 두 조건이 **모두** 참이어야 한다 (§5.2 · §6-6):
+    //   1) 기관이 검증 완료   2) 후보자가 이 기관의 면접 요청을 수락
+    // 목록에서는 호출부가 한 번에 조회해 넘겨준다 (후보자 수만큼 쿼리하지 않도록).
+    const unlocked = await this.resolveOrgUnlock(row.id, viewer, orgUnlocked);
+
     // 개인정보 조회는 전량 감사 로그에 남긴다 (docs/11 §5).
     // 본인 조회는 제외한다 — 본인이 자기 프로필을 보는 것까지 적재하면 신호가 묻힌다.
     const isSelf = viewer.userId === row.user_id;
-    if (!isSelf && (viewer.scopes.includes('admin') || viewer.scopes.includes('org'))) {
+    if (!isSelf && (viewer.scopes.includes('admin') || unlocked)) {
       await this.audit.recordPiiView(viewer.userId, 'candidate', row.id, ['name', 'birthDate', 'phone']);
     }
 
     return Object.assign(new CandidateDto(), {
       ownerUserId: row.user_id,
+      orgUnlocked: unlocked,
       id: row.id,
       displayCode: row.display_code,
       name: row.name,

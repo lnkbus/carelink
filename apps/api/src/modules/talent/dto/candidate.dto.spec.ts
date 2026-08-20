@@ -74,3 +74,51 @@ describe('CandidateDto scope — docs/11 §3.1 매트릭스', () => {
     expect(applyScope(candidate(), viewer(['partner']))).toEqual({});
   });
 });
+
+/**
+ * org 승격 회귀 테스트.
+ *
+ * 이전에는 ORG_MEMBER가 항상 org_masked만 받고 org로 올라갈 길이 없어서,
+ * 면접을 수락해도 SCR-204의 UNLOCKED 상태에 도달하지 못했다. 반대로 승격이
+ * 뷰어 단위로 붙으면 한 명을 수락한 기관이 전 후보자의 실명을 보게 된다.
+ *
+ * 승격은 **레코드 단위**여야 한다 — @ScopeUnlock('org')가 그 역할을 한다.
+ */
+describe('CandidateDto org 승격 — 레코드 단위여야 한다', () => {
+  it('orgUnlocked가 참인 후보자만 실명·연락처가 열린다', () => {
+    const unlocked = Object.assign(candidate(), { orgUnlocked: true });
+    const out = applyScope(unlocked, viewer(['org_masked']));
+    expect(out.name).toBe('응우옌 티 흐엉');
+    expect(out.phone).toBe('01048218821');
+  });
+
+  it('열린 뒤에도 국적·체류자격 코드는 나가지 않는다', () => {
+    const unlocked = Object.assign(candidate(), { orgUnlocked: true });
+    const out = applyScope(unlocked, viewer(['org_masked']));
+    expect('nationality' in out).toBe(false);
+    expect('visaStatusCode' in out).toBe(false);
+    expect('visaExpiresOn' in out).toBe(false);
+    // 기관에는 치환값만
+    expect(out.employable).toBe(true);
+  });
+
+  it('같은 뷰어라도 orgUnlocked가 거짓인 후보자는 여전히 잠겨 있다', () => {
+    const v = viewer(['org_masked']);
+    const opened = applyScope(Object.assign(candidate(), { orgUnlocked: true }), v);
+    const locked = applyScope(Object.assign(candidate(), { orgUnlocked: false, id: 'c2' }), v);
+
+    expect(opened.name).toBeDefined();
+    expect('name' in locked).toBe(false);
+  });
+
+  it('orgUnlocked를 넣지 않으면 잠긴 상태다 — 기본값이 열림이면 안 된다', () => {
+    const out = applyScope(candidate(), viewer(['org_masked']));
+    expect('name' in out).toBe(false);
+  });
+
+  it('운영자는 승격과 무관하게 본다', () => {
+    const out = applyScope(candidate(), viewer(['admin']));
+    expect(out.name).toBeDefined();
+    expect(out.nationality).toBe('VN');
+  });
+});

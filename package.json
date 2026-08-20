@@ -15,7 +15,10 @@
     "admin:dev": "pnpm --filter @carelink/web-admin dev",
     "admin:build": "pnpm --filter @carelink/web-admin build",
     "admin:start": "pnpm --filter @carelink/web-admin start",
-    "typecheck": "pnpm -r --filter \"./apps/**\" --filter \"./packages/**\" exec tsc --noEmit"
+    "typecheck": "pnpm -r --filter \"./apps/**\" --filter \"./packages/**\" exec tsc --noEmit",
+    "org:dev": "pnpm --filter @carelink/web-org dev",
+    "org:build": "pnpm --filter @carelink/web-org build",
+    "org:start": "pnpm --filter @carelink/web-org start"
   },
   "devDependencies": {
     "typescript": "5.6.3"

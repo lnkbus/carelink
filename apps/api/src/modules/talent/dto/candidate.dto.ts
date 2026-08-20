@@ -2,7 +2,7 @@ import { Type } from 'class-transformer';
 import {
   IsArray, IsBoolean, IsDateString, IsIn, IsOptional, IsString, IsUUID, Length, ValidateNested,
 } from 'class-validator';
-import { Scope, ScopeOwner } from '../../../core/scope/scope.decorator';
+import { Scope, ScopeOwner, ScopeUnlock } from '../../../core/scope/scope.decorator';
 
 // ── 응답 ────────────────────────────────────────────────────────────────────
 
@@ -28,6 +28,14 @@ export class CandidateTrackDto {
 export class CandidateDto {
   /** candidates.user_id. self scope 판정에만 쓰이고 응답에는 나가지 않는다. */
   @ScopeOwner() ownerUserId: string;
+
+  /**
+   * 이 기관에게 실명·연락처가 열렸는가. 참일 때만 org_masked가 org로 승격된다.
+   *
+   * 조건은 두 개이고 **둘 다** 참이어야 한다 — 기관 검증 완료(§6-6) 그리고
+   * 후보자의 면접 수락(§5.2). 서비스가 판정하고 강제는 직렬화가 한다.
+   */
+  @ScopeUnlock('org') orgUnlocked: boolean;
   @Scope('self', 'admin', 'org', 'org_masked') id: string;
   /** 'Candidate #102' — 실명 대신 쓰는 익명 식별자 */
   @Scope('self', 'admin', 'org', 'org_masked') displayCode: string;

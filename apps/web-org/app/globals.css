@@ -1,0 +1,54 @@
+/* DESK 프레임: 1440×900, 사이드바 216px 고정, 본문만 스크롤 (design/README §Fidelity). */
+.cl-shell {
+  display: grid;
+  grid-template-columns: 232px 1fr;
+  min-height: 100vh;
+}
+
+.cl-sidebar {
+  border-right: 1px solid var(--cl-line);
+  padding: var(--cl-s6) 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.cl-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.cl-body {
+  padding: 0 var(--cl-s7) var(--cl-s8);
+  overflow-x: auto;
+}
+
+.cl-nav-group {
+  padding: var(--cl-s5) var(--cl-s6) var(--cl-s2);
+  font-size: var(--cl-micro);
+  font-weight: 600;
+  letter-spacing: .06em;
+  color: var(--cl-text-disabled);
+}
+
+.cl-nav-item {
+  display: block;
+  padding: var(--cl-s3) var(--cl-s6);
+  font-size: var(--cl-body);
+  color: var(--cl-text-sub);
+  border-left: 3px solid transparent;
+}
+
+.cl-nav-item:hover { background: var(--cl-row-hover); }
+
+.cl-nav-item[aria-current='page'] {
+  color: var(--cl-action-text);
+  background: var(--cl-action-tint);
+  border-left-color: var(--cl-action);
+  font-weight: 600;
+}
+
+/* DESK 행 hover */
+tbody tr:hover { background: var(--cl-row-hover); }

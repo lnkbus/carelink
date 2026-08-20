@@ -20,7 +20,18 @@ export interface Viewer {
   scopes: ScopeName[];
   /** ORG_MEMBER인 경우 소속 기관. org scope 판정에 쓴다. */
   organizationId?: string | null;
+  /**
+   * 소속 기관이 검증 완료 상태인가 (§6-6).
+   *
+   * org 승격의 두 조건 중 하나다. 나머지 하나(면접 수락)는 후보자마다 다르지만
+   * 이 값은 요청 전체에 걸쳐 같으므로 뷰어에 싣는다. 여기 없으면 후보자 한 명씩
+   * 기관 검증 상태를 다시 조회하게 되고, 그러다 한 경로에서 빠뜨리면 그 경로만
+   * 조용히 열린다.
+   */
+  organizationVerified?: boolean;
   locale: string;
 }
 
-export const ANONYMOUS: Viewer = { userId: null, roles: [], scopes: [], locale: 'ko' };
+export const ANONYMOUS: Viewer = {
+  userId: null, roles: [], scopes: [], organizationVerified: false, locale: 'ko',
+};
