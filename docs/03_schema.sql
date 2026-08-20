@@ -1352,6 +1352,25 @@ INSERT INTO restricted_act_keywords (keyword, category) VALUES
   ('관장','OTHER'),('도뇨','OTHER'),('소변줄','OTHER'),('콧줄','OTHER'),('경관영양','OTHER');
 -- 주의: 감지는 자동 거절이 아니라 OPS_REVIEW 전이 트리거다.
 
+-- 교육 과정 (docs/07 §3.2) ------------------------------------------------------
+-- MVP에서 LMS를 직접 만들지 않는다. 진도율은 교육 파트너가 API·CSV로 올리는 값을
+-- 저장만 한다 (SCR-106 notes). 여기 시드는 '어떤 과정이 필수인가'의 정의다.
+INSERT INTO training_programs (code, name, program_type, total_hours, is_mandatory) VALUES
+  ('MANDATORY_BASE',  '필수교육 (감염관리 · 인권 · 안전)', 'MANDATORY', 16, true),
+  -- 업무범위 교육을 따로 두는 이유: 대부분의 사고는 간병인이 "해달라고 해서"
+  -- 의료행위를 한 데서 시작한다. 거절하는 방법과 신고 경로를 가르치는 과정이라
+  -- 감염관리·인권과 성격이 다르고, 클리어런스에서도 SCOPE_TRAINING으로 분리돼 있다.
+  ('SCOPE_TRAINING',  '업무범위 교육',                      'MANDATORY',  4, true),
+  ('KOREAN_TOPIK',    '한국어 (TOPIK 대비)',                'LANGUAGE', 200, false),
+  ('JOB_BASIC_CARE',  '직무 기초 (돌봄 실무)',              'JOB',       40, false);
+
+-- 업무범위 교육을 3개 트랙 전부의 필수 요구사항으로 건다.
+-- worker_clearances의 SCOPE_TRAINING 항목이 배치 전 PASS를 요구하는데
+-- 어느 트랙도 이 교육을 요구하지 않으면 아무도 이수하지 않아 배치가 영원히 막힌다.
+INSERT INTO track_requirements (track_id, kind, ref_code, is_mandatory, note)
+SELECT id, 'TRAINING', 'SCOPE_TRAINING', true, '배치 전 필수 (docs/07 §3.2)'
+  FROM tracks WHERE code IN ('HOSPITAL_CAREGIVER','CARE_WORKER','HEALTHCARE_ASSISTANT');
+
 INSERT INTO care_service_items (code, label_ko) VALUES
   ('MEAL_SUPPORT',    '식사 도움'),
   ('MOBILITY',        '이동 · 보행 보조'),

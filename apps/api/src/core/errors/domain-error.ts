@@ -27,6 +27,7 @@ export const DOMAIN_ERRORS = {
   TALENT_TRACK_NOT_ACTIVE:    { status: HttpStatus.BAD_REQUEST,  message: 'Track is not active' },
   TALENT_DOC_VERDICT_REQUIRED:{ status: HttpStatus.BAD_REQUEST,  message: 'A verdict is required before the original is purged' },
   TALENT_DOC_ORIGINAL_PURGED: { status: HttpStatus.GONE,         message: 'Original file was purged after review; only the verdict is retained' },
+  TALENT_VISA_STEP_NOT_APPLICABLE: { status: HttpStatus.CONFLICT, message: 'This visa-process step does not apply to the candidate' },
   TALENT_PRIMARY_TRACK_EXISTS:{ status: HttpStatus.CONFLICT,     message: 'Candidate already has a primary track' },
 
   // ── org ────────────────────────────────────────────────────────────────

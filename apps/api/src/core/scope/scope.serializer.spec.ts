@@ -82,7 +82,8 @@ describe('applyScope', () => {
     expect(Object.keys(out)).toEqual(['displayCode', 'experienceMonths']);
   });
 
-  it('중첩 DTO에도 같은 규칙이 적용된다', () => {
+  it('중첩 DTO는 부모가 확정한 scope를 물려받는다', () => {
+    // 자식마다 소유자를 다시 선언하게 하면 선언이 늘고, 하나만 빠뜨려도 응답이 조용히 빈다.
     class WrapperDto {
       @ScopeOwner() ownerUserId: string;
       @Scope('self', 'admin', 'org', 'org_masked') candidate: CandidateDto;
@@ -103,6 +104,24 @@ describe('applyScope', () => {
     }
     const broken = Object.assign(new BrokenDto(), { secret: 'x' });
     expect(() => applyScope(broken, viewer([], 'anyone'))).toThrow(/@ScopeOwner/);
+  });
+
+  it('부모가 self로 열리면 중첩 DTO도 self로 열린다', () => {
+    class ChildDto {
+      @Scope('self') secret: string;
+    }
+    class ParentDto {
+      @ScopeOwner() ownerUserId: string;
+      @Scope('self') child: ChildDto;
+    }
+    const parent = Object.assign(new ParentDto(), {
+      ownerUserId: 'owner-1',
+      child: Object.assign(new ChildDto(), { secret: 'x' }),
+    });
+    // 자식에는 @ScopeOwner가 없지만 부모가 확정한 self를 물려받는다.
+    expect(applyScope(parent, viewer([], 'owner-1'))).toEqual({ child: { secret: 'x' } });
+    // 남이 보면 부모부터 닫히므로 자식도 나가지 않는다.
+    expect(applyScope(parent, viewer([], 'other'))).toEqual({});
   });
 
   it('배열 필드의 각 요소도 잘린다', () => {
