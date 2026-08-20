@@ -1,0 +1,359 @@
+# CLAUDE.md — CARELINK Platform 작업 지침
+
+이 파일은 Claude Code가 **가장 먼저 읽는 문서**입니다. 작업을 시작하기 전에 전체를 읽고, 아래 순서대로 참조 문서를 확인하세요.
+
+---
+
+## 0. 시작 전 반드시 읽을 것
+
+| 순서 | 파일 | 무엇이 들어 있나 |
+|---|---|---|
+| 1 | `CLAUDE.md` (이 파일) | 작업 규칙, 금지 사항, 완료 기준 |
+| 2 | `wireframe/index.html` → `SCREENS` 배열 | **화면 사양의 단일 출처.** 36개 화면의 route / api / data / states / notes |
+| 3 | `docs/02_ARCHITECTURE.md` | 모듈 경계, 권한 모델, 상태머신, 매칭 엔진 규칙 |
+| 4 | `docs/03_schema.sql` | 테이블 정의. 주석에 설계 의도가 들어 있음 |
+| 5 | `docs/04_고용모델_및_버티컬확장.md` | 고용 모델 전략 패턴, 트랙·산업 확장 구조 |
+| 6 | `docs/06_외국인력_비자_및_공급전략.md` | 체류자격별 취업 가능 여부, 인력 풀 규모, 비자 필터 요구사항 |
+| 7 | `docs/07_품질관리_및_리스크통제.md` | 배치 전 클리어런스, 업무범위 게이트, 교대 설계 |
+| 8 | `docs/08_리크루팅_전략_및_D10_실행안.md` | 세그먼트별 채널, 코호트 운영, D-10 6개월 실행안 |
+| 9 | `docs/09_IA_및_디자인시스템.md` | 메뉴 구조, 디자인 트랙 2종, 토큰, 컴포넌트 |
+| 10 | `docs/11_개인정보_보안_및_컴플라이언스.md` | 민감정보, 국외이전, 보존·파기, 보안 요구사항 |
+| 11 | **`docs/12_리스크_레지스터_및_의사결정로그.md`** | **착수 가능 여부 판정 · 미확정 사항** |
+| 12 | `docs/01_사업제안서.md` | 왜 이렇게 만드는지. 판단이 갈릴 때 근거 |
+
+**PRD를 따로 찾지 마세요.** `SCREENS` 배열이 PRD입니다. 화면을 만들 때는 해당 객체의 `api`, `data`, `states`, `notes`를 그대로 구현 요구사항으로 사용합니다.
+
+---
+
+## 1. 이 프로젝트가 무엇인가
+
+돌봄·의료 인력의 **확보 → 검증 → 교육 → 자격 경로 → 매칭 → 배치 → 근무 운영 → 근속**을 하나의 시스템으로 관리하는 플랫폼. 여기에 병원 간병 서비스 운영이 붙습니다.
+
+사용자는 6종입니다: 후보자(Candidate), 간병사(Caregiver), 환자·보호자, 기관(병원·요양기관), 파트너(교육기관), 운영자(Admin).
+
+---
+
+## 2. 개발 범위 — 지금 만드는 것과 만들지 않는 것
+
+`SCREENS` 배열의 각 화면에 `phase` 필드가 있습니다.
+
+| phase | 상태 | 지시 |
+|---|---|---|
+| `V1` | **지금 구현** | 27화면. Candidate App + Organization Web + Admin Console + engagement 골격 |
+| `V2` | 나중 | 13화면. 라우트와 빈 화면 스텁만. 로직 구현 금지 |
+| `V3` | **착수 금지** | 1화면 + 정산·결제·제휴 API·AI 모듈. 사업 결정 미확정 |
+
+**V3를 요청받으면 구현하지 말고 이유를 설명하세요.** 특히 `SCR-405`(정산)는 간병사와의 법적 관계(직접고용 / 위탁 / 순수중개)가 확정되기 전에는 스키마조차 만들 수 없습니다. 세 경우의 정산 구조가 서로 호환되지 않기 때문입니다.
+
+---
+
+## 3. 기술 스택 (변경하지 말 것)
+
+```
+Backend   NestJS (TypeScript) · Modular Monolith
+DB        PostgreSQL 15+
+Cache/Q   Redis + BullMQ
+Web       Next.js 14 (App Router)
+Mobile    Flutter
+API       REST · /api/v1 · JWT(Access 15m / Refresh 14d) + RBAC
+Storage   S3 호환 · presigned URL만 (만료 5분)
+```
+
+**마이크로서비스로 쪼개지 마세요.** 모듈 경계만 명확히 두고 단일 배포합니다. 분리는 V3 이후 판단합니다.
+
+---
+
+## 4. 리포지토리 구조
+
+```
+apps/api/src/modules/{iam,talent,org,matching,care,ops}/
+  └─ <module>/
+       controller/   REST 엔드포인트
+       service/      비즈니스 로직 (모듈 간 호출은 여기로만)
+       repository/   DB 접근 (다른 모듈이 직접 호출 금지)
+       dto/          요청·응답 + @Scope 데코레이터
+       entity/
+       state/        상태머신 정의
+
+apps/web-org/        Organization Web  (V1)
+apps/web-admin/      Admin Console     (V1)
+apps/web-care/       Patient 반응형 웹 (V2)
+apps/mobile-candidate/  Flutter (V1)
+apps/mobile-caregiver/  Flutter (V2)
+
+packages/shared-types/  OpenAPI 생성 타입
+packages/ui/            공용 디자인 시스템
+infra/migrations/
+```
+
+---
+
+## 5. 절대 규칙
+
+### 5.1 모듈 경계
+`matching` 모듈이 `candidates` 테이블을 직접 SELECT 하지 않습니다.
+→ `talent.getCandidatesForMatching(criteria)`를 호출합니다.
+
+### 5.2 개인정보 scope
+같은 후보자 데이터라도 보는 주체에 따라 필드가 다릅니다. **컨트롤러의 if 문으로 처리하지 마세요.** 반드시 DTO의 `@Scope('self' | 'org' | 'admin')` 데코레이터로 직렬화 단계에서 필터링합니다.
+
+- 기관은 검증 완료 + 후보자가 면접 요청을 수락한 뒤에만 실명·연락처를 봅니다
+- 그 전에는 `Candidate #102` 형태의 `display_code`만 노출합니다
+- 간병사에게는 환자 실명·진단명을 주지 않습니다. 병실·필요 지원·주의사항만 줍니다
+
+이 게이트가 뚫리면 플랫폼을 우회한 직거래가 발생하고 수익모델이 무너집니다.
+
+### 5.3 상태는 상태머신으로
+`if (status === 'X')` 분기를 여기저기 흩뿌리지 마세요. `state/` 디렉터리에 전이 규칙을 정의하고, 허용되지 않은 전이는 예외를 던집니다. 전이 테스트는 필수입니다.
+
+### 5.4 Append-only 테이블
+`service_logs`와 `audit_logs`는 UPDATE / DELETE 하지 않습니다. 정정은 `correction_of`로 새 행을 추가합니다. 근무시간 분쟁에서 유일한 근거가 되는 데이터입니다.
+
+### 5.5 매칭 점수를 하드코딩하지 마세요
+`matching_rules` 테이블에서 읽습니다. 운영 중 조정이 반드시 발생합니다.
+
+### 5.6 매칭은 점수만 반환하지 않습니다
+```ts
+{ candidateId, score, reasons: string[], missingRequirements: string[] }
+```
+`reasons`와 `missingRequirements`가 룰 기반 매칭을 쓰는 이유입니다. 점수만 주는 매칭은 기관도 후보자도 신뢰하지 않습니다.
+
+### 5.7 고용 모델은 배치 단위 · 분기는 Strategy로
+
+`engagements.model`이 고용 형태(`DIRECT_EMPLOYMENT` / `DELEGATION` / `BROKERAGE`)를 결정합니다. **전역 설정이나 조직 단위가 아닙니다.** 전환기에 직접고용과 중개가 병존해야 하고, 지역·트랙별로 다를 수 있기 때문입니다.
+
+```
+❌  if (model === 'DIRECT_EMPLOYMENT') { ... }   서비스 로직에 흩뿌리기
+✅  engagementStrategyFactory.get(model).calculatePayout(records, ctx)
+```
+
+`EngagementStrategy` 인터페이스(`modules/engagement/strategy/`)에 3개 구현체를 둡니다. 나머지 코드는 인터페이스만 압니다. 분기문을 흩뿌리는 순간 전환 가능성이 사라집니다.
+
+**모델 전환은 UPDATE가 아닙니다.** 기존 engagement를 `ENDED` 처리하고 새 행을 만들어 `previous_engagement_id`로 연결합니다. 과거 정산은 그 시점의 모델로 보존되어야 합니다.
+
+**경계 규칙**: 기관 청구(`billing_lines`) 계산은 고용 모델과 무관합니다. 모델별로 달라지는 것은 인력 지급(`payout_lines`)과 계약 서류, 세무 처리뿐입니다. 이 경계를 지키면 전환 비용이 정산 모듈 일부로 국한됩니다.
+
+### 5.8 트랙은 ENUM이 아니라 테이블
+
+`career_track` ENUM은 없습니다. `tracks` 테이블에서 읽습니다. 트랙별로 달라지는 요구사항은 `track_requirements`, 매칭 가중치는 `track_matching_weights`에서 조회합니다.
+
+```
+❌  if (track === 'CARE_WORKER') { requiredDocs = [...] }
+✅  const reqs = await trackService.getRequirements(trackId)
+```
+
+**MVP는 3개 트랙(병원간병 · 요양보호 · 의료지원)을 모두 운영합니다.** 화면과 로직은 하나이고 데이터만 다릅니다. 향후 농업·미용·요리 등 신규 산업은 `industries` / `tracks` 행 추가로 열립니다 — 코드 배포 없이.
+
+**모든 운영 지표는 트랙별로 분리 집계하세요.** 합산 지표만 만들면 어느 트랙이 통했는지 판별할 수 없습니다.
+
+### 5.9 체류자격은 매칭의 하드 필터입니다
+
+외국인 후보자의 취업 가능 여부는 자격증이 아니라 **체류자격**이 결정합니다. `track_visa_eligibility` 테이블이 트랙 × 비자 허용 매트릭스이며, 매칭 엔진은 점수 계산 **이전에** 이 테이블로 후보를 걸러야 합니다.
+
+```
+❌  매칭 결과에 비자 부적격 후보가 섞임 → 운영자가 수동으로 걸러냄
+✅  runMatching() 진입 시 track_visa_eligibility 조회 → 부적격 제외 + 사유 로그
+```
+
+**비자 부적격 인력을 배치하면 불법 취업 알선이 됩니다.** 편의 기능이 아니라 컴플라이언스 게이트입니다.
+
+`eligibility` 값별 처리:
+
+| 값 | 처리 |
+|---|---|
+| `ALLOWED` | 정상 매칭 |
+| `REQUIRES_QUALIFICATION` | 자격 보유 여부 확인 후 매칭 |
+| `REQUIRES_CONVERSION` | 매칭 가능하나 배치 전 체류자격 변경 필요 → engagement 컴플라이언스 체크에 연결 |
+| `PENDING_CONFIRMATION` | **자동 배정 차단.** 운영자 검토 큐로 보냄 (예: F-4 간병) |
+| `NOT_ALLOWED` | 후보 목록에서 제외 |
+
+**`candidates.visa_expires_on` 만료 관리는 서류 만료보다 중요합니다.** 서류가 만료되면 자격이 무효가 되지만, 체류자격이 만료되면 **불법 취업**이 됩니다. 60일/30일 2단계 알림 잡을 돌리고 배치 중인 인력을 우선 처리하세요.
+
+**적격성을 코드로 자동 판정하지 마세요.** 회색 영역은 `PENDING_CONFIRMATION`으로 두고 사람이 확인한 결과를 기록합니다.
+
+### 5.10 국적은 매칭 입력값이 아닙니다
+
+**국적을 거르는 것이 아니라 검증되지 않은 인력을 거릅니다.**
+
+```
+❌  if (nationality === '...') { ... }        차별이자 계약·규제 리스크
+❌  매칭 점수에 국적 가중치                     동일
+✅  worker_clearances 6개 항목 전부 PASS 여부
+✅  한국어 수준(TOPIK·KIIP)                   간병은 의사소통이 업무의 본질이므로 정당한 기준
+```
+
+`candidates.nationality`는 통계·행정 목적에만 사용하고 **매칭 로직에서 참조하지 마세요.** 기관 노출 화면에도 국적을 표시하지 않습니다.
+
+### 5.11 배치 전 클리어런스는 시스템이 강제합니다
+
+`worker_clearances`의 6개 항목이 **전부 `PASS`여야** 배치 가능합니다. 운영자가 예외 처리할 수 없도록 서비스 레벨에서 막으세요.
+
+```
+IDENTITY_VERIFIED · CRIMINAL_RECORD_CLEAR · HEALTH_CHECK
+VISA_ELIGIBLE · MANDATORY_TRAINING · SCOPE_TRAINING
+```
+
+유효기간이 있습니다(범죄경력 2년, 건강진단 1년). 만료되면 `EXPIRED`로 전이하고 **신규 배정을 차단**합니다.
+
+`worker_clearances`(사람 단위, 유효기간 있음)와 `engagement_compliance_checks`(배치 단위, 일회성)를 혼동하지 마세요.
+
+### 5.12 24시간 상주를 기본값으로 두지 마세요
+
+`shift_patterns`의 `H24_LIVE_IN`은 `requires_approval = true`입니다. 운영자 승인 없이 배정되지 않습니다.
+
+기본값은 `H8_3SHIFT`(8시간 3교대)입니다. 정부 급여화 시범사업도 3교대를 원칙으로 합니다. **잠을 못 자는 사람에게 품질을 요구할 수 없으므로, 24시간 상주를 유지하면 나머지 통제 장치도 결국 무너집니다.**
+
+직접고용 인력에게는 근로시간 규정 검토가 완료되기 전까지 `H24_LIVE_IN`을 배정하지 않습니다.
+
+### 5.13 리크루팅은 '이탈 시점'을 기록합니다
+
+`cohort_members.dropped_stage`가 이 모듈의 존재 이유입니다.
+
+```
+❌  이탈률 20%          → 대응 불가
+✅  교육 6주차 집중 이탈 → 상담 주기 조정, 생활비 구조 재설계
+```
+
+`candidates.channel_id` / `campaign_id` / `referred_by`를 반드시 채우세요. 채널별 CAC가 나오지 않으면 예산 배분을 할 수 없습니다. **`referred_by`(기존 인력 추천)는 실측상 전환율이 가장 높은 채널이므로 별도 집계합니다.**
+
+### 5.14 코어와 버티컬을 섞지 마세요
+
+```
+WORKFORCE CORE (산업 중립)  iam · talent · tracks · org · matching
+                            engagement · work-record · billing · ops
+CARE VERTICAL (돌봄 전용)   care (간병 요청·배정·간병사 일정·서비스 기록)
+```
+
+`care` 모듈의 개념(간병 요청, 병실, 보호자)을 코어에 올리지 마세요. 농업을 붙일 때 전면 재작업이 됩니다. 반대로 `engagement`, `work_records`, `billing_lines`는 반드시 코어에 있어야 합니다 — 어느 산업이든 사람은 고용되고, 일하고, 정산됩니다.
+
+### 5.15 i18n은 처음부터
+한국어 / 베트남어 / 영어. 나중에 붙이면 전면 수정입니다. 백엔드는 에러 코드만 반환하고 문구는 클라이언트가 번역합니다. 알림은 `notification_templates(code, locale, channel)`에서 조회합니다.
+
+---
+
+## 6. 도메인 금지 사항 (코드 리뷰에서 반려 대상)
+
+| # | 금지 | 이유 |
+|---|---|---|
+| 1 | 자격·체류 적격성을 코드로 자동 판정 | 플랫폼은 상태를 **기록**할 뿐입니다. 판정은 사람이 하고 결과를 입력합니다 |
+| 2 | 간병 서비스 카탈로그에 의료행위 추가 | 투약·주사·석션·처치는 항목 자체가 존재하면 안 됩니다. 자유 입력은 `restricted_act_keywords`로 스캔하고 감지 시 `OPS_REVIEW`로 보냅니다 |
+| 3 | GPS 출퇴근을 기본값으로 | 위치정보 동의와 법규 검토가 선행돼야 합니다. 기본은 병실 QR |
+| 4 | 간병 배정 즉시 자동 확정 | 보호자 선택 → 간병사 수락 → **운영자 확인**의 3단계. 자동화는 취소율이 안정된 뒤 |
+| 5 | 서류 파일 직접 URL 노출 | presigned URL(만료 5분)만 |
+| 6 | 기관 검증 전 후보자 개인정보 조회 | `verification_status = VERIFIED` 가 게이트 |
+| 7 | V1에 AI/ML 도입 | 학습 데이터가 아직 없습니다. 대신 `match_logs`에 운영자 판단을 전량 적재하세요 |
+| 8 | `DirectEmploymentStrategy`의 급여 계산 로직 구현 | 도급/파견 판정과 근로시간 규정 적용 방식에 대한 노무 검토가 선행돼야 합니다. 인터페이스와 스키마까지만 만들고 대기 |
+| 9 | 컴플라이언스 체크 미완 상태에서 engagement를 `ACTIVE`로 전이 | `engagement_compliance_checks`가 전부 PASS여야 합니다 |
+| 10 | 트랙·산업 코드를 상수로 하드코딩 | 새 산업을 열 때 배포가 필요해집니다. `tracks` 테이블 조회로 |
+| 11 | 체류자격 적격성을 코드로 자동 판정 | 플랫폼은 사람이 판정한 결과를 기록만 합니다. 회색 영역은 `PENDING_CONFIRMATION` |
+| 12 | 체류자격 코드를 기관에 그대로 노출 | 기관에는 '취업 가능 여부'만 노출합니다. 원본은 ADMIN 전용 |
+| 13 | 국적을 매칭 로직·필터·점수에 사용 | 차별이자 계약·규제 리스크. `worker_clearances`와 한국어 수준으로 판단 |
+| 14 | 클리어런스 미완 인력 배치 | 6개 전부 PASS 여야 합니다. 예외 처리 경로를 만들지 마세요 |
+| 15 | 업무범위 키워드 감지 시 자동 거절 | 표현을 바꿔 우회합니다. `OPS_REVIEW`로 보내 사람이 설명하게 하세요 |
+| 16 | 이탈을 단순 카운트로만 기록 | `dropped_stage`와 `drop_reason` 없이는 개선이 불가능합니다 |
+| 17 | E-7-2 스폰서 미검증 시설에 외국인 배치 | `organizations.e7_sponsor_status = ELIGIBLE`이 게이트입니다 |
+| 18 | 범죄경력·건강진단서 원본을 서버에 보관 | 확인 후 파기, 결과값만. `original_purged_at` 기록 |
+| 19 | 국외이전을 일반 개인정보 동의로 처리 | 별도 동의 + `overseas_transfers` 기록 필수 |
+| 20 | 운영 데이터를 개발 환경에 복제 | 마스킹 시드 스크립트를 쓰세요 |
+
+---
+
+## 7. 반드시 구현해야 하는 백그라운드 잡 (BullMQ)
+
+| 잡 | 주기 | 하는 일 | 없으면 생기는 일 |
+|---|---|---|---|
+| `document-expiry-warning` | 매일 | 만료 30일 전 서류 알림 | 배치 중인 인력의 자격이 조용히 무효화됨 |
+| `document-expire` | 매일 | `expires_at` 도달 시 `EXPIRED` 전이 | 만료 서류로 매칭이 나감 |
+| `application-no-response` | 매시 | 상태 변경 후 7일 무응답 → 운영자 태스크 | 지원자가 "연락이 없다"며 이탈 |
+| `visa-expiry-warning` | 매일 | 체류기간 만료 60일/30일 전 알림. 배치 중 인력 우선 | **만료된 체류자격으로 배치 = 불법 취업** |
+| `clearance-expiry-warning` | 매일 | 클리어런스 만료 30일 전 알림 | 검증 만료 상태로 배치 지속 |
+| `clearance-expire` | 매일 | 만료 시 `EXPIRED` 전이 + 신규 배정 차단 | 무검증 인력이 계속 배정됨 |
+| `scope-keyword-scan` | 요청 생성 시 | 자유 입력 스캔 → 감지 시 `OPS_REVIEW` | 간병사에게 의료행위 요구가 그대로 전달됨 |
+| `data-retention-purge` | 매일 | `data_retention_policies` 기준 자동 파기 | 수동 파기 정책은 지켜지지 않음 |
+| `care-assignment-sla` | 매 10분 | 요청 후 4시간 미배정 → `ISSUE` + 알림 | 보호자가 밤새 기다림 |
+| `ticket-sla` | 매 10분 | 안전사고·부당대우·업무범위 초과 4시간 초과 | 대응 실패가 사업 리스크로 전이 |
+
+---
+
+## 8. 개발 순서
+
+각 단계는 **동작하는 상태로 끝나야** 합니다. 통합 테스트가 통과하지 않으면 다음으로 넘어가지 마세요.
+
+```
+ 1. 스키마 마이그레이션 + 시드 (industries/tracks/track_requirements 포함)
+ 2. iam        — 회원가입·로그인·역할·JWT       → SCR-001~003
+ 3. talent     — 후보자 프로필·트랙              → SCR-103, 104
+ 4. talent     — 서류 업로드·검증·만료 잡        → SCR-105
+ 5. talent     — 커리어 여정·교육 진도           → SCR-102, 106
+ 6. org        — 기관 등록·검증 게이트           → SCR-201, 503
+ 7. matching   — 채용 요청 CRUD                  → SCR-202
+ 8. matching   — 룰 엔진(score+reasons+missing)  → SCR-107, 108, 203, 204
+    ※ 점수 계산 전 track_visa_eligibility 하드 필터 적용
+ 9. matching   — 지원·면접 상태머신·알림         → SCR-109, 205
+10. ops        — 운영 콘솔·일괄작업·매칭센터     → SCR-501, 502, 504
+    ※ 모든 지표를 트랙별로 분리 집계할 것
+10.3 recruiting — 파트너·채널·캠페인·코호트 파이프라인   → SCR-510, 511
+     ※ candidates에 channel_id/campaign_id/referred_by 필수 기록
+10.4 quality    — worker_clearances 게이트·업무범위 스캔 → SCR-509
+     ※ 클리어런스 미완 인력은 매칭 결과에서 제외
+10.5 engagement — 모델·계약·컴플라이언스 게이트   → SCR-508
+     + EngagementStrategy 3종 골격 (계산 로직은 미구현)
+     ※ 나중에 끼워 넣으면 배치·정산 로직을 전부 다시 짜야 함
+─────────────────── V1 완료 · 파일럿 투입 ───────────────────
+11. care       — 요청·배정·SLA 잡               → SCR-301~305, 505
+12. care       — QR 체크인·근무 기록            → SCR-401~404, 306
+13. ops        — 사건 관리·에스컬레이션          → SCR-506
+12.5 engagement — service_logs → work_records 집계·승인 잡
+─────────────────── V2 완료 ────────────────────────────────
+14. payroll    — ⚠️ 도급/파견·근로시간 노무 검토 완료 후 착수
+```
+
+---
+
+## 9. 작업 완료 기준 (Definition of Done)
+
+기능 하나를 끝냈다고 말하려면 아래가 전부 충족되어야 합니다.
+
+- [ ] `SCREENS` 배열의 해당 화면에 적힌 `api`가 모두 동작한다
+- [ ] `states`에 정의된 상태 전이가 상태머신으로 구현되고 단위 테스트가 있다
+- [ ] `notes`의 제약(법규·정책·운영)이 코드에 반영되어 있다
+- [ ] `@Scope` 데코레이터로 역할별 필드 노출이 제한된다
+- [ ] 개인정보 조회·상태 변경은 `audit_logs`에 적재된다
+- [ ] 에러는 도메인 코드(`TALENT_DOC_EXPIRED` 형식)로 반환된다
+- [ ] ko/vi/en 문구 키가 준비되어 있다
+- [ ] 모바일 화면은 최소 폰트 16px, 터치 타겟 48px (고령 사용자 기준)
+
+---
+
+## 9-2. 착수 전 확인
+
+**`docs/12` §4에 단계별 착수 가능 여부가 정리돼 있습니다.**
+개발의 90%는 지금 시작할 수 있고, 막힌 것은 `DirectEmploymentStrategy`의 급여 계산 로직 하나입니다.
+
+## 10. 판단이 서지 않을 때
+
+**만들지 말고 물어보세요.** 특히 아래는 코드로 결정할 사안이 아닙니다.
+
+- 기관 현장 배치가 도급인지 근로자파견인지 (지휘·명령권 설계)
+- 해당 직군의 파견 허용 여부 / 근로자공급사업 허가 필요 여부
+- 24시간 간병의 근로시간·휴게 규정 적용 방식
+- 4대보험·퇴직금 부담을 반영한 기관 청구 단가
+- 후보자 개인정보 수집 범위와 보존 기간
+- 급여 정보의 공개 범위
+- 자격·체류 적격성 판정 기준 (특히 F-4 자격자의 간병 업무 종사 가능 여부 — docs/06 §4)
+- 취소·환불 정책
+
+이 항목들은 `docs/04_고용모델_및_버티컬확장.md` §8에 미확정 상태로 명시되어 있습니다. 임의로 가정해서 구현하면 나중에 전면 재작업이 발생합니다.
+
+---
+
+## 11. 커밋 규약
+
+```
+feat(talent): 서류 만료 알림 잡 추가
+fix(matching): 지역 부분 일치 점수 계산 오류 수정
+chore(infra): BullMQ 워커 도커 설정
+docs(spec): SCR-204 매칭 근거 필드 추가
+```
+
+화면 관련 작업은 커밋 메시지에 화면 ID를 포함하세요. 예: `feat(matching): SCR-204 매칭 근거 노출`

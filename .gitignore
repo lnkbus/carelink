@@ -1,0 +1,14 @@
+node_modules/
+dist/
+build/
+.next/
+.env
+.env.*
+!.env.example
+*.log
+coverage/
+.DS_Store
+.turbo/
+.dart_tool/
+.idea/
+.vscode/
