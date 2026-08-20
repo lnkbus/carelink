@@ -1,0 +1,24 @@
+name: carelink_candidate
+description: CARELINK 후보자 앱 (SCR-101~110) — FIELD 트랙
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.5.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # 상태 관리는 ValueNotifier + InheritedWidget로 충분합니다.
+  # 화면 10개에 상태 관리 패키지를 얹으면 배우는 비용이 더 큽니다.
+  http: ^1.2.2
+  flutter_secure_storage: ^9.2.2
+  intl: ^0.19.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true

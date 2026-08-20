@@ -9,9 +9,10 @@
 
 ## 1. 현재 상태
 
-**V1 백엔드 골격 완료.** `docs/02` §12의 1~10.5단계가 모두 구현·검증됐습니다.
-PostgreSQL 16 + Redis 실환경에서 인증 → 프로필 → 서류 → 여정 → 매칭 → 지원·면접 →
-클리어런스 → 배치까지 end-to-end로 동작합니다.
+**V1 완료.** 백엔드 11모듈 + 화면 25종(운영 콘솔 8 · 기관 웹 5 · 후보자 앱 12)이
+모두 구현·검증됐습니다. PostgreSQL 16 + Redis 실환경에서 인증 → 프로필 → 서류 →
+여정 → 매칭 → 지원·면접 → 클리어런스 → 배치까지 end-to-end로 동작하고,
+후보자 앱은 브라우저에서 로그인 → 홈까지 실제로 확인했습니다.
 
 | 단계 | 모듈 | 화면 | 상태 |
 |---|---|---|---|
@@ -27,8 +28,10 @@ PostgreSQL 16 + Redis 실환경에서 인증 → 프로필 → 서류 → 여정
 | — | `packages/ui` | — | ✅ 토큰 + 신규 컴포넌트 5종 (DESK) |
 | — | `web-admin` | SCR-501·502·503·504·508·509·510·511 | ✅ Next.js 14 · 8화면 실데이터 렌더 확인 |
 | — | `web-org` | SCR-201·202·203·204·205 | ✅ Next.js 14 · 5화면 · 개인정보 게이트 3조건 검증 |
+| — | `mobile-candidate` | SCR-001·002·101~110 | ✅ Flutter 3.24 · ko/vi/ru/en · 브라우저에서 로그인→홈 실동작 확인 |
+| — | Docker | — | ✅ `docker compose up -d --build` 한 번에 전체 스택 |
 
-단위 테스트 143건 통과. 상태머신 전이는 전부 테스트가 있습니다.
+단위 테스트 **166건** 통과 (API 143 · 후보자 앱 23). 상태머신 전이는 전부 테스트가 있습니다.
 
 **개인정보 게이트 실측** (`GET /candidates/{id}`, 같은 후보자·다른 뷰어):
 
@@ -38,7 +41,7 @@ PostgreSQL 16 + Redis 실환경에서 인증 → 프로필 → 서류 → 여정
 | 검증 완료 기관 + 면접 없음 | ❌ 키 자체가 없음 | ❌ |
 | 검증 대기 기관 + 면접 수락함 | ❌ 키 자체가 없음 | ❌ |
 
-**남은 것**: `mobile-candidate`(Flutter, SCR-101~110) · `care`(V2, 11~13단계) · `payroll`(V3, U1·U2·U5 선행) · 백그라운드 잡 5종
+**남은 것**: `care`(V2, 11~13단계) · `payroll`(V3, U1·U2·U5 선행) · 백그라운드 잡 5종
 (`scope-keyword-scan` · `data-retention-purge` · `care-assignment-sla` ·
 `ticket-sla` · `shift-24h-review` — 전부 care/V2에 붙는 잡).
 
@@ -145,6 +148,7 @@ PostgreSQL 16 + Redis 실환경에서 인증 → 프로필 → 서류 → 여정
 | **C3** | SCR-304 간병사 카드 | `경력 3년 2개월 · **베트남**` — 국적 노출 (3명 전부) | `docs/07` §2.2는 "**기관** 노출 화면에 국적 표시 금지"라 문언상 환자·보호자 화면을 직접 다루지 않습니다. 다만 D6·§5.10의 취지와는 어긋납니다 — **회색 영역, 판단 필요** |
 | **C4** | SCR-401·402·403 | 간병사에게 **환자 실명**(`김영수 어르신`) + 나이·성별 노출 | `docs/11` §3.2: 간병사에게는 병실·필요 지원·주의사항만. 실명 ❌ |
 
+| **C6** | SCR-110 다국어 라벨 | 사양은 "한국어 기준 **2.5배** 수용" | 실측 **최대 4.1배** (`journey.visa` ru). 번역을 줄여 맞추면 문구가 어색해짐 — **설계 기준을 4.5배로 올리는 쪽을 권함**. 현재 구현은 고정폭 위젯을 쓰지 않아 이미 수용 중 (docs/13 C6) |
 | **C5** | SCR-502 후보자 관리 | `SCREENS`의 api에 **`GET /admin/candidates?…&nationality=`** — 국적이 조회 필터 | §5.10은 국적을 "통계·행정 목적에만" 허용하고 §6-13은 "매칭 로직·**필터**·점수"에 금지. 관리 목록 필터가 어느 쪽인지 문언이 갈립니다 — **회색 영역, 판단 필요** |
 
 **C1·C2·C4는 시안이 틀린 것으로 정리됩니다** — `docs/07` §3.3(카탈로그 제외), §3.6(H24 비권장),
@@ -234,16 +238,24 @@ MVP 초기 공급의 주력)는 절차가 없고, `REQUIRES_CONVERSION`(D-10→E
 ```
 ✅ 1~10.5  스키마 → iam → talent → org → matching → ops
            → recruiting → quality → engagement           V1 백엔드 완료
-✅         packages/ui + web-admin 8화면                 Admin Console 완료
+✅         packages/ui + web-admin 8화면                 운영 콘솔 완료
 ✅         web-org 5화면                                 기관 웹 완료
+✅         mobile-candidate 12화면 · 4개 언어             후보자 앱 완료
+✅         docker compose                                V1 전체 완료
 ──────────────────────────────────────────────────────────
-1. mobile-candidate — SCR-101~110 (Flutter, FIELD, ko/vi/ru/en)
-   ※ FIELD 규격: 최소 폰트 16px · 터치 타깃 48px · next_action 화면당 1개
-2. C3 · C5 판정                                   ← care 착수 직전
+1. 실기기 검증 — 터치 타깃·글꼴 확대·Keystore (docs/14 §3-3)
+2. C3 · C5 · C6 판정                              ← care 착수 직전
 ─────────────── 파일럿 투입 ───────────────
 3. care(11~13) + 잡 5종 → V2
 4. payroll — U1·U2·U5 해결 전 착수 금지
 ```
+
+### 문서
+
+| 문서 | 무엇 |
+|---|---|
+| `docs/13_개발_의사결정로그.md` | 구현하며 내린 기술 결정 D-01~D-12 · 발견한 결함 F-01~F-10 · 판단 필요 C5·C6 |
+| `docs/14_테스트_및_실행_가이드.md` | Docker 실행 · 개발 로그인 · **네이티브 앱 4단계 검증 방안** |
 
 ### 아직 없는 엔드포인트
 
@@ -255,12 +267,27 @@ MVP 초기 공급의 주력)는 절차가 없고, `REQUIRES_CONVERSION`(D-10→E
 
 ### 실행
 
+**전체 스택을 한 번에** — 자세한 것은 `docs/14_테스트_및_실행_가이드.md`
+
+```bash
+docker compose up -d --build
+#  :3000  API          :3100  운영 콘솔
+#  :3200  기관 웹       :3300  후보자 앱(웹 빌드)
+```
+
+**개별 실행**
+
 ```bash
 pnpm db:migrate && pnpm db:seed
 pnpm api:dev        # :3000/api/v1
-pnpm admin:dev      # :3100  운영 콘솔  (apps/web-admin/.env.example 참고)
-pnpm org:dev        # :3200  기관 웹    (apps/web-org/.env.example 참고)
+pnpm admin:dev      # :3100  운영 콘솔
+pnpm org:dev        # :3200  기관 웹
+cd apps/mobile-candidate && flutter run -d chrome \
+  --dart-define=CARELINK_API_URL=http://localhost:3000/api/v1
 ```
+
+**개발 로그인**: 비밀번호가 없습니다. `POST /auth/otp/send` 응답의 `devCode`가
+화면에도 함께 뜹니다 (운영에서는 내려오지 않음).
 
 ### 구현 시 확정 사항 메모
 

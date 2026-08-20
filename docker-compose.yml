@@ -1,0 +1,121 @@
+# CARELINK 전체 스택.
+#
+#   docker compose up -d --build
+#
+# 뜨는 것:
+#   :3000  API            (/api/v1)
+#   :3100  운영 콘솔       SCR-501·502·503·504·508·509·510·511
+#   :3200  기관 웹         SCR-201·202·203·204·205
+#   :3300  후보자 앱(웹)    SCR-101~110 — 검증용. 실배포는 스토어입니다.
+#   :5432  PostgreSQL 16
+#   :6379  Redis 7
+#
+# 개발 편의를 위해 비밀번호가 평문으로 들어 있습니다. **운영에 그대로 쓰지 마세요.**
+# 운영에서는 .env 또는 시크릿 매니저로 주입하고, DB·Redis 포트를 외부에 열지 마세요.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: carelink
+      POSTGRES_PASSWORD: carelink
+      POSTGRES_DB: carelink
+      # 한국어 정렬·검색을 위해 로케일을 맞춥니다.
+      LANG: ko_KR.utf8
+    ports: ['5432:5432']
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U carelink -d carelink']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports: ['6379:6379']
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # 마이그레이션 + 시드. 한 번 돌고 끝납니다.
+  #
+  # API에 넣지 않은 이유: API를 여러 개 띄우면 마이그레이션이 동시에 돌고,
+  # 그중 하나는 반드시 실패합니다. 스키마 적용은 한 번만 일어나야 합니다.
+  migrate:
+    image: postgres:16-alpine
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      PGPASSWORD: carelink
+    volumes:
+      - ./infra/migrations:/migrations:ro
+    entrypoint: ['sh', '-c']
+    command: >
+      "psql -h db -U carelink -d carelink -v ON_ERROR_STOP=1 -f /migrations/0001_init.sql &&
+       psql -h db -U carelink -d carelink -v ON_ERROR_STOP=1 -f /migrations/0002_seed.sql &&
+       echo '스키마·시드 적용 완료'"
+    restart: 'no'
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      migrate: { condition: service_completed_successfully }
+    environment:
+      DATABASE_URL: postgres://carelink:carelink@db:5432/carelink
+      REDIS_URL: redis://redis:6379
+      # 개발용 고정값. 운영에서는 반드시 주입하세요 —
+      # 이 값이 노출되면 아무나 운영자 토큰을 발급할 수 있습니다.
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me}
+      NODE_ENV: production
+      PORT: 3000
+      # 브라우저에서 API를 직접 부르는 출처. 와일드카드를 쓰지 않습니다 —
+      # 이 API는 후보자의 실명·연락처·체류자격을 다룹니다.
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3100,http://localhost:3200,http://localhost:3300}
+    ports: ['3000:3000']
+
+  web-admin:
+    build:
+      context: .
+      dockerfile: apps/web-admin/Dockerfile
+    depends_on:
+      api: { condition: service_healthy }
+    environment:
+      # 서버 컴포넌트는 컨테이너 네트워크 안에서 api를 부릅니다.
+      CARELINK_API_URL: http://api:3000/api/v1
+      # 브라우저(로그인 화면)는 호스트에서 부르므로 localhost입니다.
+      # 둘을 같은 값으로 두면 한쪽이 반드시 실패합니다.
+      NEXT_PUBLIC_API_URL: http://localhost:3000/api/v1
+    ports: ['3100:3100']
+
+  web-org:
+    build:
+      context: .
+      dockerfile: apps/web-org/Dockerfile
+    depends_on:
+      api: { condition: service_healthy }
+    environment:
+      CARELINK_API_URL: http://api:3000/api/v1
+      NEXT_PUBLIC_API_URL: http://localhost:3000/api/v1
+    ports: ['3200:3200']
+
+  # 후보자 앱 — 웹 빌드. 화면 흐름·번역·API 연동 확인용입니다.
+  # 터치 타깃과 글꼴 크기는 실기기에서 최종 확인하세요 (docs/14 §3).
+  mobile-web:
+    build:
+      context: ./apps/mobile-candidate
+      dockerfile: Dockerfile
+      args:
+        CARELINK_API_URL: http://localhost:3000/api/v1
+    depends_on:
+      api: { condition: service_healthy }
+    ports: ['3300:80']
+
+volumes:
+  db-data:
