@@ -7,6 +7,7 @@ import { TracksService } from '../../tracks/service/tracks.service';
 import { CandidateDto, CandidateTrackDto } from '../dto/candidate.dto';
 import { CandidateRepository, type CandidateRow, type CandidateTrackRow, type MatchingCandidateRow } from '../repository/candidate.repository';
 import { candidateStatusMachine, type CandidateStatus } from '../state/candidate-status.state';
+import { displayPhone } from '../../iam/service/phone';
 
 @Injectable()
 export class CandidateService {
@@ -221,7 +222,7 @@ export class CandidateService {
       displayCode: row.display_code,
       name: row.name,
       birthDate: toDateString(row.birth_date),
-      phone: row.phone ?? null,
+      phone: displayPhone(row.phone ?? null),
       nationality: row.nationality,
       visaStatusCode: row.visa_status_code,
       visaExpiresOn: toDateString(row.visa_expires_on),

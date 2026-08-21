@@ -59,7 +59,8 @@ export function LoginForm() {
         <input
           id="phone" className="cf-input cf-mono" inputMode="numeric" autoComplete="tel"
           placeholder="01012345678" value={phone}
-          onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+          // '+'를 지우지 않습니다 — 국제번호 가입을 받습니다 (docs/08 E·F).
+          onChange={(e) => setPhone(e.target.value.replace(/[^0-9+\s-]/g, ''))}
           disabled={sent}
         />
       </div>
@@ -90,7 +91,7 @@ export function LoginForm() {
 
       {error && <div className="cf-note cf-note-alert">{errorLabel(error)}</div>}
 
-      <button className="cf-btn" onClick={sent ? verify : send} disabled={busy || (sent ? code.length < 4 : phone.length < 10)}>
+      <button className="cf-btn" onClick={sent ? verify : send} disabled={busy || (sent ? code.length < 6 : phone.replace(/\D/g, '').length < 9)}>
         {busy ? '잠시만요…' : sent ? '확인' : '인증번호 받기'}
       </button>
 

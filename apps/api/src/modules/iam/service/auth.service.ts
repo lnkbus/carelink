@@ -6,6 +6,7 @@ import { UserRepository, type UserRoleRow, type UserRow } from '../repository/us
 import { OtpService } from './otp.service';
 import { TokenService, type TokenPair } from './token.service';
 import { UserService } from './user.service';
+import { normalizePhone } from './phone';
 
 export interface LoginResult extends TokenPair {
   user: UserRow;
@@ -124,9 +125,4 @@ export class AuthService {
 
     return this.users.listRoles(userId);
   }
-}
-
-/** 숫자만 남긴다. 화면에서 '010 4821 8821'처럼 들어와도 같은 계정으로 붙어야 한다. */
-function normalizePhone(phone: string): string {
-  return phone.replace(/[^\d+]/g, '');
 }

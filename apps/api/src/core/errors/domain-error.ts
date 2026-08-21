@@ -9,6 +9,7 @@ import { HttpException, HttpStatus } from '@nestjs/common';
  */
 export const DOMAIN_ERRORS = {
   // ── iam ────────────────────────────────────────────────────────────────
+  IAM_PHONE_INVALID:          { status: HttpStatus.BAD_REQUEST,  message: 'Phone number is not a valid number; include the country code (+84) or the leading 0' },
   IAM_OTP_INVALID:            { status: HttpStatus.BAD_REQUEST,  message: 'OTP code does not match or has expired' },
   IAM_OTP_TOO_MANY_ATTEMPTS:  { status: HttpStatus.TOO_MANY_REQUESTS, message: 'OTP verification attempted too many times' },
   IAM_OTP_RATE_LIMITED:       { status: HttpStatus.TOO_MANY_REQUESTS, message: 'OTP requested too frequently for this phone number' },

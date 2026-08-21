@@ -71,9 +71,17 @@ export function LoginForm() {
         inputMode="numeric"
         placeholder="01012345678"
         value={phone}
-        onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ''))}
+        // '+'를 지우지 않습니다. 해외 거주 후보자가 국제번호로 직접
+        // 가입하기 때문입니다 (2026-08-21 확정 · docs/08 E·F 세그먼트).
+        // 서버가 E.164로 정규화하므로 하이픈·공백은 넣어도 됩니다.
+        onChange={(e) => setPhone(e.target.value.replace(/[^0-9+\s-]/g, ''))}
         disabled={sent}
       />
+      {!sent && (
+        <p style={{ margin: 'var(--cl-s2) 0 0', fontSize: 'var(--cl-caption)', color: 'var(--cl-text-muted)' }}>
+          해외 번호는 국가번호를 붙여 주세요 (예: +84)
+        </p>
+      )}
 
       {sent && (
         <>
@@ -116,7 +124,7 @@ export function LoginForm() {
 
       <button
         style={button(true)}
-        disabled={busy || (sent ? code.length < 4 : phone.length < 9)}
+        disabled={busy || (sent ? code.length < 6 : phone.replace(/\D/g, '').length < 9)}
         onClick={sent ? verify : send}
       >
         {sent ? '로그인' : '인증번호 받기'}

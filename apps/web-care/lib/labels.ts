@@ -80,6 +80,7 @@ const ERRORS: Record<string, string> = {
   COMMON_NOT_FOUND: '요청을 찾을 수 없습니다.',
   IAM_ROLE_FORBIDDEN: '이 요청을 볼 권한이 없습니다.',
   IAM_TOKEN_INVALID: '로그인이 만료됐습니다. 다시 로그인해 주세요.',
+  IAM_PHONE_INVALID: '번호를 다시 확인해 주세요. 해외 번호는 국가번호를 붙여 주세요 (예: +84).',
   IAM_OTP_TOO_MANY_ATTEMPTS: '인증번호를 여러 번 틀렸습니다. 잠시 후 다시 시도해 주세요.',
   COMMON_VALIDATION_FAILED: '입력한 내용을 다시 확인해 주세요.',
   NETWORK: '연결에 실패했습니다. 잠시 후 다시 시도해 주세요.',

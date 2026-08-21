@@ -97,6 +97,7 @@ const ERROR_DICT: Record<string, string> = {
   ORG_NOT_VERIFIED: '검증되지 않은 기관입니다. 후보자 개인정보는 검증 이후에 열립니다.',
   COMMON_INVALID_TRANSITION: '허용되지 않는 상태 변경입니다.',
   RECRUITING_ATTRIBUTION_LOCKED: '유입 출처가 이미 기록되어 있습니다. 첫 접점이 우선합니다.',
+  IAM_PHONE_INVALID: '번호를 다시 확인해 주세요. 해외 번호는 국가번호를 붙여 주세요 (예: +84).',
   IAM_TOKEN_INVALID: '세션이 만료되었습니다. 다시 로그인하세요.',
   QUALITY_SHIFT_NOT_AVAILABLE: '지금은 선택할 수 없는 교대 방식입니다. 3교대로 진행하세요.',
   CARE_REST_PERIOD_TOO_SHORT: '직전 근무와의 간격이 11시간 미만입니다. 연속 교대는 사실상 24시간 근무가 됩니다.',

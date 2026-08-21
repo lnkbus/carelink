@@ -232,6 +232,36 @@ curl -sS -X POST "$B/care-assignments/$AID/end" "${CH[@]}" -d "{\"checkMethod\":
 OUT=$(curl -sS -X POST "$B/admin/jobs/work-record-aggregate/run" "${A[@]}")
 echo "$OUT" | grep -q '"skipped"' && ok "집계 잡이 24시간 건을 건너뜀" || bad "잡 응답이 예상과 다름" "$OUT"
 
+# ── 13. 전화번호 정규화 — 계정이 갈라지지 않는다 ────────────────────────
+head_ "13. 국제번호 가입 · 표기 차이로 계정이 갈라지지 않음"
+# 2026-08-21 확정: 해외 거주 후보자가 국제번호로 직접 가입합니다.
+# 표기가 달라도 같은 계정이어야 합니다 — 갈라지면 서류·클리어런스가
+# 어느 계정에 붙었는지 아무도 모르게 됩니다.
+one_id() {
+  redis-cli -h "${REDIS_HOST:-127.0.0.1}" -p "${REDIS_PORT:-6379}" DEL "otp:cooldown:$(printf '%s' "$1" | tr -d ' +-')" >/dev/null 2>&1
+  redis-cli -h "${REDIS_HOST:-127.0.0.1}" -p "${REDIS_PORT:-6379}" --scan --pattern 'otp:cooldown:*' 2>/dev/null | while IFS= read -r k; do
+    [ -n "$k" ] && redis-cli -h "${REDIS_HOST:-127.0.0.1}" -p "${REDIS_PORT:-6379}" DEL "$k" >/dev/null 2>&1
+  done
+  local c
+  c=$(curl -sS -X POST "$B/auth/otp/send" -H 'content-type: application/json' -d "{\"phone\":\"$1\"}" | J "['devCode']")
+  [ -z "$c" ] && { echo ""; return; }
+  curl -sS -X POST "$B/auth/otp/verify" -H 'content-type: application/json' \
+    -d "{\"phone\":\"$1\",\"code\":\"$c\",\"consents\":[{\"code\":\"TOS\",\"version\":\"v1\",\"agreed\":true},{\"code\":\"PRIVACY\",\"version\":\"v1\",\"agreed\":true}]}" \
+    | J "['me']['id']"
+}
+BEFORE=$(psql "$DB" -tAqc "SELECT count(*) FROM users;" | tr -d '[:space:]')
+V1=$(one_id "+84912345678")
+V2=$(one_id "0084 912 345 678")
+if [ -n "$V1" ] && [ "$V1" = "$V2" ]; then
+  ok "국제번호 표기가 달라도 같은 계정"
+else
+  bad "국제번호 표기에 따라 계정이 갈라짐" "$V1 vs $V2"
+fi
+AFTER=$(psql "$DB" -tAqc "SELECT count(*) FROM users;" | tr -d '[:space:]')
+[ "$BEFORE" = "$AFTER" ] && ok "중복 계정이 생기지 않음 ($AFTER명 유지)" || bad "계정이 늘어남" "$BEFORE → $AFTER"
+E=$(curl -sS -X POST "$B/auth/otp/send" -H 'content-type: application/json' -d '{"phone":"1011110001"}' | code)
+[ "$E" = "IAM_PHONE_INVALID" ] && ok "국가번호도 0도 없는 값은 추측하지 않고 거절" || bad "모호한 번호를 받아들임" "code=$E"
+
 # ── 결과 ────────────────────────────────────────────────────────────────
 printf '\n\033[1m통과 %d · 실패 %d\033[0m\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ] || exit 1

@@ -68,6 +68,14 @@ clear_otp_cooldown
 # 계정표를 찍습니다. 실패를 성공처럼 보고하는 것이 실패 자체보다 나쁩니다.
 die() { printf '\033[31m%s\033[0m\n' "$1" >&2; exit 1; }
 
+# psql 실패를 삼키지 않습니다.
+#
+# 종전에는 `psql -q -c`가 오류를 뱉어도 스크립트가 계속 돌고 마지막에
+# '완료'를 찍었습니다. 실제로 그렇게 서류 한 건이 조용히 빠진 채
+# "데모 준비 끝"으로 보고됐습니다.
+q() { psql "$DB" -q -v ON_ERROR_STOP=1 -c "$1" || die "시드 SQL이 실패했습니다:
+  ${1%%$'\n'*}…"; }
+
 login() {
   local p="$1" c
   c=$(curl -sS -X POST "$B/auth/otp/send" -H 'content-type: application/json' -d "{\"phone\":\"$p\"}" | J "['devCode']")
@@ -125,6 +133,7 @@ summary() {
   후보자         01033330001   :3300   ← 배치 준비 · 서류 2건 (1건 D-20)
                  01033330002           서류 검토 중 · 취업 가능 '확인 중'
                  01033330003           H-2 · 취업 '가능' · 러시아어 (고려인)
+                 +84912345678          **해외 거주** · 베트남어 · 입국 전
   보호자         01055550001   :3400
   간병사         01044440001   :3500   ← 오늘 근무 1건 배정됨
                  01044440002           비어 있음
@@ -150,7 +159,7 @@ fi
 
 say "1/6 운영자"
 read -r AT AR AU <<<"$(login 01011110001)"
-psql "$DB" -q -c "INSERT INTO user_roles (user_id, role, is_primary, approved_at) VALUES ('$AU','ADMIN',true,now()) ON CONFLICT DO NOTHING;"
+q "INSERT INTO user_roles (user_id, role, is_primary, approved_at) VALUES ('$AU','ADMIN',true,now()) ON CONFLICT DO NOTHING;"
 AT=$(reissue "$AR"); A=(-H "authorization: Bearer $AT" -H 'content-type: application/json')
 
 say "2/6 기관 2곳"
@@ -163,17 +172,17 @@ ORG_P=$(psql "$DB" -tAqc "INSERT INTO organizations (name, industry_id, org_type
 
 read -r OT OR OU <<<"$(login 01022220001)"
 role "$OT" "{\"role\":\"ORG_MEMBER\",\"organizationId\":\"$ORG_V\",\"makePrimary\":true}"
-psql "$DB" -q -c "UPDATE user_roles SET approved_at = now() WHERE user_id='$OU' AND role='ORG_MEMBER';"
+q "UPDATE user_roles SET approved_at = now() WHERE user_id='$OU' AND role='ORG_MEMBER';"
 read -r PT PR PU <<<"$(login 01022220002)"
 role "$PT" "{\"role\":\"ORG_MEMBER\",\"organizationId\":\"$ORG_P\",\"makePrimary\":true}"
-psql "$DB" -q -c "UPDATE user_roles SET approved_at = now() WHERE user_id='$PU' AND role='ORG_MEMBER';"
+q "UPDATE user_roles SET approved_at = now() WHERE user_id='$PU' AND role='ORG_MEMBER';"
 
 say "3/6 채용 요청"
 OT=$(reissue "$OR"); O=(-H "authorization: Bearer $OT" -H 'content-type: application/json')
 JOB=$(curl -sS -X POST "$B/jobs" "${O[@]}" -d "{\"title\":\"병원 간병사 (3교대)\",\"trackId\":\"$TRK\",\"region\":\"서울\",\"headcount\":3,\"minExperienceYrs\":1,\"employmentType\":\"FULL_TIME\",\"dormProvided\":true,\"salaryMin\":2800000,\"salaryMax\":3200000,\"salaryVisibility\":\"AFTER_MATCH\"}" | J "['id']")
 curl -sS -X PATCH "$B/jobs/$JOB/status" "${O[@]}" -d '{"status":"OPEN"}' >/dev/null
 
-say "4/6 후보자 3명 (트랙·서류·지원까지)"
+say "4/6 후보자 4명 (국내 3 · 해외 1)"
 # 후보자를 만들기만 하면 대시보드가 전부 0으로 보입니다. 트랙·서류·지원까지
 # 넣어야 파이프라인이 실제로 그려집니다.
 #
@@ -197,8 +206,7 @@ mkcand() {
      ON CONFLICT (user_id) DO UPDATE SET status = EXCLUDED.status
      RETURNING id;" | tr -d '[:space:]')
   tid=$(psql "$DB" -tAqc "SELECT id FROM tracks WHERE code='$track';" | tr -d '[:space:]')
-  psql "$DB" -q -c \
-    "INSERT INTO candidate_tracks (candidate_id, track_id, is_primary)
+  q "INSERT INTO candidate_tracks (candidate_id, track_id, is_primary)
      VALUES ('$cid', '$tid', true) ON CONFLICT DO NOTHING;"
   echo "$cid"
 }
@@ -217,45 +225,54 @@ C2=$(mkcand 01033330002 CD-1002 "김민서" 대한민국 "" DOC_REVIEW "" \
      1978-11-02 FEMALE "서울 노원" "ARRAY['서울']" "ARRAY['PART_TIME','FULL_TIME']" false 14 CARE_WORKER)
 C3=$(mkcand 01033330003 CD-1003 "박 스베틀라나" 우즈베키스탄 H-2 READY 2028-03-31 \
      1985-07-25 FEMALE "충북 청주" "ARRAY['충북','대전']" "ARRAY['FULL_TIME']" true 30 HOSPITAL_CAREGIVER)
-psql "$DB" -q -c "UPDATE users SET locale = 'ru' WHERE phone = '01033330003';"
+# 저장은 E.164입니다 — 서버가 010…을 +8210…으로 정규화합니다.
+q "UPDATE users SET locale = 'ru' WHERE phone = '+821033330003';"
+
+# 해외 거주 후보자 — **국제번호로 직접 가입**합니다 (2026-08-21 확정).
+# 아직 입국 전이라 한국 번호가 없고, 이 경로가 없으면 docs/08의 E·F
+# 세그먼트(현지 고려인 · 베트남 양성대학)는 애초에 등록될 수가 없습니다.
+C4=$(mkcand "+84912345678" CD-1004 "쩐 반 민" 베트남 "" DRAFT "" \
+     1999-05-08 MALE "베트남 하노이" "ARRAY['서울','경기']" "ARRAY['FULL_TIME']" true 90 CARE_WORKER)
+q "UPDATE users SET locale = 'vi' WHERE phone = '+84912345678';"
 
 # 부트랙 하나 — 한 사람이 트랙을 겹쳐 갖는 경우가 실제로 흔합니다
 # (요양보호사가 병원 간병도 하는 경우 · SCR-003 notes).
-psql "$DB" -q -c \
-  "INSERT INTO candidate_tracks (candidate_id, track_id, is_primary)
+q "INSERT INTO candidate_tracks (candidate_id, track_id, is_primary)
    SELECT '$C3', id, false FROM tracks WHERE code = 'CARE_WORKER'
    ON CONFLICT DO NOTHING;"
 
 # 서류 — 사람마다 상태가 다릅니다. 전부 VERIFIED면 만료 카운트다운도
 # 반려 안내도 화면에 나타나지 않습니다.
-psql "$DB" -q -c \
-  "INSERT INTO documents (candidate_id, doc_type, file_key, file_name, status,
+q "INSERT INTO documents (candidate_id, doc_type, file_key, file_name, status,
                           reviewed_at, expires_at, verdict)
    VALUES ('$C1','IDENTITY','demo/id1','외국인등록증.pdf','VERIFIED', now(), current_date + 400, NULL),
           ('$C1','HEALTH',  'demo/h1', '건강진단서.pdf',  'VERIFIED', now(), current_date + 20, 'FIT'),
           ('$C2','IDENTITY','demo/id2','주민등록증.pdf',  'UNDER_REVIEW', NULL, NULL, NULL),
-          ('$C2','CERTIFICATE','demo/c2','요양보호사자격증.pdf','VERIFIED', now(), NULL, NULL),
+          ('$C2','QUALIFICATION','demo/c2','요양보호사자격증.pdf','VERIFIED', now(), NULL, NULL),
           ('$C3','IDENTITY','demo/id3','외국인등록증.pdf','VERIFIED', now(), current_date + 500, NULL),
           ('$C3','HEALTH',  'demo/h3', '건강진단서.pdf',  'REJECTED', now(), NULL, NULL);"
 
 # 지원 1건 — 기관 웹에서 후보자 검색·매칭 근거가 보입니다.
-psql "$DB" -q -c \
-  "INSERT INTO applications (job_id, candidate_id, status)
+q "INSERT INTO applications (job_id, candidate_id, status)
    VALUES ('$JOB', '$C1', 'APPLIED') ON CONFLICT DO NOTHING;"
 
 say "5/6 간병사 3명 (클리어런스 통과)"
 CGS=()
 for i in 1 2 3; do
   P="0104444000$i"
-  U=$(psql "$DB" -tAqc "SELECT id FROM users WHERE phone='$P';" | tr -d '[:space:]')
+  # psql로 직접 넣을 때도 API와 **같은 형식**이어야 합니다. 010…으로 넣으면
+  # 로그인 시 서버가 +8210…을 찾아 못 찾고 계정을 하나 더 만듭니다 —
+  # 그 계정에는 CAREGIVER 역할이 없어서 앱이 빈 화면으로 뜹니다.
+  E164="+82${P#0}"
+  U=$(psql "$DB" -tAqc "SELECT id FROM users WHERE phone='$E164';" | tr -d '[:space:]')
   if [ -z "$U" ]; then
-    U=$(psql "$DB" -tAqc "INSERT INTO users (phone, locale, status) VALUES ('$P','ko','ACTIVE') RETURNING id;" | tr -d '[:space:]')
-    psql "$DB" -q -c "INSERT INTO user_roles (user_id, role, is_primary, approved_at) VALUES ('$U','CAREGIVER',true,now());"
+    U=$(psql "$DB" -tAqc "INSERT INTO users (phone, locale, status) VALUES ('$E164','ko','ACTIVE') RETURNING id;" | tr -d '[:space:]')
+    q "INSERT INTO user_roles (user_id, role, is_primary, approved_at) VALUES ('$U','CAREGIVER',true,now());"
   fi
   CG=$(psql "$DB" -tAqc "INSERT INTO caregivers (user_id, display_code, experience_yrs, rating_avg, completed_count)
     VALUES ('$U','CG-100$i', $((i*2+1)), 4.$((i+4)), $((i*11)))
     ON CONFLICT (user_id) DO UPDATE SET experience_yrs = EXCLUDED.experience_yrs RETURNING id;" | tr -d '[:space:]')
-  psql "$DB" -q -c "INSERT INTO caregiver_availability (caregiver_id, starts_at, ends_at) VALUES ('$CG','2020-01-01','2030-12-31');"
+  q "INSERT INTO caregiver_availability (caregiver_id, starts_at, ends_at) VALUES ('$CG','2020-01-01','2030-12-31');"
   # 3번은 클리어런스 하나를 일부러 비워 둡니다 — 매칭에서 빠지는 것을 보여주려고.
   LIST="IDENTITY_VERIFIED CRIMINAL_RECORD_CLEAR HEALTH_CHECK VISA_ELIGIBLE MANDATORY_TRAINING SCOPE_TRAINING"
   [ "$i" = "3" ] && LIST="IDENTITY_VERIFIED CRIMINAL_RECORD_CLEAR HEALTH_CHECK VISA_ELIGIBLE MANDATORY_TRAINING"
@@ -267,7 +284,7 @@ done
 
 say "6/6 병원 · 보호자 · 간병 요청"
 H1=$(psql "$DB" -tAqc "INSERT INTO hospitals (name, region, is_partner) VALUES ('서울성모병원','서울',true) RETURNING id;" | tr -d '[:space:]')
-psql "$DB" -q -c "INSERT INTO hospitals (name, region, is_partner) VALUES ('분당서울대병원','경기',true),('강남세브란스병원','서울',true);"
+q "INSERT INTO hospitals (name, region, is_partner) VALUES ('분당서울대병원','경기',true),('강남세브란스병원','서울',true);"
 read -r GT GR GU <<<"$(login 01055550001)"
 role "$GT" '{"role":"PATIENT_GUARDIAN","makePrimary":true}'
 GT=$(reissue "$GR"); G=(-H "authorization: Bearer $GT" -H 'content-type: application/json')

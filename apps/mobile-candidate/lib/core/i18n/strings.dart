@@ -46,6 +46,12 @@ const Map<String, Map<AppLocale, String>> _dict = {
     AppLocale.ko: '인증번호로 로그인', AppLocale.vi: 'Đăng nhập bằng mã xác minh',
     AppLocale.ru: 'Вход по коду', AppLocale.en: 'Sign in with a code',
   },
+  'login.countryCode': {
+    AppLocale.ko: '해외 번호는 국가번호를 붙여 주세요 (예: +84)',
+    AppLocale.vi: 'Số nước ngoài: thêm mã quốc gia (VD: +84)',
+    AppLocale.ru: 'Зарубежный номер — с кодом страны (например, +998)',
+    AppLocale.en: 'For overseas numbers, include the country code (e.g. +84)',
+  },
   'login.phone': {
     AppLocale.ko: '휴대전화 번호', AppLocale.vi: 'Số điện thoại',
     AppLocale.ru: 'Номер телефона', AppLocale.en: 'Phone number',

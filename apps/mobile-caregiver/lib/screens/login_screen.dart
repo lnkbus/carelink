@@ -78,7 +78,9 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final app = AppScope.of(context);
-    final canSubmit = _sent ? _code.text.length >= 4 : _phone.text.length >= 9;
+    final canSubmit = _sent
+        ? _code.text.length >= 6
+        : _phone.text.replaceAll(RegExp(r'\D'), '').length >= 9;
 
     return Scaffold(
       body: SafeArea(
@@ -112,8 +114,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: _phone,
                 enabled: !_sent,
                 hint: '01012345678',
+                // '+'를 지우지 않습니다. 해외 거주 후보자가 국제번호로 직접
+                // 가입하기 때문입니다 (2026-08-21 확정 · docs/08 E·F 세그먼트).
+                // 서버가 E.164로 정규화하므로 하이픈·공백은 넣어도 됩니다.
+                allowPlus: true,
                 onChanged: (_) => setState(() {}),
               ),
+              if (!_sent) ...[
+                const SizedBox(height: CL.s3),
+                Text(
+                  app.t('login.countryCode'),
+                  style: const TextStyle(fontSize: CL.caption, color: CL.textMuted, height: 1.5),
+                ),
+              ],
 
               if (_sent) ...[
                 const SizedBox(height: CL.s6),
@@ -189,6 +202,7 @@ class _LoginScreenState extends State<LoginScreen> {
     required TextEditingController controller,
     required String hint,
     bool enabled = true,
+    bool allowPlus = false,
     int? maxLength,
     ValueChanged<String>? onChanged,
   }) {
@@ -198,12 +212,16 @@ class _LoginScreenState extends State<LoginScreen> {
         controller: controller,
         enabled: enabled,
         onChanged: onChanged,
-        keyboardType: TextInputType.number,
+        keyboardType: allowPlus ? TextInputType.phone : TextInputType.number,
         // 카운터('0/6')를 띄우지 않습니다. FIELD 화면은 높이가 고정이라
         // 카운터가 붙으면 입력칸이 밀립니다.
         maxLength: maxLength,
         buildCounter: (_, {required currentLength, required isFocused, maxLength}) => null,
-        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        inputFormatters: [
+          allowPlus
+              ? FilteringTextInputFormatter.allow(RegExp(r'[0-9+\s-]'))
+              : FilteringTextInputFormatter.digitsOnly,
+        ],
         style: const TextStyle(fontSize: CL.body, fontFamily: CL.monoFamily),
         decoration: InputDecoration(
           hintText: hint,
@@ -237,6 +255,12 @@ String _loginErrorText(String code, AppLocale locale) => switch (code) {
           AppLocale.vi => 'Vui lòng thử lại sau giây lát',
           AppLocale.ru => 'Повторите попытку чуть позже',
           AppLocale.en => 'Please try again in a moment',
+        },
+      'IAM_PHONE_INVALID' => switch (locale) {
+          AppLocale.ko => '번호를 다시 확인해 주세요. 해외 번호는 국가번호(+84 등)가 필요합니다',
+          AppLocale.vi => 'Vui lòng kiểm tra lại số. Số nước ngoài cần mã quốc gia (VD: +84)',
+          AppLocale.ru => 'Проверьте номер. Для зарубежного номера нужен код страны (например, +998)',
+          AppLocale.en => 'Please check the number. Overseas numbers need a country code (e.g. +84)',
         },
       'IAM_OTP_INVALID' => switch (locale) {
           AppLocale.ko => '인증번호가 맞지 않습니다',

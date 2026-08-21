@@ -13,6 +13,7 @@ import { ConsentService } from '../service/consent.service';
 import { UserService } from '../service/user.service';
 import type { UserRoleRow, UserRow } from '../repository/user.repository';
 import { ROLES_REQUIRING_ORG_APPROVAL } from '../iam.types';
+import { displayPhone } from '../service/phone';
 
 /**
  * SCR-001 스플래시 · SCR-002 로그인 · SCR-003 역할 선택.
@@ -144,7 +145,8 @@ export class AuthController {
     return Object.assign(new MeDto(), {
       ownerUserId: user.id,
       id: user.id,
-      phone: user.phone,
+      // 저장은 E.164(+8210…), 표시는 익숙한 010… 으로 되돌린다.
+      phone: displayPhone(user.phone),
       locale: user.locale,
       status: user.status,
       roles: roleDtos,
