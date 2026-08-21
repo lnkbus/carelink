@@ -52,7 +52,14 @@ if [ "$state" != "healthy" ]; then
 fi
 
 say "3/3 데모 데이터"
-docker compose run --rm tools demo
+# 실패를 삼키면 안 됩니다. 아래 URL 목록이 그대로 찍혀서 '다 됐다'로 읽히고,
+# 정작 화면은 비어 있습니다.
+if ! docker compose run --rm tools demo; then
+  bad "데모 데이터 주입에 실패했습니다. 스택은 떠 있으니 로그를 보세요:"
+  echo "  docker compose logs api --tail 50"
+  echo "  docker compose logs migrate"
+  exit 1
+fi
 
 say "확인"
 cat <<TXT

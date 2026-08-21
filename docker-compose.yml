@@ -43,7 +43,7 @@ services:
       timeout: 3s
       retries: 20
 
-  # 마이그레이션 + 시드. 한 번 돌고 끝납니다.
+  # 마이그레이션 + 시드. 한 번 돌고 끝납니다 — 다시 불려도 안전합니다.
   #
   # API에 넣지 않은 이유: API를 여러 개 띄우면 마이그레이션이 동시에 돌고,
   # 그중 하나는 반드시 실패합니다. 스키마 적용은 한 번만 일어나야 합니다.
@@ -52,14 +52,17 @@ services:
     depends_on:
       db: { condition: service_healthy }
     environment:
+      PGHOST: db
+      PGUSER: carelink
+      PGDATABASE: carelink
       PGPASSWORD: carelink
     volumes:
       - ./infra/migrations:/migrations:ro
-    entrypoint: ['sh', '-c']
-    command: >
-      "psql -h db -U carelink -d carelink -v ON_ERROR_STOP=1 -f /migrations/0001_init.sql &&
-       psql -h db -U carelink -d carelink -v ON_ERROR_STOP=1 -f /migrations/0002_seed.sql &&
-       echo '스키마·시드 적용 완료'"
+    # 재실행 가능해야 합니다. `docker compose run --rm tools ...`가
+    # api → migrate 의존을 따라 이 컨테이너를 다시 돌리기 때문입니다.
+    # 스크립트가 '이미 적용됨'을 확인하고 건너뜁니다.
+    entrypoint: ['sh']
+    command: ['/migrations/apply.sh']
     restart: 'no'
 
   api:

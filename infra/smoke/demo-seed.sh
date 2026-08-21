@@ -73,6 +73,51 @@ login() {
 reissue() { curl -sS -X POST "$B/auth/refresh" -H 'content-type: application/json' -d "{\"refreshToken\":\"$1\"}" | J "['accessToken']"; }
 role() { curl -sS -X POST "$B/auth/roles" -H "authorization: Bearer $1" -H 'content-type: application/json' -d "$2" >/dev/null; }
 
+# ── 재실행 ──────────────────────────────────────────────────────────────
+#
+# 이 스크립트는 **여러 번 돌아갑니다**. `bash infra/local/start.sh`를 다시
+# 치는 것이 가장 흔한 재시작 방법이기 때문입니다.
+#
+# 그런데 organizations·hospitals·jobs·care_requests에는 자연키 유니크가
+# 없습니다. 그대로 두면 두 번째 실행이 **실패하지 않고 전부 두 벌**을
+# 만듭니다 — 화면에 병원이 6개, 채용 요청이 2개 뜨고, 처음 보는 사람은
+# 그것을 데이터 오류로 읽습니다. 조용한 중복이 명시적 실패보다 나쁩니다.
+#
+# 그래서 데모 데이터가 이미 있으면 손대지 않고 계정표만 다시 보여줍니다.
+# 처음부터 다시 만들려면 볼륨을 지우세요: docker compose down -v
+demo_exists() {
+  [ -n "$(psql "$DB" -tAqc "SELECT 1 FROM candidates WHERE display_code = 'CD-1001' LIMIT 1;" 2>/dev/null | tr -d '[:space:]')" ]
+}
+
+summary() {
+  local H1="${1:-(병원 미생성)}"
+  echo
+  say "완료. 로그인 번호 (인증번호는 화면에 표시됩니다)"
+  cat <<TXT
+
+  운영자         01011110001   :3100
+  기관 (검증완료) 01022220001   :3200
+  기관 (검증대기) 01022220002   :3200   ← 개인정보 게이트 비교용
+  후보자         01033330001   :3300   ← 배치 준비 · 서류 2건 (1건 D-20)
+                 01033330002           서류 검토 중 · 취업 가능 '확인 중'
+                 01033330003           H-2 · 취업 '가능' · 러시아어 (고려인)
+  보호자         01055550001   :3400
+  간병사         01044440001   :3500   ← 오늘 근무 1건 배정됨
+                 01044440002           비어 있음
+                 01044440003           클리어런스 5/6 (매칭에서 빠짐)
+
+  병실 QR 토큰   $H1:703호
+
+TXT
+}
+
+if demo_exists; then
+  say "데모 데이터가 이미 있습니다 — 새로 만들지 않습니다."
+  echo "  처음부터 다시 만들려면: docker compose down -v && bash infra/local/start.sh"
+  summary "$(psql "$DB" -tAqc "SELECT id FROM hospitals WHERE name='서울성모병원' LIMIT 1;" | tr -d '[:space:]')"
+  exit 0
+fi
+
 say "1/6 운영자"
 read -r AT AR AU <<<"$(login 01011110001)"
 psql "$DB" -q -c "INSERT INTO user_roles (user_id, role, is_primary, approved_at) VALUES ('$AU','ADMIN',true,now()) ON CONFLICT DO NOTHING;"
@@ -190,21 +235,4 @@ curl -sS -X PATCH "$B/care-assignments/$A1/status" "${A[@]}" -d '{"status":"ASSI
 # 브라우저에서 로그인이 막히고, 처음 써 보는 사람은 그걸 고장으로 읽습니다.
 clear_otp_cooldown
 
-echo
-say "완료. 로그인 번호 (인증번호는 화면에 표시됩니다)"
-cat <<TXT
-
-  운영자         01011110001   :3100
-  기관 (검증완료) 01022220001   :3200
-  기관 (검증대기) 01022220002   :3200   ← 개인정보 게이트 비교용
-  후보자         01033330001   :3300   ← 배치 준비 · 서류 2건 (1건 D-20)
-                 01033330002           서류 검토 중 · 취업 가능 '확인 중'
-                 01033330003           H-2 · 취업 '가능' · 러시아어 (고려인)
-  보호자         01055550001   :3400
-  간병사         01044440001   :3500   ← 오늘 근무 1건 배정됨
-                 01044440002           비어 있음
-                 01044440003           클리어런스 5/6 (매칭에서 빠짐)
-
-  병실 QR 토큰   $H1:703호
-
-TXT
+summary "$H1"
