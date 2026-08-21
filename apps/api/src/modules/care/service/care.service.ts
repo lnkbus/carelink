@@ -359,6 +359,66 @@ export class CareService {
   listServiceLogs(assignmentId: string) { return this.repo.listServiceLogs(assignmentId); }
   requesterOfAssignment(assignmentId: string) { return this.repo.requesterOfAssignment(assignmentId); }
 
+  // ── 가용 시간 (SCR-402) ──────────────────────────────────────────────
+  //
+  // 간병사가 직접 관리해야 매칭 정확도가 올라갑니다. 이 데이터가 없으면
+  // 운영자가 전화로 확인하게 되고, '매칭 시간 단축'이라는 MVP 검증 목표가
+  // 무너집니다 (SCR-402 notes · docs/03 주석).
+
+  private async myCaregiverId(userUd: string): Promise<string> {
+    const id = await this.repo.caregiverIdForUser(userUd);
+    if (!id) {
+      throw new DomainError('COMMON_NOT_FOUND', {
+        targetType: 'caregiver', targetId: userUd,
+        reason: 'this account is not registered as a caregiver',
+      });
+    }
+    return id;
+  }
+
+  async listAvailability(userId: string) {
+    return this.repo.listAvailability(await this.myCaregiverId(userId));
+  }
+
+  async addAvailability(input: {
+    userId: string; startsAt: string; endsAt: string; kind: 'AVAILABLE' | 'BLOCKED';
+  }) {
+    if (new Date(input.endsAt) <= new Date(input.startsAt)) {
+      throw new DomainError('COMMON_INVALID_TRANSITION', {
+        startsAt: input.startsAt, endsAt: input.endsAt,
+        reason: 'the end of a block must be after its start',
+      });
+    }
+    const caregiverId = await this.myCaregiverId(input.userId);
+    const row = await this.repo.addAvailability({ ...input, caregiverId });
+    await this.audit.record({
+      actorUserId: input.userId, action: 'STATUS_CHANGE',
+      targetType: 'caregiver_availability', targetId: row.id,
+      after: { kind: row.kind, startsAt: row.starts_at, endsAt: row.ends_at },
+    });
+    return row;
+  }
+
+  async removeAvailability(userId: string, id: string) {
+    const caregiverId = await this.myCaregiverId(userId);
+    const result = await this.repo.deleteAvailability(caregiverId, id);
+    if (result === 'NOT_FOUND') {
+      throw new DomainError('COMMON_NOT_FOUND', { targetType: 'caregiver_availability', targetId: id });
+    }
+    if (result === 'BOOKED') {
+      // 지우면 화면에서는 사라지지만 배정은 남습니다. 그 상태로 간병사가
+      // 안 나오면 병실에 사람이 없습니다.
+      throw new DomainError('CARE_AVAILABILITY_BOOKED', {
+        availabilityId: id,
+        reason: 'an assignment already falls inside this window; cancel the assignment first',
+      });
+    }
+    await this.audit.record({
+      actorUserId: userId, action: 'DELETE',
+      targetType: 'caregiver_availability', targetId: id,
+    });
+  }
+
   async getAssignment(assignmentId: string) {
     const row = await this.repo.findAssignment(assignmentId);
     if (!row) {

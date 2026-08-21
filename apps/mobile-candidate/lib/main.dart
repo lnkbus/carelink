@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'core/api/api_client.dart';
+import 'package:carelink_field_ui/carelink_field_ui.dart';
 import 'core/i18n/strings.dart';
 import 'core/app_state.dart';
-import 'core/theme/tokens.dart';
 import 'screens/applications_screen.dart';
 import 'screens/documents_screen.dart';
 import 'screens/home_screen.dart';

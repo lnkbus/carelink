@@ -130,5 +130,30 @@ services:
       api: { condition: service_healthy }
     ports: ['3300:80']
 
+  # 보호자 반응형 웹 (SCR-301~306). 별도 앱을 만들지 않습니다 — 보호자는
+  # 설치 의사가 낮고 대개 병원에서 링크로 들어옵니다 (SCR-301 notes).
+  web-care:
+    build:
+      context: .
+      dockerfile: apps/web-care/Dockerfile
+    depends_on:
+      api: { condition: service_healthy }
+    environment:
+      CARELINK_API_URL: http://api:3000/api/v1
+      NEXT_PUBLIC_API_URL: http://localhost:3000/api/v1
+    ports: ['3400:3400']
+
+  # 간병사 앱 — 웹 빌드 (SCR-401~404). 검증용입니다.
+  # 터치 타깃과 글꼴 크기는 실기기에서 최종 확인하세요 (docs/14 §3).
+  caregiver-web:
+    build:
+      context: .
+      dockerfile: apps/mobile-caregiver/Dockerfile
+      args:
+        CARELINK_API_URL: http://localhost:3000/api/v1
+    depends_on:
+      api: { condition: service_healthy }
+    ports: ['3500:80']
+
 volumes:
   db-data:

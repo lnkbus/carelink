@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:carelink_field_ui/carelink_field_ui.dart';
 import '../core/app_state.dart';
-import '../core/i18n/strings.dart';
-/// SCR-002 로그인 — 비밀번호 없음, 휴대폰 OTP만 (README §4-2 S1 확정).
+/// 로그인 — 비밀번호 없음, 휴대폰 OTP만 (README §4-2 S1 확정).
 ///
-/// 입력 필드 64px, 버튼 64px. 40~65세 사용자가 한 손으로 쓰는 화면입니다.
-/// 상단에 LocaleSwitcher를 둡니다 — 로그인 전에 언어를 못 바꾸면
-/// 한국어를 못 읽는 사용자는 여기서 막힙니다.
+/// 입력 필드 64px, 버튼 64px. 병원 복도에서 한 손으로 쓰는 화면입니다.
+/// 상단에 언어 전환을 둡니다 — 로그인 전에 언어를 못 바꾸면 한국어를
+/// 못 읽는 사용자는 여기서 막힙니다. 간병 인력의 상당수가 외국인입니다.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -102,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: CL.s3),
               Text(
-                app.t('login.title'),
+                app.t('app.name'),
                 style: const TextStyle(fontSize: CL.body, color: CL.textMuted),
               ),
               const SizedBox(height: CL.s7),
@@ -147,7 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: CL.s6),
               PrimaryButton(
                 hero: true,
-                label: _sent ? app.t('login.submit') : app.t('login.sendCode'),
+                label: _sent ? app.t('login.verify') : app.t('login.send'),
                 onPressed: _busy || !canSubmit
                     ? null
                     : () => _sent ? _verify(app) : _sendCode(app),
@@ -156,7 +155,7 @@ class _LoginScreenState extends State<LoginScreen> {
               if (_sent) ...[
                 const SizedBox(height: CL.s4),
                 SecondaryButton(
-                  label: app.t('login.changeNumber'),
+                  label: app.t('common.cancel'),
                   onPressed: () => setState(() {
                     _sent = false;
                     _code.clear();
@@ -165,11 +164,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ],
 
-              const SizedBox(height: CL.s6),
-              Text(
-                app.t('login.consent'),
-                style: const TextStyle(fontSize: CL.caption, color: CL.textMuted, height: 1.5),
-              ),
             ],
           ),
         ),
@@ -245,7 +239,7 @@ Future<void> _showLocaleSheet(BuildContext context, AppState app) async {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              app.t('settings.language'),
+              app.locale.nativeName,
               style: const TextStyle(fontSize: CL.subtitle, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: CL.s6),

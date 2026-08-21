@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/app_state.dart';
 import '../core/i18n/strings.dart';
-import '../core/theme/tokens.dart';
-import '../widgets/field_widgets.dart';
-
+import 'package:carelink_field_ui/carelink_field_ui.dart';
 /// SCR-106 교육.
 ///
 /// 수강 중 과정을 히어로로 올리고 필수 과정을 그 아래 둡니다

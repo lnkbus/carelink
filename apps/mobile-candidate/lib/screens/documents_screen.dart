@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import '../core/app_state.dart';
 import '../core/i18n/strings.dart';
-import '../core/theme/tokens.dart';
+import 'package:carelink_field_ui/carelink_field_ui.dart';
 import '../models/models.dart';
-import '../widgets/field_widgets.dart';
-
 /// SCR-105 서류 / 증빙.
 ///
 /// **만료일 관리가 핵심입니다.** 자격증·건강진단서가 만료되면 배치 중인 인력의
@@ -208,6 +206,7 @@ class _DocumentTile extends StatelessWidget {
           if (doc.expiresAt != null) ...[
             const SizedBox(height: CL.s4),
             ExpiryCountdown(
+              expiredLabel: app.t('expiry.expired'),
               days: doc.expiresInDays,
               locale: locale,
               date: doc.expiresAt,

@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/app_state.dart';
-import '../core/theme/tokens.dart';
+import 'package:carelink_field_ui/carelink_field_ui.dart';
 import '../models/models.dart';
-import '../widgets/field_widgets.dart';
-
 /// SCR-110 마이페이지 · SCR-104 프로필 요약.
 ///
 /// **FIELD 트랙은 ko/vi/ru/en 4개 언어입니다.** 러시아어는 고려인 세그먼트
@@ -111,6 +109,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           if (me.visaExpiresInDays != null) ...[
                             const SizedBox(height: CL.s4),
                             ExpiryCountdown(
+                              expiredLabel: app.t('expiry.expired'),
                               days: me.visaExpiresInDays,
                               locale: app.locale,
                               date: me.visaExpiresOn,

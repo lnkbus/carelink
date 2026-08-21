@@ -9,6 +9,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # FIELD 토큰·API 클라이언트·위젯은 간병사 앱과 공용입니다.
+  # 앱마다 복사하면 반드시 어긋납니다 — 한쪽에서 색을 고치고 다른 쪽은 그대로 남습니다.
+  carelink_field_ui:
+    path: ../../packages/field_ui
   # 상태 관리는 ValueNotifier + InheritedWidget로 충분합니다.
   # 화면 10개에 상태 관리 패키지를 얹으면 배우는 비용이 더 큽니다.
   http: ^1.2.2

@@ -1,6 +1,5 @@
 import 'package:carelink_candidate/core/i18n/strings.dart';
-import 'package:carelink_candidate/core/theme/tokens.dart';
-import 'package:carelink_candidate/widgets/field_widgets.dart';
+import 'package:carelink_field_ui/carelink_field_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -82,7 +81,7 @@ void main() {
 
     testWidgets('ExpiryCountdown은 날짜가 아니라 D-day를 보여준다', (tester) async {
       await tester.pumpWidget(wrap(
-        const ExpiryCountdown(days: 42, locale: AppLocale.ko, date: '2026-10-01'),
+        const ExpiryCountdown(days: 42, locale: AppLocale.ko, expiredLabel: '만료됨', date: '2026-10-01'),
       ));
 
       expect(find.text('D-42'), findsOneWidget);
@@ -92,7 +91,7 @@ void main() {
 
     testWidgets('이미 만료됐으면 D+n과 만료 표시가 함께 나온다', (tester) async {
       await tester.pumpWidget(wrap(
-        const ExpiryCountdown(days: -5, locale: AppLocale.ko),
+        const ExpiryCountdown(days: -5, locale: AppLocale.ko, expiredLabel: '만료됨'),
       ));
 
       expect(find.text('D+5'), findsOneWidget);

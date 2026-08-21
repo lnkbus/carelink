@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import '../core/app_state.dart';
 import '../core/i18n/strings.dart';
-import '../core/theme/tokens.dart';
+import 'package:carelink_field_ui/carelink_field_ui.dart';
 import '../models/models.dart';
-import '../widgets/field_widgets.dart';
-
 /// SCR-102 커리어 여정.
 ///
 /// **이 화면이 CARELINK의 차별점입니다.** 일반 구인구직은 "지원 상태"만

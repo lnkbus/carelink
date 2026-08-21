@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/app_state.dart';
-import '../core/theme/tokens.dart';
+import 'package:carelink_field_ui/carelink_field_ui.dart';
 import '../models/models.dart';
-import '../widgets/field_widgets.dart';
-
 /// SCR-104 프로필.
 ///
 /// 기본정보 행은 56px, 아바타 88px (design/README §Candidate App 104).
@@ -147,6 +145,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         if (me.visaExpiresInDays != null) ...[
                           const SizedBox(height: CL.s4),
                           ExpiryCountdown(
+                            expiredLabel: app.t('expiry.expired'),
                             days: me.visaExpiresInDays,
                             locale: app.locale,
                             date: me.visaExpiresOn,

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import '../core/app_state.dart';
 import '../core/i18n/strings.dart';
-import '../core/theme/tokens.dart';
+import 'package:carelink_field_ui/carelink_field_ui.dart';
 import '../models/models.dart';
-import '../widgets/field_widgets.dart';
 import 'login_screen.dart' show showLocaleSheet;
 
 /// SCR-101 후보자 홈.
@@ -101,6 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       if (_me?.visaExpiresInDays != null) ...[
                         const SizedBox(height: CL.s6),
                         ExpiryCountdown(
+                          expiredLabel: app.t('expiry.expired'),
                           days: _me!.visaExpiresInDays,
                           locale: app.locale,
                           label: app.t('profile.visa'),

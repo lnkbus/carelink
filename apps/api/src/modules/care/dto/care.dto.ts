@@ -119,14 +119,20 @@ export class CareAssignmentDto {
    */
   @ScopeOwner() ownerUserId: string;
 
-  @Scope('self', 'admin', 'org') id: string;
-  @Scope('self', 'admin', 'org') careRequestId: string;
-  @Scope('self', 'admin', 'org') caregiverDisplayCode: string;
-  @Scope('self', 'admin', 'org') status: string;
-  @Scope('self', 'admin', 'org') offeredAt: Date;
-  @Scope('self', 'admin', 'org') respondedAt: Date | null;
-  @Scope('self', 'admin', 'org') shiftStartTime: string | null;
-  @Scope('self', 'admin', 'org') shiftEndTime: string | null;
+  // 간병사도 **자기 배정은** 봅니다 (SCR-401·402). 여기 있는 것은 전부
+  // 배정 자체의 사실이고 환자 신원은 하나도 없습니다 — 병원·병실·필요
+  // 지원은 별도 DTO(CaregiverAssignmentDto)로 나갑니다.
+  //
+  // caregiver를 빼두면 `/caregivers/me/assignments`가 role 가드는 통과하고
+  // 직렬화에서 전부 잘려 **빈 객체**가 나갑니다. 앱은 그걸 파싱하다 죽습니다.
+  @Scope('self', 'caregiver', 'admin', 'org') id: string;
+  @Scope('self', 'caregiver', 'admin', 'org') careRequestId: string;
+  @Scope('self', 'caregiver', 'admin', 'org') caregiverDisplayCode: string;
+  @Scope('self', 'caregiver', 'admin', 'org') status: string;
+  @Scope('self', 'caregiver', 'admin', 'org') offeredAt: Date;
+  @Scope('self', 'caregiver', 'admin', 'org') respondedAt: Date | null;
+  @Scope('self', 'caregiver', 'admin', 'org') shiftStartTime: string | null;
+  @Scope('self', 'caregiver', 'admin', 'org') shiftEndTime: string | null;
   /** 운영자 확인자. 이것이 채워져야 확정입니다 (§6-4). */
   @Scope('admin') confirmedBy: string | null;
   @Scope('admin') caregiverId: string;
@@ -221,6 +227,27 @@ export class CaregiverAssignmentDto {
    * 현장에서 같은 요구를 받을 수 있고, 그때 거절할 근거가 됩니다.
    */
   @Scope('caregiver', 'admin') restrictedFlags: string[] | null;
+}
+
+/**
+ * 가용/차단 구간 (SCR-402).
+ *
+ * 간병사 본인만 봅니다. 다른 사람의 일정을 볼 이유가 없고, 일정은
+ * 생활 패턴이 그대로 드러나는 정보입니다.
+ */
+export class AvailabilityDto {
+  @ScopeOwner() ownerUserId: string;
+  @Scope('self', 'caregiver', 'admin') id: string;
+  @Scope('self', 'caregiver', 'admin') startsAt: Date;
+  @Scope('self', 'caregiver', 'admin') endsAt: Date;
+  /** AVAILABLE | BLOCKED */
+  @Scope('self', 'caregiver', 'admin') kind: string;
+}
+
+export class AvailabilityInputDto {
+  @IsISO8601() startsAt: string;
+  @IsISO8601() endsAt: string;
+  @IsIn(['AVAILABLE', 'BLOCKED']) kind: 'AVAILABLE' | 'BLOCKED';
 }
 
 /**

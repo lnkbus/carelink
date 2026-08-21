@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/app_state.dart';
-import '../core/theme/tokens.dart';
-import '../widgets/field_widgets.dart';
-
+import 'package:carelink_field_ui/carelink_field_ui.dart';
 /// SCR-103 커리어 트랙.
 ///
 /// **트랙은 ENUM이 아니라 테이블입니다** (§5.8). 화면은 하나이고 데이터만

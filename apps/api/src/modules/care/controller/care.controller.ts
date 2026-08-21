@@ -1,10 +1,11 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { DomainError } from '../../../core/errors/domain-error';
 import type { Viewer } from '../../../core/scope/scope.types';
 import { Roles } from '../../iam/guard/roles.guard';
 import { CurrentViewer } from '../../iam/guard/viewer.decorator';
 import {
-  AppendLogDto, AssignmentStatusDto, CareAssignmentDto, CaregiverAssignmentDto,
+  AppendLogDto, AssignmentStatusDto, AvailabilityDto, AvailabilityInputDto,
+  CareAssignmentDto, CaregiverAssignmentDto,
   CareMatchResultDto, CareRequestDto, CareRequestQueryDto, CareRequestStatusDto,
   CaregiverCardDto, CreateCareRequestDto, OfferAssignmentDto, ServiceLogDto,
   ShiftBoundaryDto,
@@ -195,6 +196,39 @@ export class CareController {
   }
 
   /**
+   * SCR-402 — 내 가용 시간.
+   *
+   * 간병사가 직접 관리합니다. 운영자가 전화로 확인하는 순간 '매칭 시간
+   * 단축'이라는 MVP 검증 목표가 무너집니다 (SCR-402 notes).
+   */
+  @Get('caregivers/me/availability')
+  @Roles('CAREGIVER', 'ADMIN', 'SUPER_ADMIN')
+  async myAvailability(@CurrentViewer() viewer: Viewer): Promise<AvailabilityDto[]> {
+    const rows = await this.care.listAvailability(viewer.userId!);
+    return rows.map((r) => toAvailabilityDto(r, viewer.userId!));
+  }
+
+  @Post('caregivers/me/availability')
+  @Roles('CAREGIVER', 'ADMIN', 'SUPER_ADMIN')
+  async addAvailability(
+    @CurrentViewer() viewer: Viewer,
+    @Body() dto: AvailabilityInputDto,
+  ): Promise<AvailabilityDto> {
+    const row = await this.care.addAvailability({ userId: viewer.userId!, ...dto });
+    return toAvailabilityDto(row, viewer.userId!);
+  }
+
+  @Delete('caregivers/me/availability/:id')
+  @Roles('CAREGIVER', 'ADMIN', 'SUPER_ADMIN')
+  @HttpCode(204)
+  async removeAvailability(
+    @CurrentViewer() viewer: Viewer,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
+    await this.care.removeAvailability(viewer.userId!, id);
+  }
+
+  /**
    * SCR-403 — 간병사용 근무 상세.
    *
    * **환자 실명·나이·성별·진단명이 나가지 않습니다.** 리포지토리 쿼리에 아예
@@ -296,6 +330,14 @@ export class CareController {
     ]);
     return rows.map((r) => toLogDto(r, requester?.requester_id ?? ''));
   }
+}
+
+function toAvailabilityDto(
+  a: { id: string; starts_at: Date; ends_at: Date; kind: string }, ownerUserId: string,
+): AvailabilityDto {
+  return Object.assign(new AvailabilityDto(), {
+    ownerUserId, id: a.id, startsAt: a.starts_at, endsAt: a.ends_at, kind: a.kind,
+  });
 }
 
 function toLogDto(l: ServiceLogRow, ownerUserId: string): ServiceLogDto {

@@ -71,6 +71,7 @@ export const DOMAIN_ERRORS = {
   CARE_LOG_TIME_FORBIDDEN:  { status: HttpStatus.FORBIDDEN,    message: 'Only an operator may restate the time of a logged event, and only as a correction' },
   CARE_LOG_TIME_INVALID:    { status: HttpStatus.BAD_REQUEST,  message: 'A logged event cannot have occurred in the future' },
   QUALITY_SHIFT_NOT_ALLOWED_FOR_WORKER: { status: HttpStatus.FORBIDDEN, message: 'This shift pattern cannot be assigned to this worker' },
+  CARE_AVAILABILITY_BOOKED: { status: HttpStatus.CONFLICT, message: 'An assignment already falls inside this availability window' },
 
   // ── 공통 ───────────────────────────────────────────────────────────────
   COMMON_INVALID_TRANSITION:  { status: HttpStatus.CONFLICT,     message: 'State transition is not allowed' },

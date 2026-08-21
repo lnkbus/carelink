@@ -22,7 +22,7 @@ async function bootstrap(): Promise<void> {
    */
   // localhost와 127.0.0.1은 브라우저에게 **다른 출처**입니다. 둘 다 넣지 않으면
   // 주소창에 무엇을 쳤느냐에 따라 되기도 하고 안 되기도 합니다.
-  const defaultOrigins = [3100, 3200, 3300, 3400]
+  const defaultOrigins = [3100, 3200, 3300, 3400, 3500]
     .flatMap((port) => [`http://localhost:${port}`, `http://127.0.0.1:${port}`])
     .join(',');
   const origins = (process.env.CORS_ORIGINS ?? defaultOrigins)

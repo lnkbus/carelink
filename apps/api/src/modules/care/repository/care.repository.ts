@@ -219,6 +219,68 @@ export class CareRepository {
   // ── 근무 기록 (SCR-404 · 306) ─────────────────────────────────────────
   //
   // ***** APPEND-ONLY *****
+  /** user_id → caregiver_id. 앱은 자기 id를 모릅니다 — 토큰의 user만 압니다. */
+  async caregiverIdForUser(userId: string): Promise<string | null> {
+    const row = await this.db.one<{ id: string }>(
+      `SELECT id FROM caregivers WHERE user_id = $1`, [userId],
+    );
+    return row?.id ?? null;
+  }
+
+  /** 간병사 본인의 가용/차단 구간 (SCR-402). */
+  listAvailability(caregiverId: string): Promise<{
+    id: string; starts_at: Date; ends_at: Date; kind: string;
+  }[]> {
+    return this.db.query(
+      `SELECT id, starts_at, ends_at, kind
+         FROM caregiver_availability
+        WHERE caregiver_id = $1 AND ends_at >= now() - interval '7 days'
+        ORDER BY starts_at`,
+      [caregiverId],
+    );
+  }
+
+  async addAvailability(input: {
+    caregiverId: string; startsAt: string; endsAt: string; kind: string;
+  }): Promise<{ id: string; starts_at: Date; ends_at: Date; kind: string }> {
+    return (await this.db.one(
+      `INSERT INTO caregiver_availability (caregiver_id, starts_at, ends_at, kind)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, starts_at, ends_at, kind`,
+      [input.caregiverId, input.startsAt, input.endsAt, input.kind],
+    ))!;
+  }
+
+  /**
+   * 구간 삭제.
+   *
+   * **배정이 걸려 있으면 지우지 않습니다.** 가용 구간을 지운다고 배정이
+   * 사라지지는 않는데, 화면에서는 사라진 것처럼 보입니다 — 그 상태로
+   * 간병사가 안 나오면 병실에 사람이 없습니다.
+   */
+  async deleteAvailability(caregiverId: string, id: string): Promise<'DELETED' | 'BOOKED' | 'NOT_FOUND'> {
+    const row = await this.db.one<{ id: string; starts_at: Date; ends_at: Date }>(
+      `SELECT id, starts_at, ends_at FROM caregiver_availability WHERE id = $1 AND caregiver_id = $2`,
+      [id, caregiverId],
+    );
+    if (!row) return 'NOT_FOUND';
+
+    const booked = await this.db.one<{ n: string }>(
+      `SELECT count(*)::text AS n
+         FROM care_assignments a
+         JOIN care_requests r ON r.id = a.care_request_id
+        WHERE a.caregiver_id = $1
+          AND a.status IN ('OFFERED','ACCEPTED','ASSIGNED','IN_SERVICE')
+          AND r.start_at < $3
+          AND COALESCE(r.end_at, r.start_at) >= $2`,
+      [caregiverId, row.starts_at.toISOString(), row.ends_at.toISOString()],
+    );
+    if (Number(booked?.n ?? 0) > 0) return 'BOOKED';
+
+    await this.db.query(`DELETE FROM caregiver_availability WHERE id = $1`, [id]);
+    return 'DELETED';
+  }
+
   /** 간병사 → 인력 user_id. 코어(engagement)에 물어보려면 이 값이 필요합니다. */
   async caregiverUserId(caregiverId: string): Promise<string | null> {
     const row = await this.db.one<{ user_id: string }>(

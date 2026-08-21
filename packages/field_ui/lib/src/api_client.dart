@@ -48,6 +48,8 @@ class ApiClient {
 
   Future<dynamic> patch(String path, [Object? body]) => _send('PATCH', path, body: body);
 
+  Future<dynamic> delete(String path) => _send('DELETE', path);
+
   Future<dynamic> _send(
     String method,
     String path, {
@@ -66,6 +68,7 @@ class ApiClient {
     final res = switch (method) {
       'POST' => await _http.post(uri, headers: headers, body: body == null ? null : jsonEncode(body)),
       'PATCH' => await _http.patch(uri, headers: headers, body: body == null ? null : jsonEncode(body)),
+      'DELETE' => await _http.delete(uri, headers: headers),
       _ => await _http.get(uri, headers: headers),
     };
 

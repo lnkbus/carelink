@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import '../core/app_state.dart';
 import '../core/i18n/strings.dart';
-import '../core/theme/tokens.dart';
+import 'package:carelink_field_ui/carelink_field_ui.dart';
 import '../models/models.dart';
-import '../widgets/field_widgets.dart';
-
 /// SCR-109 지원 현황.
 ///
 /// **불합격에는 사유가 필수입니다** (design/README §Candidate App 109).

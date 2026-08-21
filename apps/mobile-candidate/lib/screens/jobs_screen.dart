@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import '../core/api/api_client.dart';
+import 'package:carelink_field_ui/carelink_field_ui.dart';
 import '../core/app_state.dart';
 import '../core/i18n/strings.dart';
-import '../core/theme/tokens.dart';
 import '../models/models.dart';
-import '../widgets/field_widgets.dart';
 import 'home_screen.dart' show salaryText;
 
 /// SCR-107 일자리 목록 · SCR-108 상세.

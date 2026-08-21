@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../core/i18n/strings.dart';
-import '../core/theme/tokens.dart';
+import 'locale.dart';
+import 'tokens.dart';
 
 /// 상태 배지.
 ///
@@ -55,12 +55,16 @@ class ExpiryCountdown extends StatelessWidget {
     super.key,
     required this.days,
     required this.locale,
+    required this.expiredLabel,
     this.label,
     this.date,
   });
 
   final int? days;
   final AppLocale locale;
+  /// 만료된 상태의 문구. **공용 패키지는 앱의 문구 사전을 알지 못합니다** —
+  /// 여기서 `tr()`을 부르면 패키지가 특정 앱에 묶입니다.
+  final String expiredLabel;
   final String? label;
   final String? date;
 
@@ -102,7 +106,7 @@ class ExpiryCountdown extends StatelessWidget {
           if (d != null && d < 0) ...[
             const SizedBox(width: CL.s2),
             Text(
-              tr('expiry.expired', locale),
+              expiredLabel,
               style: TextStyle(fontSize: CL.caption, color: tone.fg, fontWeight: FontWeight.w600),
             ),
           ],
