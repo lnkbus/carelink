@@ -63,8 +63,20 @@ class _HomeScreenState extends State<HomeScreen> {
     final app = AppScope.of(context);
 
     return Scaffold(
+      // 시안(SCR-101)의 앱바 — 26px 브랜드 타일 + '케어링크' + 언어 칩.
       appBar: AppBar(
-        title: Text(app.t('home.title')),
+        toolbarHeight: 56,
+        automaticallyImplyLeading: false,
+        title: Row(
+          children: [
+            const BrandMark(size: 26, tileColor: CL.action, markColor: Colors.white, radius: 8),
+            const SizedBox(width: CL.s3),
+            Text(
+              app.t('brand.name'),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
+          ],
+        ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: CL.s5),
@@ -85,7 +97,47 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: ListView(
                     padding: const EdgeInsets.all(CL.s6),
                     children: [
-                      if (_journey != null) _ProgressDots(journey: _journey!, locale: app.locale),
+                      // 시안의 인사 블록 — 44px 아바타 + 이름 22px/700 +
+                      // 표시코드·트랙 mono 14px. 자기 화면이라는 신호가
+                      // 없으면 공용 안내판처럼 읽힙니다.
+                      Row(
+                        children: [
+                          Container(
+                            width: 44, height: 44,
+                            decoration: const BoxDecoration(
+                              color: CL.actionTint, shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.person, size: 24, color: CL.action),
+                          ),
+                          const SizedBox(width: CL.s4),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  app.t('home.greeting').replaceFirst(
+                                        '{name}',
+                                        _me?.name ?? _me?.displayCode ?? '',
+                                      ),
+                                  style: const TextStyle(
+                                    fontSize: 22, fontWeight: FontWeight.w700, letterSpacing: -0.4,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  [
+                                    _me?.displayCode,
+                                    if ((_me?.tracks ?? const []).isNotEmpty) _me!.tracks.first.labelKo,
+                                  ].whereType<String>().join(' · '),
+                                  style: const TextStyle(
+                                    fontFamily: CL.monoFamily, fontSize: CL.caption, color: CL.textMuted,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: CL.s6),
 
                       // 화면에서 가장 큰 요소. 하나뿐입니다.
@@ -94,6 +146,39 @@ class _HomeScreenState extends State<HomeScreen> {
                         locale: app.locale,
                         onTap: (screen) => widget.onNavigate(screen),
                       ),
+
+                      // 시안의 '취업 준비 단계 3 / 5' 카드. 점만 있으면
+                      // 몇 단계 중 몇 번째인지 세어 봐야 합니다.
+                      if (_journey != null) ...[
+                        const SizedBox(height: CL.s6),
+                        FieldCard(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.baseline,
+                                textBaseline: TextBaseline.alphabetic,
+                                children: [
+                                  Text(
+                                    app.t('home.stage'),
+                                    style: const TextStyle(fontSize: CL.subtitle, fontWeight: FontWeight.w700),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    '${_journey!.groups.where((g) => g.state == 'DONE').length} / ${_journey!.groups.length}',
+                                    style: const TextStyle(
+                                      fontFamily: CL.monoFamily, fontSize: 15,
+                                      fontWeight: FontWeight.w700, color: CL.actionText,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: CL.s4),
+                              _ProgressDots(journey: _journey!, locale: app.locale),
+                            ],
+                          ),
+                        ),
+                      ],
 
                       // 체류자격 만료는 서류 만료보다 무겁습니다 — 만료되면
                       // 자격 무효가 아니라 불법 취업이 됩니다 (§5.9).

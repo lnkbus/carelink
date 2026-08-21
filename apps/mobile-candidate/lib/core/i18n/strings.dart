@@ -106,6 +106,18 @@ const Map<String, Map<AppLocale, String>> _dict = {
     AppLocale.ru: 'Экраны для этой роли — в другом приложении. Уточните адрес у менеджера.',
     AppLocale.en: 'Screens for this role live in another app. Ask your coordinator for the address.',
   },
+  'home.greeting': {
+    // `{name}`을 치환합니다. 호칭 위치가 언어마다 달라서(한국어는 뒤,
+    // 나머지는 앞) 접미사 한 조각으로는 만들 수 없습니다.
+    AppLocale.ko: '{name}님',
+    AppLocale.vi: 'Chào {name}',
+    AppLocale.ru: 'Здравствуйте, {name}',
+    AppLocale.en: 'Hi {name}',
+  },
+  'home.stage': {
+    AppLocale.ko: '취업 준비 단계', AppLocale.vi: 'Giai đoạn chuẩn bị',
+    AppLocale.ru: 'Этап подготовки', AppLocale.en: 'Getting ready',
+  },
   'common.loading': {
     AppLocale.ko: '불러오는 중', AppLocale.vi: 'Đang tải',
     AppLocale.ru: 'Загрузка', AppLocale.en: 'Loading',
