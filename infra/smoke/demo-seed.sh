@@ -23,8 +23,43 @@ DB="${2:-postgres://carelink:carelink@127.0.0.1:5432/carelink}"
 J() { python3 -c "import sys,json;d=json.load(sys.stdin);print(d$1)" 2>/dev/null; }
 say() { printf '\033[1m%s\033[0m\n' "$1"; }
 
+# ── 이식성 ──────────────────────────────────────────────────────────────
+#
+# macOS에서 이 스크립트가 그대로 돌아야 합니다. GNU 전용 문법 두 가지를
+# 피합니다:
+#   date -d      BSD date는 -v를 씁니다. python3로 계산합니다.
+#   xargs -r     BSD xargs에는 -r이 없습니다. 루프로 바꿉니다.
+# 기본 bash가 3.2(맥)여도 동작하도록 연관 배열도 쓰지 않습니다.
+
+# 내일 HH:00 **KST**를 UTC ISO로. 데모 화면은 전부 KST로 그려지므로
+# 여기서 UTC로 계산하면 09:00으로 넣은 값이 18:00으로 보입니다.
+iso() { python3 - "$1" <<'PYE'
+import sys, datetime
+KST = datetime.timezone(datetime.timedelta(hours=9))
+h = int(sys.argv[1])
+d = (datetime.datetime.now(KST) + datetime.timedelta(days=1)).replace(
+    hour=h, minute=0, second=0, microsecond=0)
+print(d.astimezone(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'))
+PYE
+}
+TOMORROW_00=$(iso 0)
+TOMORROW_08=$(iso 8)
+TOMORROW_09=$(iso 9)
+
+# OTP 재발송 쿨다운(번호당 30초)을 지웁니다. 시드가 로그인을 여러 번 하므로
+# 남겨 두면 시드 직후 브라우저 로그인이 막히고, 처음 써 보는 사람은 그걸
+# 고장으로 읽습니다.
+clear_otp_cooldown() {
+  command -v redis-cli >/dev/null 2>&1 || return 0
+  local rc="redis-cli -h ${REDIS_HOST:-127.0.0.1} -p ${REDIS_PORT:-6379}"
+  $rc --scan --pattern 'otp:cooldown:*' 2>/dev/null | while IFS= read -r k; do
+    [ -n "$k" ] && $rc DEL "$k" >/dev/null 2>&1
+  done
+  return 0
+}
+
 # OTP 쿨다운은 번호당 30초입니다. 시드가 로그인을 여러 번 하므로 미리 지웁니다.
-redis-cli --scan --pattern 'otp:cooldown:*' 2>/dev/null | xargs -r redis-cli DEL >/dev/null 2>&1
+clear_otp_cooldown
 
 login() {
   local p="$1" c
@@ -139,11 +174,11 @@ role "$GT" '{"role":"PATIENT_GUARDIAN","makePrimary":true}'
 GT=$(reissue "$GR"); G=(-H "authorization: Bearer $GT" -H 'content-type: application/json')
 
 # (a) 정상 요청 — 매칭까지 진행
-R1=$(curl -sS -X POST "$B/care-requests" "${G[@]}" -d "{\"hospitalId\":\"$H1\",\"ward\":\"703호\",\"serviceType\":\"DAY\",\"shiftPatternCode\":\"H8_3SHIFT\",\"startAt\":\"$(date -u -d 'tomorrow 00:00' +%Y-%m-%dT%H:%M:%SZ)\",\"endAt\":\"$(date -u -d 'tomorrow 08:00' +%Y-%m-%dT%H:%M:%SZ)\",\"supportItems\":[\"MEAL_SUPPORT\",\"MOBILITY\"],\"mobilityLevel\":\"PARTIAL_ASSIST\",\"cautions\":\"밤에 자주 깨십니다. 화장실 이동을 도와주세요.\"}" | J "['id']")
+R1=$(curl -sS -X POST "$B/care-requests" "${G[@]}" -d "{\"hospitalId\":\"$H1\",\"ward\":\"703호\",\"serviceType\":\"DAY\",\"shiftPatternCode\":\"H8_3SHIFT\",\"startAt\":\"$TOMORROW_00\",\"endAt\":\"$TOMORROW_08\",\"supportItems\":[\"MEAL_SUPPORT\",\"MOBILITY\"],\"mobilityLevel\":\"PARTIAL_ASSIST\",\"cautions\":\"밤에 자주 깨십니다. 화장실 이동을 도와주세요.\"}" | J "['id']")
 curl -sS -X PATCH "$B/care-requests/$R1/status" "${A[@]}" -d '{"status":"MATCHING"}' >/dev/null
 
 # (b) 업무범위 감지 요청 — OPS_REVIEW 큐에 남습니다
-curl -sS -X POST "$B/care-requests" "${G[@]}" -d "{\"hospitalId\":\"$H1\",\"ward\":\"502호\",\"serviceType\":\"DAY\",\"shiftPatternCode\":\"H8_3SHIFT\",\"startAt\":\"$(date -u -d 'tomorrow 09:00' +%Y-%m-%dT%H:%M:%SZ)\",\"supportItems\":[\"HYGIENE\"],\"mobilityLevel\":\"FULL_ASSIST\",\"cautions\":\"인슐린 주사를 하루 두 번 놓아주시고 욕창 소독도 부탁드립니다.\"}" >/dev/null
+curl -sS -X POST "$B/care-requests" "${G[@]}" -d "{\"hospitalId\":\"$H1\",\"ward\":\"502호\",\"serviceType\":\"DAY\",\"shiftPatternCode\":\"H8_3SHIFT\",\"startAt\":\"$TOMORROW_09\",\"supportItems\":[\"HYGIENE\"],\"mobilityLevel\":\"FULL_ASSIST\",\"cautions\":\"인슐린 주사를 하루 두 번 놓아주시고 욕창 소독도 부탁드립니다.\"}" >/dev/null
 
 # (c) 간병사 1번에게 제안 → 수락 → 운영자 확인까지
 A1=$(curl -sS -X POST "$B/care-requests/$R1/assign" "${G[@]}" -d "{\"caregiverId\":\"${CGS[0]}\",\"shiftStartTime\":\"09:00\",\"shiftEndTime\":\"17:00\"}" | J "['id']")
@@ -153,7 +188,7 @@ curl -sS -X PATCH "$B/care-assignments/$A1/status" "${A[@]}" -d '{"status":"ASSI
 
 # 시드가 로그인하면서 남긴 쿨다운을 지웁니다. 안 지우면 시드 직후 30초 동안
 # 브라우저에서 로그인이 막히고, 처음 써 보는 사람은 그걸 고장으로 읽습니다.
-redis-cli --scan --pattern 'otp:cooldown:*' 2>/dev/null | xargs -r redis-cli DEL >/dev/null 2>&1
+clear_otp_cooldown
 
 echo
 say "완료. 로그인 번호 (인증번호는 화면에 표시됩니다)"

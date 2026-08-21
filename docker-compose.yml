@@ -24,7 +24,8 @@ services:
       POSTGRES_DB: carelink
       # 한국어 정렬·검색을 위해 로케일을 맞춥니다.
       LANG: ko_KR.utf8
-    ports: ['5432:5432']
+    # 맥에는 로컬 Postgres가 이미 5432를 쓰는 일이 흔합니다.
+    ports: ['${DB_PORT:-55432}:5432']
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
@@ -35,7 +36,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    ports: ['6379:6379']
+    ports: ['${REDIS_PORT:-56379}:6379']
     healthcheck:
       test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
@@ -123,6 +124,9 @@ services:
   # 후보자 앱 — 웹 빌드. 화면 흐름·번역·API 연동 확인용입니다.
   # 터치 타깃과 글꼴 크기는 실기기에서 최종 확인하세요 (docs/14 §3).
   mobile-web:
+    # Flutter 이미지가 2GB대라 첫 빌드가 깁니다. 기본에서 빼 두었습니다.
+    #   docker compose --profile mobile up -d --build
+    profiles: ['mobile']
     build:
       # 공용 FIELD 패키지(packages/field_ui)가 path 의존이라 컨텍스트가
       # 리포 루트여야 합니다. 앱 디렉터리만 주면 pub get이 실패합니다.
@@ -137,6 +141,7 @@ services:
   # 간병사 앱 — 웹 빌드 (SCR-401~404). 검증용입니다.
   # 터치 타깃과 글꼴 크기는 실기기에서 최종 확인하세요 (docs/14 §3).
   caregiver-web:
+    profiles: ['mobile']
     build:
       context: .
       dockerfile: apps/mobile-caregiver/Dockerfile
@@ -145,6 +150,17 @@ services:
     depends_on:
       api: { condition: service_healthy }
     ports: ['3500:80']
+
+  # 시드·스모크 실행용. 맥에 psql·redis-cli가 없어도 됩니다.
+  #   docker compose run --rm tools demo
+  #   docker compose run --rm tools smoke
+  tools:
+    profiles: ['tools']
+    build:
+      context: .
+      dockerfile: infra/tools/Dockerfile
+    depends_on:
+      api: { condition: service_healthy }
 
 volumes:
   db-data:

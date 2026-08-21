@@ -20,7 +20,12 @@
     "org:build": "pnpm --filter @carelink/web-org build",
     "org:start": "pnpm --filter @carelink/web-org start",
     "smoke": "bash infra/smoke/smoke.sh",
-    "demo": "bash infra/smoke/demo-seed.sh"
+    "demo": "bash infra/smoke/demo-seed.sh",
+    "start:local": "bash infra/local/start.sh",
+    "start:local:mobile": "bash infra/local/start.sh --mobile",
+    "stop:local": "docker compose --profile mobile --profile tools down",
+    "smoke:docker": "docker compose run --rm tools smoke",
+    "demo:docker": "docker compose run --rm tools demo"
   },
   "devDependencies": {
     "typescript": "5.6.3"
