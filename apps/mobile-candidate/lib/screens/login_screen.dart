@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:carelink_field_ui/carelink_field_ui.dart';
 import '../core/app_state.dart';
-import '../core/i18n/strings.dart';
 /// SCR-002 로그인 — 비밀번호 없음, 휴대폰 OTP만 (README §4-2 S1 확정).
 ///
 /// 입력 필드 64px, 버튼 64px. 40~65세 사용자가 한 손으로 쓰는 화면입니다.

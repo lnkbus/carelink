@@ -41,7 +41,7 @@ export default async function CandidateSearchPage({
     apiGet<Track[]>('/tracks'),
   ]);
 
-  const employable = data.items.filter((c) => c.employable === true).length;
+  const employable = data.items.filter((c) => c.employable === 'ALLOWED').length;
   const ready = data.items.filter((c) => c.status === 'READY').length;
 
   return (
@@ -61,7 +61,7 @@ export default async function CandidateSearchPage({
               value={employable}
               unit="명"
               tone={employable ? 'signal' : 'neutral'}
-              hint="체류자격상 이 트랙에서 취업할 수 있는지를 플랫폼이 확인한 결과입니다"
+              hint="확인이 끝난 인원입니다. '확인 중'은 불가가 아니라 아직 판정 전입니다"
             />
           </KpiRow>
         </div>
@@ -105,14 +105,16 @@ export default async function CandidateSearchPage({
                     <Td tone="muted">{c.preferredRegions?.join(' · ') ?? c.currentLocation ?? '—'}</Td>
                     <Td><StatusPill tone={c.status === 'READY' ? 'signal' : 'neutral'} label={label(c.status)} /></Td>
                     <Td>
+                      {/* 세 상태를 둘로 뭉개지 않습니다. '확인 중'을 '불가'로
+                          보여주면 기관이 그 후보자를 거르고, 후보자는 확인이
+                          안 됐다는 이유로 일자리를 잃습니다. */}
                       {c.employable === null || c.employable === undefined
                         ? <Restricted reason="확인 전" />
-                        : (
-                          <StatusPill
-                            tone={c.employable ? 'signal' : 'alert'}
-                            label={c.employable ? '가능' : '불가'}
-                          />
-                        )}
+                        : c.employable === 'ALLOWED'
+                          ? <StatusPill tone="signal" label="가능" />
+                          : c.employable === 'NOT_ALLOWED'
+                            ? <StatusPill tone="alert" label="불가" />
+                            : <StatusPill tone="flag" label="확인 중" />}
                     </Td>
                     <Td><ClearanceMatrix states={matrixFor(c)} /></Td>
                     <Td mono tone="muted">{c.availableFrom ?? '—'}</Td>
@@ -149,7 +151,9 @@ function matrixFor(c: Candidate): Record<string, MatrixState> {
   const docsDone = c.status === 'READY' || c.status === 'MATCHED' || c.status === 'PLACED';
   const docState = docsDone ? verified : c.status === 'DOC_REVIEW' ? review : blocked;
   const visaState =
-    c.employable === true ? verified : c.employable === false ? blocked : review;
+    c.employable === 'ALLOWED' ? verified
+      : c.employable === 'NOT_ALLOWED' ? blocked
+        : review;
 
   return {
     PASSPORT: docState,

@@ -17,7 +17,7 @@ function candidate(): CandidateDto {
     visaStatusCode: 'F-4',
     visaExpiresOn: '2027-01-31',
     visaExpiresInDays: 42,
-    employable: true,
+    employable: 'ALLOWED',
     employabilityReasonKey: 'visa.eligibility.ALLOWED',
     currentLocation: '경기 안산',
     status: 'READY',
@@ -49,7 +49,7 @@ describe('CandidateDto scope — docs/11 §3.1 매트릭스', () => {
   it('기관에는 체류자격 대신 취업 가능 여부만 나간다', () => {
     // CLAUDE.md §6-12 — 체류자격 코드를 기관에 그대로 노출하지 않는다.
     const out = applyScope(candidate(), viewer(['org']));
-    expect(out.employable).toBe(true);
+    expect(out.employable).toBe('ALLOWED');
     expect(out.employabilityReasonKey).toBe('visa.eligibility.ALLOWED');
   });
 
@@ -99,7 +99,7 @@ describe('CandidateDto org 승격 — 레코드 단위여야 한다', () => {
     expect('visaStatusCode' in out).toBe(false);
     expect('visaExpiresOn' in out).toBe(false);
     // 기관에는 치환값만
-    expect(out.employable).toBe(true);
+    expect(out.employable).toBe('ALLOWED');
   });
 
   it('같은 뷰어라도 orgUnlocked가 거짓인 후보자는 여전히 잠겨 있다', () => {

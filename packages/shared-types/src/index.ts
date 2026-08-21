@@ -72,8 +72,14 @@ export interface Candidate {
   visaExpiresOn?: string | null;
   visaExpiresInDays?: number | null;
 
-  // 기관용 치환값
-  employable?: boolean | null;
+  /**
+   * 기관용 치환값. **boolean이 아닙니다** — 상태가 셋입니다.
+   *
+   * `PENDING`(아직 확인 안 됨)을 `NOT_ALLOWED`(취업 불가)와 합치면 화면에
+   * '불가'로 나가고, 그걸 본 기관은 그 후보자를 거릅니다. 확인이 안 됐다는
+   * 이유로 일자리를 잃는 셈입니다.
+   */
+  employable?: 'ALLOWED' | 'PENDING' | 'NOT_ALLOWED' | null;
   employabilityReasonKey?: string | null;
 
   gender?: string | null;

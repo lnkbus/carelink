@@ -206,7 +206,7 @@ class _DocumentTile extends StatelessWidget {
           if (doc.expiresAt != null) ...[
             const SizedBox(height: CL.s4),
             ExpiryCountdown(
-              expiredLabel: app.t('expiry.expired'),
+              expiredLabel: tr('expiry.expired', locale),
               days: doc.expiresInDays,
               locale: locale,
               date: doc.expiresAt,

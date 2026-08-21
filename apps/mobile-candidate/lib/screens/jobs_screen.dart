@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:carelink_field_ui/carelink_field_ui.dart';
 import '../core/app_state.dart';
-import '../core/i18n/strings.dart';
 import '../models/models.dart';
 import 'home_screen.dart' show salaryText;
 

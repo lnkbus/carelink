@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:carelink_field_ui/carelink_field_ui.dart';
-import 'core/i18n/strings.dart';
 import 'core/app_state.dart';
 import 'screens/applications_screen.dart';
 import 'screens/documents_screen.dart';

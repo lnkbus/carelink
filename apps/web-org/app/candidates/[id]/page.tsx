@@ -125,14 +125,15 @@ export default async function CandidateDetailPage({ params }: { params: { id: st
               note="체류자격 원본 코드는 운영자만 봅니다. 기관에는 이 트랙에서 취업할 수 있는지만 제공됩니다."
             >
               <div style={{ padding: 'var(--cl-s5)', display: 'flex', gap: 'var(--cl-s5)', alignItems: 'center' }}>
+                {/* '확인 중'과 '불가'는 다릅니다. 합치면 판정 전인 후보자가
+                    취업할 수 없는 사람으로 보입니다. */}
                 {c.employable === null || c.employable === undefined
                   ? <StatusPill tone="flag" label="확인 전" />
-                  : (
-                    <StatusPill
-                      tone={c.employable ? 'signal' : 'alert'}
-                      label={c.employable ? '이 트랙에서 취업 가능' : '이 트랙에서는 취업 불가'}
-                    />
-                  )}
+                  : c.employable === 'ALLOWED'
+                    ? <StatusPill tone="signal" label="이 트랙에서 취업 가능" />
+                    : c.employable === 'NOT_ALLOWED'
+                      ? <StatusPill tone="alert" label="이 트랙에서는 취업 불가" />
+                      : <StatusPill tone="flag" label="확인 중 — 판정 전입니다" />}
                 {c.employabilityReasonKey && (
                   <span style={{ fontSize: 'var(--cl-caption)', color: 'var(--cl-text-muted)' }}>
                     {reasonText(c.employabilityReasonKey)}
@@ -220,7 +221,9 @@ function matrixFor(c: Candidate): Record<string, MatrixState> {
   const docsDone = c.status === 'READY' || c.status === 'MATCHED' || c.status === 'PLACED';
   const docState: MatrixState = docsDone ? 'VERIFIED' : c.status === 'DOC_REVIEW' ? 'REVIEW' : 'BLOCKED';
   const visaState: MatrixState =
-    c.employable === true ? 'VERIFIED' : c.employable === false ? 'BLOCKED' : 'REVIEW';
+    c.employable === 'ALLOWED' ? 'VERIFIED'
+      : c.employable === 'NOT_ALLOWED' ? 'BLOCKED'
+        : 'REVIEW';
   return {
     PASSPORT: docState,
     CERTIFICATE: docsDone ? 'VERIFIED' : 'REVIEW',

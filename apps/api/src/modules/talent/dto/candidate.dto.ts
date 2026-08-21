@@ -55,8 +55,21 @@ export class CandidateDto {
   /** 체류자격 만료까지 남은 일수. 만료는 카운트다운으로 보여준다 (docs/09 §4.1-5). */
   @Scope('self', 'admin') visaExpiresInDays: number | null;
 
-  /** 기관용 치환값 — 원본 체류자격 대신 '취업 가능 여부'만. */
-  @Scope('admin', 'org', 'org_masked') employable: boolean | null;
+  /**
+   * 기관용 치환값 — 원본 체류자격 대신 '취업 가능 여부'만.
+   *
+   * **boolean이 아닙니다.** 상태가 셋인데 둘로 뭉개면 "아직 확인하지 않았다"가
+   * "취업할 수 없다"로 보입니다. 그 화면을 본 기관은 그 후보자를 거르고,
+   * 후보자는 확인이 안 됐다는 이유로 일자리를 잃습니다.
+   *
+   *   ALLOWED      확인됐고 이 트랙에서 취업할 수 있다
+   *   PENDING      아직 확인되지 않았다 — 불가가 아니다
+   *   NOT_ALLOWED  확인됐고 취업할 수 없다
+   *
+   * 판정은 사람이 하고 플랫폼은 기록만 합니다 (§6-1 · §6-11). 회색 영역은
+   * `PENDING_CONFIRMATION`으로 두고 운영자 검토 큐로 갑니다.
+   */
+  @Scope('admin', 'org', 'org_masked') employable: 'ALLOWED' | 'PENDING' | 'NOT_ALLOWED' | null;
   @Scope('admin', 'org', 'org_masked') employabilityReasonKey: string | null;
 
   @Scope('self', 'admin', 'org', 'org_masked') gender: string | null;

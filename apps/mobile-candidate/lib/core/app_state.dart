@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'api/api_client.dart';
+import 'package:carelink_field_ui/carelink_field_ui.dart';
 import 'i18n/strings.dart';
 
 /// 앱 전역 상태.

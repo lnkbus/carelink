@@ -184,11 +184,21 @@ export class CandidateService {
     const primaryTrackId = tracks.find((t) => t.is_primary)?.track_id ?? tracks[0]?.track_id ?? null;
 
     // 기관에는 체류자격 코드 대신 '취업 가능 여부'만 준다 (CLAUDE.md §6-12).
-    let employable: boolean | null = null;
+    //
+    // **PENDING과 NOT_ALLOWED를 구분한다.** 둘을 합치면 "아직 확인하지
+    // 않았다"가 "취업할 수 없다"로 보이고, 그 화면을 본 기관은 그 후보자를
+    // 거릅니다. 확인이 안 됐다는 이유로 일자리를 잃는 셈입니다.
+    let employable: 'ALLOWED' | 'PENDING' | 'NOT_ALLOWED' | null = null;
     let employabilityReasonKey: string | null = null;
     if (primaryTrackId) {
       const check = await this.tracks.checkVisaEligibility(primaryTrackId, row.visa_status_code);
-      employable = check.eligibility === 'ALLOWED';
+      employable = check.eligibility === 'ALLOWED'
+        ? 'ALLOWED'
+        : check.eligibility === 'NOT_ALLOWED'
+          ? 'NOT_ALLOWED'
+          // REQUIRES_QUALIFICATION · REQUIRES_CONVERSION · PENDING_CONFIRMATION.
+          // 전부 '아직 정해지지 않았다'이지 '안 된다'가 아닙니다.
+          : 'PENDING';
       employabilityReasonKey = check.reasonKey;
     }
 
