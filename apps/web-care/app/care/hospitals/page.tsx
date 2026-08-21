@@ -1,6 +1,6 @@
 import type { CareHospital } from '@carelink/shared-types';
 import { Ask, Page, Notice } from '@/components/Page';
-import { apiGet } from '@/lib/api';
+import { guardedGet } from '@/lib/api';
 import { currentUser } from '@/lib/session';
 import { HospitalPicker } from './HospitalPicker';
 
@@ -18,7 +18,7 @@ export const dynamic = 'force-dynamic';
  */
 export default async function HospitalsPage() {
   await currentUser();
-  const hospitals = await apiGet<CareHospital[]>('/care-hospitals');
+  const hospitals = await guardedGet<CareHospital[]>('/care-hospitals');
 
   return (
     <Page title="간병 신청" back="/care" step={1}>

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { CareAssignment, CareRequest, ServiceLog } from '@carelink/shared-types';
 import { Page, Notice, Row } from '@/components/Page';
-import { apiGet } from '@/lib/api';
+import { guardedGet } from '@/lib/api';
 import { currentUser } from '@/lib/session';
 import { fmtDateTime, label } from '@/lib/labels';
 
@@ -28,17 +28,17 @@ export const dynamic = 'force-dynamic';
  */
 export default async function HistoryPage() {
   await currentUser();
-  const requests = await apiGet<CareRequest[]>('/care-requests/me/list');
+  const requests = await guardedGet<CareRequest[]>('/care-requests/me/list');
   const done = requests.filter((r) => ['COMPLETED', 'CANCELLED'].includes(r.status));
 
   // 완료 건마다 배정과 기록을 붙입니다. 건수가 많지 않아 순차로 충분합니다.
   const rows = await Promise.all(
     done.map(async (r) => {
-      const assignments = await apiGet<CareAssignment[]>(`/care-requests/${r.id}/assignments`)
+      const assignments = await guardedGet<CareAssignment[]>(`/care-requests/${r.id}/assignments`)
         .catch(() => [] as CareAssignment[]);
       const a = assignments.find((x) => ['ASSIGNED', 'IN_SERVICE', 'COMPLETED'].includes(x.status));
       const logs = a
-        ? await apiGet<ServiceLog[]>(`/care-assignments/${a.id}/logs`).catch(() => [] as ServiceLog[])
+        ? await guardedGet<ServiceLog[]>(`/care-assignments/${a.id}/logs`).catch(() => [] as ServiceLog[])
         : [];
       return { request: r, assignment: a ?? null, logs };
     }),

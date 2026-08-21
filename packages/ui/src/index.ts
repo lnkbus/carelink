@@ -7,3 +7,4 @@ export { LocaleSwitcher, LOCALES, type Locale } from './components/LocaleSwitche
 export {
   PageHeader, KpiChip, KpiRow, Section, DataTable, Td, Tr, Button, Restricted,
 } from './components/desk';
+export { PhoneInput } from './components/PhoneInput';

@@ -1,11 +1,14 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { PhoneInput } from '@carelink/ui';
 import { errorLabel } from '@/lib/labels';
 
 export function LoginForm() {
   const router = useRouter();
   const [phone, setPhone] = useState('');
+  // 국가번호. 해외 거주 보호자·후보자가 여기를 바꿉니다.
+  const [dial, setDial] = useState('+82');
   const [code, setCode] = useState('');
   const [sent, setSent] = useState(false);
   const [devCode, setDevCode] = useState<string | null>(null);
@@ -13,6 +16,12 @@ export function LoginForm() {
   const [busy, setBusy] = useState(false);
 
   const base = process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:3000/api/v1';
+
+  /**
+   * 국가번호 + 숫자. 국내 번호의 앞 0은 뗍니다 —
+   * `+82 010…`은 존재하지 않는 번호입니다. 최종 정규화는 서버가 합니다.
+   */
+  const e164 = () => `${dial}${phone.replace(/^0/, '')}`;
 
   // 네트워크 실패까지 잡습니다. ApiException만 잡으면 CORS 차단·연결 실패가
   // 그대로 올라가 화면이 백지가 됩니다 (F-09와 같은 사고).
@@ -26,7 +35,7 @@ export function LoginForm() {
   const send = () => guard(async () => {
     const res = await fetch(`${base}/auth/otp/send`, {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ phone }),
+      body: JSON.stringify({ phone: e164() }),
     });
     const data = await res.json();
     if (!res.ok) { setError(data.code ?? null); return; }
@@ -39,7 +48,7 @@ export function LoginForm() {
     const res = await fetch('/api/session', {
       method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        phone, code,
+        phone: e164(), code,
         consents: [
           { code: 'TOS', version: 'v1', agreed: true },
           { code: 'PRIVACY', version: 'v1', agreed: true },
@@ -55,13 +64,11 @@ export function LoginForm() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--cl-s5)' }}>
       <div className="cf-field">
-        <label htmlFor="phone">휴대폰 번호</label>
-        <input
-          id="phone" className="cf-input cf-mono" inputMode="numeric" autoComplete="tel"
-          placeholder="01012345678" value={phone}
-          // '+'를 지우지 않습니다 — 국제번호 가입을 받습니다 (docs/08 E·F).
-          onChange={(e) => setPhone(e.target.value.replace(/[^0-9+\s-]/g, ''))}
+        <PhoneInput
+          label="휴대폰 번호"
+          value={phone}
           disabled={sent}
+          onChange={(digits, d) => { setPhone(digits); setDial(d); }}
         />
       </div>
 
@@ -91,8 +98,8 @@ export function LoginForm() {
 
       {error && <div className="cf-note cf-note-alert">{errorLabel(error)}</div>}
 
-      <button className="cf-btn" onClick={sent ? verify : send} disabled={busy || (sent ? code.length < 6 : phone.replace(/\D/g, '').length < 9)}>
-        {busy ? '잠시만요…' : sent ? '확인' : '인증번호 받기'}
+      <button className="cf-btn" onClick={sent ? verify : send} disabled={busy || (sent ? code.length < 6 : phone.length < 9)}>
+        {busy ? '잠시만요…' : sent ? '확인' : '인증 문자 받기'}
       </button>
 
       {sent && (

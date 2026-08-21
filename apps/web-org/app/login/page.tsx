@@ -26,6 +26,18 @@ export default function LoginPage({ searchParams }: { searchParams: { reason?: s
         </p>
         <ReturnReason reason={searchParams.reason} />
         <LoginForm />
+
+        {/* 문자가 안 오는 가장 흔한 이유가 통신사 스팸 차단입니다.
+            모르면 시스템이 고장 난 것으로 읽습니다. */}
+        <div
+          style={{
+            marginTop: 'var(--cl-s5)', padding: 'var(--cl-s5)', borderRadius: 12,
+            background: 'var(--cl-bg-sub)', color: 'var(--cl-text-sub)',
+            fontSize: 16, lineHeight: 1.5,
+          }}
+        >
+          문자가 오지 않으면 통신사 스팸 차단을 확인해 주세요.
+        </div>
       </div>
     </div>
   );

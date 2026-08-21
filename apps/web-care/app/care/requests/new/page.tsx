@@ -1,6 +1,6 @@
 import type { CareServiceItem } from '@carelink/shared-types';
 import { Ask, Page } from '@/components/Page';
-import { apiGet } from '@/lib/api';
+import { guardedGet } from '@/lib/api';
 import { currentUser } from '@/lib/session';
 import { RequestForm } from './RequestForm';
 
@@ -26,7 +26,7 @@ export default async function NewRequestPage({
   searchParams: { hospitalId?: string; name?: string };
 }) {
   await currentUser();
-  const catalog = await apiGet<CareServiceItem[]>('/care-services/catalog');
+  const catalog = await guardedGet<CareServiceItem[]>('/care-services/catalog');
 
   return (
     <Page title="간병 신청" back="/care/hospitals" step={2}>

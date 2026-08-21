@@ -41,3 +41,25 @@ export function redirectToLogin(e: unknown): never {
   const reason = e instanceof ApiError && e.status === 403 ? 'forbidden' : 'expired';
   redirect(`/login?reason=${reason}`);
 }
+
+/**
+ * 사이드바 배지 — 손대야 할 건수.
+ *
+ * 시안(SCR-201)의 사이드바는 '채용 요청 3', '면접 관리 5'처럼 숫자를 답니다.
+ * 담당자가 로그인해서 가장 먼저 보는 것이 사이드바이고, 숫자가 없으면
+ * 화면을 하나씩 열어 확인해야 합니다.
+ *
+ * 실패하면 0으로 둡니다 — 배지 하나 때문에 화면 전체가 죽으면 안 됩니다.
+ */
+export async function navBadges(): Promise<{ jobs: number; interviews: number }> {
+  const [jobs, interviews] = await Promise.all([
+    apiGet<{ items: { status: string }[] }>('/jobs', { size: 100 })
+      .then((p) => p.items.filter((j) => j.status === 'OPEN').length)
+      .catch(() => 0),
+    // 수락 대기 = 후보자의 응답을 기다리는 건. 기관이 대신 확정할 수 없습니다.
+    apiGet<{ status: string }[]>('/interviews')
+      .then((r) => r.filter((i) => i.status === 'REQUESTED').length)
+      .catch(() => 0),
+  ]);
+  return { jobs, interviews };
+}

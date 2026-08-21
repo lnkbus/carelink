@@ -115,6 +115,50 @@ const Map<String, Map<AppLocale, String>> _dict = {
     AppLocale.ko: '예정된 근무가 없습니다', AppLocale.vi: 'Không có ca nào',
     AppLocale.ru: 'Смен нет', AppLocale.en: 'No shifts scheduled',
   },
+  'login.heroTitle': {
+    AppLocale.ko: '휴대폰 번호로 시작',
+    AppLocale.vi: 'Bắt đầu bằng số điện thoại',
+    AppLocale.ru: 'Начните с номера телефона',
+    AppLocale.en: 'Start with your phone number',
+  },
+  'login.heroSub': {
+    AppLocale.ko: '번호를 입력하면 인증 문자를 보냅니다. 비밀번호는 없습니다.',
+    AppLocale.vi: 'Nhập số, chúng tôi sẽ gửi mã xác minh. Không cần mật khẩu.',
+    AppLocale.ru: 'Введите номер — пришлём код. Пароль не нужен.',
+    AppLocale.en: 'Enter your number and we will text you a code. No password.',
+  },
+  'login.sendSms': {
+    AppLocale.ko: '인증 문자 받기', AppLocale.vi: 'Nhận mã xác minh',
+    AppLocale.ru: 'Получить код', AppLocale.en: 'Send me a code',
+  },
+  'login.spamNote': {
+    AppLocale.ko: '문자가 오지 않으면 통신사 스팸 차단을 확인해 주세요.',
+    AppLocale.vi: 'Không nhận được tin nhắn? Hãy kiểm tra bộ lọc spam của nhà mạng.',
+    AppLocale.ru: 'Нет сообщения? Проверьте спам-фильтр оператора.',
+    AppLocale.en: 'No text? Check your carrier’s spam filter.',
+  },
+  'login.needHelp': {
+    AppLocale.ko: '도움이 필요해요', AppLocale.vi: 'Tôi cần trợ giúp',
+    AppLocale.ru: 'Мне нужна помощь', AppLocale.en: 'I need help',
+  },
+  'login.dialCode': {
+    AppLocale.ko: '국가번호', AppLocale.vi: 'Mã quốc gia',
+    AppLocale.ru: 'Код страны', AppLocale.en: 'Country code',
+  },
+  'splash.tagline': {
+    AppLocale.ko: '돌봄 인력과 현장을 잇습니다',
+    AppLocale.vi: 'Kết nối nhân lực chăm sóc với hiện trường',
+    AppLocale.ru: 'Соединяем персонал ухода и объекты',
+    AppLocale.en: 'Connecting care workers and sites',
+  },
+  'splash.checking': {
+    AppLocale.ko: '토큰 확인 중', AppLocale.vi: 'Đang kiểm tra phiên',
+    AppLocale.ru: 'Проверка сессии', AppLocale.en: 'Checking session',
+  },
+  'brand.name': {
+    AppLocale.ko: '케어링크', AppLocale.vi: 'CARELINK',
+    AppLocale.ru: 'КЕАРЛИНК', AppLocale.en: 'CARELINK',
+  },
   'common.loading': {
     AppLocale.ko: '불러오는 중',
     AppLocale.vi: 'Đang tải',

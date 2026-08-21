@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { LocaleSwitcher } from '@carelink/ui';
-import { currentUser } from '@/lib/session';
+import { currentUser, navBadges } from '@/lib/session';
 import { NavItem } from './NavItem';
 import { SessionBox } from './SessionBox';
 
@@ -15,28 +15,26 @@ const NAV = [
   {
     group: '운영',
     items: [
-      { href: '/', label: '운영 대시보드', screen: 'SCR-501' },
-      { href: '/matching', label: '매칭 센터', screen: 'SCR-504' },
-      // 이 둘이 메뉴에 없어서 SLA 잡 두 개가 허공에 돌고 있었습니다 —
-      // care-assignment-sla와 ticket-sla가 만든 결과를 볼 화면이 없었습니다.
-      { href: '/care', label: '간병 운영', screen: 'SCR-505' },
-      { href: '/tickets', label: '사건 · 문의', screen: 'SCR-506' },
+      { href: '/', label: '운영 대시보드' },
+      { href: '/matching', label: '매칭 센터', badge: 'matching' as const },
+      { href: '/care', label: '간병 운영' },
+      { href: '/tickets', label: '사건 · 문의', badge: 'tickets' as const },
     ],
   },
   {
     group: '자원',
     items: [
-      { href: '/candidates', label: '후보자 관리', screen: 'SCR-502' },
-      { href: '/organizations', label: '기관 관리', screen: 'SCR-503' },
-      { href: '/engagements', label: '고용 · 계약', screen: 'SCR-508' },
-      { href: '/clearances', label: '품질 · 안전', screen: 'SCR-509' },
+      { href: '/candidates', label: '후보자 관리' },
+      { href: '/organizations', label: '기관 관리' },
+      { href: '/engagements', label: '고용 · 계약' },
+      { href: '/clearances', label: '품질 · 안전' },
     ],
   },
   {
     group: '공급',
     items: [
-      { href: '/partners', label: '파트너 · 채널', screen: 'SCR-510' },
-      { href: '/cohorts', label: '코호트', screen: 'SCR-511' },
+      { href: '/partners', label: '파트너 · 채널' },
+      { href: '/cohorts', label: '코호트' },
     ],
   },
   {
@@ -44,32 +42,52 @@ const NAV = [
     items: [
       // 버티컬 확장의 실행 창구입니다. 농업·미용을 열 때 개발자가 아니라
       // 운영자가 여기서 산업과 트랙을 만듭니다 (§5.8).
-      { href: '/tracks', label: '산업 · 트랙', screen: 'SCR-507' },
+      { href: '/tracks', label: '산업 · 트랙' },
     ],
   },
 ];
 
 export async function Shell({ children }: { children: React.ReactNode }) {
-  const me = await currentUser();
+  const [me, badges] = await Promise.all([currentUser(), navBadges()]);
 
   return (
     <div className="cl-shell">
       <nav className="cl-sidebar">
+        {/* 시안의 로고 블록 — 24px 검은 타일 + '케어링크' + mono 'ADMIN CONSOLE'. */}
         <Link
           href="/"
           style={{
-            display: 'block', padding: '0 var(--cl-s6) var(--cl-s5)',
-            fontWeight: 700, letterSpacing: '.2em', fontSize: 'var(--cl-subtitle)',
-            color: 'var(--cl-text)',
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: 'var(--cl-s2) var(--cl-s4) var(--cl-s5)', color: 'var(--cl-text)',
           }}
         >
-          CARELINK
+          <span
+            aria-hidden="true"
+            style={{
+              width: 24, height: 24, borderRadius: 7, background: 'var(--cl-text)',
+              color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 13,
+            }}
+          >
+            ♥
+          </span>
+          <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.25 }}>
+            <span style={{ fontSize: 14, fontWeight: 700 }}>케어링크</span>
+            <span style={{ fontFamily: 'var(--cl-font-mono)', fontSize: 'var(--cl-micro)', fontWeight: 500, color: 'var(--cl-text-muted)' }}>
+              ADMIN CONSOLE
+            </span>
+          </span>
         </Link>
         {NAV.map((section) => (
           <div key={section.group}>
             <div className="cl-nav-group">{section.group}</div>
             {section.items.map((item) => (
-              <NavItem key={item.href} href={item.href} label={item.label} screen={item.screen} />
+              <NavItem
+                key={item.href}
+                href={item.href}
+                label={item.label}
+                badge={'badge' in item && item.badge ? badges[item.badge] : undefined}
+              />
             ))}
           </div>
         ))}

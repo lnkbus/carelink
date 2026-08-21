@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:carelink_field_ui/carelink_field_ui.dart';
 import 'core/app_state.dart';
+import 'core/i18n/strings.dart';
 import 'screens/applications_screen.dart';
 import 'screens/documents_screen.dart';
 import 'screens/home_screen.dart';
@@ -62,7 +63,7 @@ class _CarelinkAppState extends State<CarelinkApp> {
             child: child ?? const SizedBox.shrink(),
           ),
           home: !widget.state.ready
-              ? const _Splash()
+              ? _Splash(state: widget.state)
               : widget.state.signedIn
                   ? const RootShell()
                   : const LoginScreen(),
@@ -73,24 +74,23 @@ class _CarelinkAppState extends State<CarelinkApp> {
 }
 
 /// SCR-001 스플래시. 토큰 상태를 확인하는 동안만 보입니다.
+/// SCR-001 스플래시.
+///
+/// 시안대로 **파란 전면 + 하트 마크 96px + 케어링크 + 태그라인 + 점 세 개**.
+/// 종전에는 파란 배경에 'CARELINK' 글자 하나였습니다. 앱을 여는 첫 순간이
+/// 브랜드를 만나는 유일한 지점이라, 여기가 비면 나머지가 아무리 정돈돼도
+/// 조립품처럼 보입니다.
 class _Splash extends StatelessWidget {
-  const _Splash();
+  const _Splash({required this.state});
+
+  final AppState state;
 
   @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: CL.actionStrong,
-      body: Center(
-        child: Text(
-          'CARELINK',
-          style: TextStyle(
-            color: Colors.white, fontSize: CL.title,
-            fontWeight: FontWeight.w700, letterSpacing: 5,
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => SplashView(
+        title: tr('brand.name', state.locale),
+        tagline: tr('splash.tagline', state.locale),
+        status: 'v1.0.0 · ${tr('splash.checking', state.locale)}',
+      );
 }
 
 /// 하단 탭 4개 (design/README §Candidate App 101).

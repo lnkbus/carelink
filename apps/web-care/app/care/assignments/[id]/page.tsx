@@ -1,6 +1,6 @@
 import type { CareAssignment, ServiceLog } from '@carelink/shared-types';
 import { Page, Row } from '@/components/Page';
-import { apiGet } from '@/lib/api';
+import { guardedGet } from '@/lib/api';
 import { currentUser } from '@/lib/session';
 import { fmtDateTime, label } from '@/lib/labels';
 
@@ -21,8 +21,8 @@ export const dynamic = 'force-dynamic';
 export default async function AssignmentPage({ params }: { params: { id: string } }) {
   await currentUser();
   const [assignment, logs] = await Promise.all([
-    apiGet<CareAssignment>(`/care-assignments/${params.id}`),
-    apiGet<ServiceLog[]>(`/care-assignments/${params.id}/logs`),
+    guardedGet<CareAssignment>(`/care-assignments/${params.id}`),
+    guardedGet<ServiceLog[]>(`/care-assignments/${params.id}/logs`),
   ]);
 
   // 시작/종료가 짝을 이루는지 보여줍니다 — 종료 기록이 없으면 근무 중입니다.

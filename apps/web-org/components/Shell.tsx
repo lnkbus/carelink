@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { LocaleSwitcher, StatusPill } from '@carelink/ui';
-import { currentUser } from '@/lib/session';
+import { currentUser, navBadges } from '@/lib/session';
 import { NavItem } from './NavItem';
 import { SessionBox } from './SessionBox';
 
@@ -12,10 +12,10 @@ import { SessionBox } from './SessionBox';
  * 게이트는 숨기는 것이 아니라 설명하는 편이 낫습니다.
  */
 const NAV = [
-  { href: '/', label: '대시보드', screen: 'SCR-201' },
-  { href: '/jobs', label: '채용 요청', screen: 'SCR-202' },
-  { href: '/candidates', label: '후보자 검색', screen: 'SCR-203' },
-  { href: '/interviews', label: '면접 관리', screen: 'SCR-205' },
+  { href: '/', label: '대시보드' },
+  { href: '/jobs', label: '채용 요청', badge: 'jobs' as const },
+  { href: '/candidates', label: '후보자 검색' },
+  { href: '/interviews', label: '면접 관리', badge: 'interviews' as const },
 ];
 
 export async function Shell({
@@ -26,7 +26,7 @@ export async function Shell({
   verificationStatus?: string;
 }) {
   const verified = verificationStatus === 'VERIFIED';
-  const me = await currentUser();
+  const [me, badges] = await Promise.all([currentUser(), navBadges()]);
   return (
     <div className="cl-shell">
       <nav className="cl-sidebar">
@@ -64,7 +64,12 @@ export async function Shell({
         )}
 
         {NAV.map((item) => (
-          <NavItem key={item.href} href={item.href} label={item.label} screen={item.screen} />
+          <NavItem
+            key={item.href}
+            href={item.href}
+            label={item.label}
+            badge={'badge' in item && item.badge ? badges[item.badge] : undefined}
+          />
         ))}
 
         <div style={{ padding: 'var(--cl-s6)' }}>

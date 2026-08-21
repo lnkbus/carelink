@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import type { DomainErrorBody } from '@carelink/shared-types';
 
 const BASE = process.env.CARELINK_API_URL ?? 'http://127.0.0.1:3000/api/v1';
@@ -80,4 +81,25 @@ export async function apiSend<T>(
 
 export function apiBase(): string {
   return BASE;
+}
+
+/**
+ * 서버 컴포넌트에서 안전하게 부른다.
+ *
+ * **401·403이 페이지 밖으로 새면 Next.js가 500 화면을 냅니다.** 사용자에게는
+ * "Application error: a server-side exception has occurred"만 보이고, 원인은
+ * 로그를 봐야 압니다. 실제로 보호자 홈이 그렇게 죽었습니다 — 역할이 없는
+ * 계정이 `/care-requests/me/list`를 부르면 403이 그대로 올라갔습니다.
+ *
+ * 권한 문제는 500이 아니라 **로그인 화면 + 이유**입니다.
+ */
+export async function guardedGet<T>(path: string, params?: Record<string, string | number | undefined>): Promise<T> {
+  try {
+    return await apiGet<T>(path, params);
+  } catch (e) {
+    if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
+      redirect(`/login?reason=${e.status === 403 ? 'forbidden' : 'expired'}`);
+    }
+    throw e;
+  }
 }

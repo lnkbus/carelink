@@ -1,7 +1,7 @@
 import type { Me } from '@carelink/shared-types';
 import { LogoutButton } from '@/components/LogoutButton';
 import { Page, Row } from '@/components/Page';
-import { apiGet } from '@/lib/api';
+import { guardedGet } from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,7 +18,7 @@ export const dynamic = 'force-dynamic';
 export default async function MePage() {
   let me: Me | null = null;
   try {
-    me = await apiGet<Me>('/auth/me');
+    me = await guardedGet<Me>('/auth/me');
   } catch {
     me = null;
   }

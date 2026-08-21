@@ -1,7 +1,7 @@
 import type { CareAssignment, CareMatchResult, CareRequest } from '@carelink/shared-types';
 import { Page, Notice } from '@/components/Page';
 import { RequestSteps } from '@/components/RequestSteps';
-import { apiGet, apiSend } from '@/lib/api';
+import { guardedGet, apiSend } from '@/lib/api';
 import { currentUser } from '@/lib/session';
 import { label } from '@/lib/labels';
 import { CaregiverList } from './CaregiverList';
@@ -28,12 +28,12 @@ export const dynamic = 'force-dynamic';
  */
 export default async function MatchPage({ params }: { params: { id: string } }) {
   await currentUser();
-  const request = await apiGet<CareRequest>(`/care-requests/${params.id}`);
+  const request = await guardedGet<CareRequest>(`/care-requests/${params.id}`);
 
   // 매칭은 POST입니다 — 실행할 때마다 match_logs에 운영자 판단 근거가 쌓입니다.
   const [match, assignments] = await Promise.all([
     apiSend<CareMatchResult>('POST', `/care-requests/${params.id}/match`),
-    apiGet<CareAssignment[]>(`/care-requests/${params.id}/assignments`),
+    guardedGet<CareAssignment[]>(`/care-requests/${params.id}/assignments`),
   ]);
 
   const pending = assignments.find((a) => ['OFFERED', 'ACCEPTED'].includes(a.status));

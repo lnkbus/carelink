@@ -9,3 +9,5 @@ export 'src/locale.dart';
 export 'src/tokens.dart';
 export 'src/api_client.dart';
 export 'src/field_widgets.dart';
+export 'src/brand.dart';
+export 'src/phone_field.dart';

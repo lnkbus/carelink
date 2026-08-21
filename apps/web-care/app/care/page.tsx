@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { CareRequest } from '@carelink/shared-types';
 import { Ask, Page, Row } from '@/components/Page';
-import { apiGet } from '@/lib/api';
+import { guardedGet } from '@/lib/api';
 import { currentUser } from '@/lib/session';
 import { fmtDateTime, label } from '@/lib/labels';
 
@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic';
  */
 export default async function CareHome() {
   await currentUser();
-  const requests = await apiGet<CareRequest[]>('/care-requests/me/list');
+  const requests = await guardedGet<CareRequest[]>('/care-requests/me/list');
 
   const live = requests.filter((r) => ['SUBMITTED', 'MATCHING', 'OFFER_SENT', 'ASSIGNED', 'IN_SERVICE', 'OPS_REVIEW', 'ISSUE'].includes(r.status));
   const past = requests.filter((r) => !live.includes(r));

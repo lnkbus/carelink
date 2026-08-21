@@ -1,11 +1,14 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { PhoneInput } from '@carelink/ui';
 import { errorLabel } from '@/lib/labels';
 
 export function LoginForm() {
   const router = useRouter();
   const [phone, setPhone] = useState('');
+  // 국가번호. 해외 거주 후보자가 여기를 바꿉니다 (docs/08 E·F 세그먼트).
+  const [dial, setDial] = useState('+82');
   const [code, setCode] = useState('');
   const [sent, setSent] = useState(false);
   const [devCode, setDevCode] = useState<string | null>(null);
@@ -14,12 +17,18 @@ export function LoginForm() {
 
   const base = process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:3000/api/v1';
 
+  /**
+   * 국가번호 + 숫자. 국내 번호의 앞 0은 뗍니다 —
+   * `+82 010…`은 존재하지 않는 번호입니다. 최종 정규화는 서버가 합니다.
+   */
+  const e164 = () => `${dial}${phone.replace(/^0/, '')}`;
+
   async function send() {
     setBusy(true); setError(null);
     try {
       const res = await fetch(`${base}/auth/otp/send`, {
         method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify({ phone: e164() }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.code ?? 'COMMON_INTERNAL_ERROR'); return; }
@@ -35,7 +44,7 @@ export function LoginForm() {
       const res = await fetch('/api/session', {
         method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          phone, code,
+          phone: e164(), code,
           consents: [
             { code: 'TOS', version: 'v1', agreed: true },
             { code: 'PRIVACY', version: 'v1', agreed: true },
@@ -63,25 +72,12 @@ export function LoginForm() {
 
   return (
     <div>
-      <label style={{ display: 'block', fontSize: 'var(--cl-caption)', color: 'var(--cl-text-sub)', marginBottom: 'var(--cl-s2)' }}>
-        휴대전화 번호
-      </label>
-      <input
-        style={field}
-        inputMode="numeric"
-        placeholder="01012345678"
+      <PhoneInput
+        label="휴대폰 번호"
         value={phone}
-        // '+'를 지우지 않습니다. 해외 거주 후보자가 국제번호로 직접
-        // 가입하기 때문입니다 (2026-08-21 확정 · docs/08 E·F 세그먼트).
-        // 서버가 E.164로 정규화하므로 하이픈·공백은 넣어도 됩니다.
-        onChange={(e) => setPhone(e.target.value.replace(/[^0-9+\s-]/g, ''))}
         disabled={sent}
+        onChange={(digits, d) => { setPhone(digits); setDial(d); }}
       />
-      {!sent && (
-        <p style={{ margin: 'var(--cl-s2) 0 0', fontSize: 'var(--cl-caption)', color: 'var(--cl-text-muted)' }}>
-          해외 번호는 국가번호를 붙여 주세요 (예: +84)
-        </p>
-      )}
 
       {sent && (
         <>
@@ -124,10 +120,10 @@ export function LoginForm() {
 
       <button
         style={button(true)}
-        disabled={busy || (sent ? code.length < 6 : phone.replace(/\D/g, '').length < 9)}
+        disabled={busy || (sent ? code.length < 6 : phone.length < 9)}
         onClick={sent ? verify : send}
       >
-        {sent ? '로그인' : '인증번호 받기'}
+        {sent ? '로그인' : '인증 문자 받기'}
       </button>
 
       {sent && (

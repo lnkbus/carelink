@@ -20,12 +20,37 @@ export default function LoginPage({ searchParams }: { searchParams: { reason?: s
           borderRadius: 'var(--cl-r-hero)', padding: 'var(--cl-s7)',
         }}
       >
-        <div style={{ letterSpacing: '.28em', fontWeight: 700, fontSize: 17 }}>CARELINK</div>
-        <p style={{ margin: 'var(--cl-s2) 0 var(--cl-s6)', color: 'var(--cl-text-muted)', fontSize: 'var(--cl-body)' }}>
-          운영 콘솔 · 인증번호로 로그인합니다
+        {/* 시안(SCR-002)의 브랜드 마크 64px — 파란 타일 + 흰 하트. */}
+        <div
+          style={{
+            width: 64, height: 64, borderRadius: 20, background: 'var(--cl-action-strong)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#fff', fontSize: 34, marginBottom: 'var(--cl-s6)',
+          }}
+          aria-hidden="true"
+        >
+          ♥
+        </div>
+        <h1 style={{ margin: 0, fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em' }}>
+          휴대폰 번호로 시작
+        </h1>
+        <p style={{ margin: 'var(--cl-s3) 0 var(--cl-s6)', color: 'var(--cl-text-muted)', fontSize: 17, lineHeight: 1.5 }}>
+          번호를 입력하면 인증 문자를 보냅니다. 비밀번호는 없습니다. · 운영 콘솔
         </p>
         <ReturnReason reason={searchParams.reason} />
         <LoginForm />
+
+        {/* 문자가 안 오는 가장 흔한 이유가 통신사 스팸 차단입니다.
+            모르면 시스템이 고장 난 것으로 읽습니다. */}
+        <div
+          style={{
+            marginTop: 'var(--cl-s5)', padding: 'var(--cl-s5)', borderRadius: 12,
+            background: 'var(--cl-bg-sub)', color: 'var(--cl-text-sub)',
+            fontSize: 16, lineHeight: 1.5,
+          }}
+        >
+          문자가 오지 않으면 통신사 스팸 차단을 확인해 주세요.
+        </div>
       </div>
     </div>
   );

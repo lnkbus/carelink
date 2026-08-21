@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { CareAssignment, CareRequest } from '@carelink/shared-types';
 import { Page, Notice, Row } from '@/components/Page';
 import { RequestSteps } from '@/components/RequestSteps';
-import { apiGet } from '@/lib/api';
+import { guardedGet } from '@/lib/api';
 import { currentUser } from '@/lib/session';
 import { fmtDateTime, label } from '@/lib/labels';
 
@@ -26,8 +26,8 @@ export const dynamic = 'force-dynamic';
 export default async function ConfirmPage({ params }: { params: { id: string } }) {
   await currentUser();
   const [request, assignments] = await Promise.all([
-    apiGet<CareRequest>(`/care-requests/${params.id}`),
-    apiGet<CareAssignment[]>(`/care-requests/${params.id}/assignments`),
+    guardedGet<CareRequest>(`/care-requests/${params.id}`),
+    guardedGet<CareAssignment[]>(`/care-requests/${params.id}/assignments`),
   ]);
 
   const confirmed = assignments.find((a) => ['ASSIGNED', 'IN_SERVICE', 'COMPLETED'].includes(a.status));
