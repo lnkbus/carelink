@@ -165,12 +165,17 @@ export class ShiftBoundaryDto {
  * 생깁니다. 이 엔드포인트로 새로 만들 수 있으면 QR을 찍지 않고 근무를
  * 주장할 수 있게 됩니다.
  *
+ * **BREAK_START/BREAK_END는 여기 있습니다.** 휴게는 간병사가 직접 찍습니다.
+ * QR을 요구하지 않는 이유는 휴게가 병실 밖에서 일어나야 정상이기 때문입니다 —
+ * 병실 QR을 찍으라고 하면 자리를 뜨지 말라는 뜻이 되고, 그러면 그건 휴게가
+ * 아니라 대기시간입니다 (§50③).
+ *
  * 다만 **이미 찍힌 출퇴근을 정정하는 것은 별개**입니다. 분쟁의 대부분이
  * "09:00에 시작했는데 QR을 09:14에 찍었다" 형태라, 정정이 막히면 append-only가
  * 근거가 아니라 오기록의 고착이 됩니다. 정정은 원본과 같은 유형이어야 하고
  * 운영자만 할 수 있습니다 — 서비스 레이어에서 확인합니다.
  */
-const LOG_TYPES = ['SUPPORT', 'NOTE', 'ISSUE'] as const;
+const LOG_TYPES = ['SUPPORT', 'NOTE', 'ISSUE', 'BREAK_START', 'BREAK_END'] as const;
 const CORRECTABLE_LOG_TYPES = ['SHIFT_START', 'SHIFT_END'] as const;
 const APPENDABLE_LOG_TYPES = [...LOG_TYPES, ...CORRECTABLE_LOG_TYPES] as const;
 

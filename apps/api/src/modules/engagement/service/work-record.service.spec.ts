@@ -6,8 +6,8 @@ import type { AssignmentWorkFacts, WorkRecordRepository } from '../repository/wo
  *
  * 여기서 못 박는 것은 세 가지입니다.
  *   1. 야간·근무일은 **KST 벽시계** 기준이다 (UTC로 세면 주간이 야간이 된다)
- *   2. 실제 근무가 짧으면 계획된 휴게를 그대로 빼지 않는다 (근로기준법 §54)
- *   3. 24시간 상주는 U5 확정 전까지 집계하지 않는다
+ *   2. 휴게는 **기록된 것만** 공제한다 (2026-08-21 결정 · 근로기준법 §54)
+ *   3. 비활성 교대 패턴(24시간 상주)은 집계하지 않는다
  */
 function makeService(facts: Partial<AssignmentWorkFacts>) {
   const created: Record<string, unknown>[] = [];
@@ -15,7 +15,7 @@ function makeService(facts: Partial<AssignmentWorkFacts>) {
     assignmentWorkFacts: jest.fn().mockResolvedValue({
       assignment_id: 'a1', worker_user_id: 'u1',
       engagement_id: 'e1', shift_pattern_code: 'H8_3SHIFT',
-      started_at: null, ended_at: null, ...facts,
+      started_at: null, ended_at: null, break_minutes: null, ...facts,
     } as AssignmentWorkFacts),
     findBySource: jest.fn().mockResolvedValue(null),
     create: jest.fn(async (input: Record<string, unknown>) => {
@@ -37,6 +37,7 @@ describe('근무 시간 구분', () => {
     const { svc, created } = makeService({
       started_at: kst('2026-08-20T09:00:00'),
       ended_at: kst('2026-08-20T18:00:00'),
+      break_minutes: 60,
     });
     await svc.aggregateAssignment({ assignmentId: 'a1', actorUserId: null });
     expect(created[0]).toMatchObject({
@@ -73,6 +74,7 @@ describe('근무 시간 구분', () => {
       shift_pattern_code: 'H12_2SHIFT',
       started_at: kst('2026-08-20T08:00:00'),
       ended_at: kst('2026-08-20T20:00:00'),
+      break_minutes: 90,
     });
     await svc.aggregateAssignment({ assignmentId: 'a1', actorUserId: null });
     expect(created[0]).toMatchObject({
@@ -81,39 +83,70 @@ describe('근무 시간 구분', () => {
   });
 });
 
-describe('휴게시간은 실제 근무 길이에 따라 상한이 있다 (근로기준법 §54)', () => {
-  it('4시간 미만이면 휴게를 빼지 않는다', async () => {
-    // 계획된 60분을 그대로 빼면 2시간 일한 사람의 근로시간이 1시간이 됩니다.
+describe('휴게 — 기록된 것만 공제한다', () => {
+  it('기록이 없으면 공제하지 않는다', async () => {
+    // 계획된 60분을 대신 빼면 실제로 못 쉰 사람의 임금을 뺀 것이 되고,
+    // 그건 임금체불이라 소급 청구 대상입니다. 대신 왜 0분인지를 남깁니다.
+    const { svc, created } = makeService({
+      started_at: kst('2026-08-20T09:00:00'),
+      ended_at: kst('2026-08-20T18:00:00'),
+      break_minutes: null,
+    });
+    await svc.aggregateAssignment({ assignmentId: 'a1', actorUserId: null });
+    expect(created[0]).toMatchObject({
+      breakMinutes: 0, breakSource: 'NOT_RECORDED', normalMinutes: 480, overtimeMinutes: 60,
+    });
+  });
+
+  it('기록된 만큼만 공제한다 — 계획값과 달라도 그대로', async () => {
+    // 45분만 쉬었으면 45분입니다. 계획이 60분이라고 60분을 빼지 않습니다.
+    const { svc, created } = makeService({
+      started_at: kst('2026-08-20T09:00:00'),
+      ended_at: kst('2026-08-20T18:00:00'),
+      break_minutes: 45,
+    });
+    await svc.aggregateAssignment({ assignmentId: 'a1', actorUserId: null });
+    expect(created[0]).toMatchObject({
+      breakMinutes: 45, breakSource: 'RECORDED', normalMinutes: 480, overtimeMinutes: 15,
+    });
+  });
+
+  it('0분을 찍었으면 0분이다 — 미기록과 구분된다', async () => {
+    // 둘 다 공제는 0이지만 의미가 다릅니다. 미기록은 운영자가 확인해야 하고,
+    // 0분 기록은 "쉬지 못했다"는 본인 진술입니다.
+    const { svc, created } = makeService({
+      started_at: kst('2026-08-20T09:00:00'),
+      ended_at: kst('2026-08-20T17:00:00'),
+      break_minutes: 0,
+    });
+    await svc.aggregateAssignment({ assignmentId: 'a1', actorUserId: null });
+    expect(created[0]).toMatchObject({ breakMinutes: 0, breakSource: 'RECORDED' });
+  });
+
+  it('체류시간보다 긴 휴게 기록은 상한을 씌운다', async () => {
+    // 오기록입니다. 그대로 빼면 근로시간이 음수가 됩니다.
     const { svc, created } = makeService({
       started_at: kst('2026-08-20T09:00:00'),
       ended_at: kst('2026-08-20T11:00:00'),
+      break_minutes: 600,
     });
     await svc.aggregateAssignment({ assignmentId: 'a1', actorUserId: null });
-    expect(created[0]).toMatchObject({ breakMinutes: 0, normalMinutes: 120 });
-  });
-
-  it('4시간 이상 8시간 미만이면 30분까지만 뺀다', async () => {
-    const { svc, created } = makeService({
-      started_at: kst('2026-08-20T09:00:00'),
-      ended_at: kst('2026-08-20T15:00:00'),
-    });
-    await svc.aggregateAssignment({ assignmentId: 'a1', actorUserId: null });
-    expect(created[0]).toMatchObject({ breakMinutes: 30, normalMinutes: 330 });
+    expect(created[0]).toMatchObject({ breakMinutes: 120, normalMinutes: 0 });
   });
 
   it('근로시간이 음수가 되는 경우가 없다', async () => {
-    // 체크인 직후 체크아웃 같은 오기록에서도 성립해야 합니다.
     const { svc, created } = makeService({
       started_at: kst('2026-08-20T09:00:00'),
       ended_at: kst('2026-08-20T09:01:00'),
+      break_minutes: 30,
     });
     await svc.aggregateAssignment({ assignmentId: 'a1', actorUserId: null });
-    expect(created[0]).toMatchObject({ breakMinutes: 0, normalMinutes: 1 });
+    expect(created[0]).toMatchObject({ breakMinutes: 1, normalMinutes: 0 });
   });
 });
 
 describe('집계가 막히는 경우', () => {
-  it('24시간 상주는 U5 확정 전까지 집계하지 않는다', async () => {
+  it('비활성 교대 패턴(24시간 상주)은 집계하지 않는다', async () => {
     // 0으로 채우면 '무급 24시간'이 되고 전체를 근로로 넣으면 매일 연장근로
     // 한도를 넘습니다. 둘 다 틀리므로 값을 만들지 않습니다 (CLAUDE.md §6-8).
     const { svc } = makeService({

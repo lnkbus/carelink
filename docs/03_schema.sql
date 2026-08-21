@@ -826,6 +826,9 @@ CREATE TABLE shift_patterns (
   -- true면 운영자 승인 없이 배정 불가
   requires_approval BOOLEAN NOT NULL DEFAULT false,
   is_recommended    BOOLEAN NOT NULL DEFAULT true,
+  -- false면 신규 요청에서 선택할 수 없다. 행은 남긴다 —
+  -- 과거 요청이 이 코드를 참조하고 있고, 노무 판정이 뒤집히면 다시 연다.
+  is_active         BOOLEAN NOT NULL DEFAULT true,
   sort_order        INT NOT NULL DEFAULT 0,
   note              TEXT
 );
@@ -930,7 +933,13 @@ CREATE TABLE care_assignments (
 CREATE TABLE service_logs (
   id             UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   assignment_id  UUID NOT NULL REFERENCES care_assignments(id) ON DELETE CASCADE,
-  log_type       VARCHAR(32) NOT NULL,   -- SHIFT_START | SHIFT_END | SUPPORT | NOTE | ISSUE
+  -- SHIFT_START | SHIFT_END  출퇴근. QR 체크인에서만 생긴다.
+  -- BREAK_START | BREAK_END  휴게. 간병사가 직접 찍는다.
+  --   휴게를 숫자로 입력받지 않고 시각으로 찍게 하는 이유: 출퇴근과 같은
+  --   증거 사슬에 올려야 §54 이행을 증명할 수 있다. 기록이 없으면 공제하지
+  --   않는다 — 입증책임은 사용자에게 있고, 못 쉰 사람의 임금을 빼면 체불이다.
+  -- SUPPORT | NOTE | ISSUE   서비스 기록
+  log_type       VARCHAR(32) NOT NULL,
   item_code      VARCHAR(64),            -- care_service_items.code
   occurred_at    TIMESTAMPTZ NOT NULL,
   check_method   check_method,
@@ -1207,6 +1216,12 @@ CREATE TABLE work_records (
   started_at       TIMESTAMPTZ,
   ended_at         TIMESTAMPTZ,
   break_minutes    INT NOT NULL DEFAULT 0,
+  -- 휴게시간의 출처. 0분이 '실제로 안 쉼'인지 '기록이 없음'인지 구분한다.
+  --   RECORDED      간병사가 앱에서 휴게 시작·종료를 찍었다
+  --   NOT_RECORDED  기록이 없다 → **공제하지 않는다** (임금체불 방지)
+  --   PLANNED       교대 패턴의 소정 휴게를 적용했다 (기록 도입 전 데이터)
+  -- 이 구분이 없으면 정산 분쟁에서 "왜 0분인가"를 되짚을 수 없다.
+  break_source     VARCHAR(16) NOT NULL DEFAULT 'NOT_RECORDED',
   normal_minutes   INT NOT NULL DEFAULT 0,
   night_minutes    INT NOT NULL DEFAULT 0,
   overtime_minutes INT NOT NULL DEFAULT 0,
@@ -1443,13 +1458,19 @@ VALUES
   ('SEG_F_VN_COLLEGE',  '베트남 양성대학 (D-2)',      'D-2',  30, NULL, 6, false, '2~3년 장기 자산');
 
 -- 교대 패턴 -------------------------------------------------------------------
-INSERT INTO shift_patterns (code, label_ko, hours_per_worker, workers_per_day, requires_approval, is_recommended, sort_order, note) VALUES
-  ('H8_3SHIFT',  '8시간 3교대',  8,  3, false, true,  1, '급여화 시범사업 원칙. 권장 기본값'),
-  ('H12_2SHIFT', '12시간 2교대', 12, 2, false, true,  2, NULL),
-  ('DAY',        '주간 전담',    10, 1, false, true,  3, NULL),
-  ('NIGHT',      '야간 전담',    12, 1, false, true,  4, '야간수당 별도'),
-  ('H24_LIVE_IN','24시간 상주',  24, 1, true,  false, 9,
-   '비권장. 운영자 승인 필수. 직접고용 인력에게는 근로시간 규정 검토 완료 전 배정 금지');
+INSERT INTO shift_patterns (code, label_ko, hours_per_worker, workers_per_day, requires_approval, is_recommended, is_active, sort_order, note) VALUES
+  ('H8_3SHIFT',  '8시간 3교대',  8,  3, false, true,  true,  1, '급여화 시범사업 원칙. 권장 기본값'),
+  ('H12_2SHIFT', '12시간 2교대', 12, 2, false, true,  true,  2, NULL),
+  ('DAY',        '주간 전담',    10, 1, false, true,  true,  3, NULL),
+  ('NIGHT',      '야간 전담',    12, 1, false, true,  true,  4, '야간수당 별도'),
+  -- 2026-08-21 경영 판단으로 **비활성**. 24시간 상주에서 자는 시간을 휴게로
+  -- 볼지 근로로 볼지(U5)가 정해지지 않았고, 정해지지 않은 채로 배치하면
+  -- 나중에 소급 임금 청구나 연장근로 한도 위반이 됩니다. 3교대로 대체합니다.
+  --
+  -- **행을 지우지 않은 이유**: 과거 요청이 이 코드를 참조하고, 노무 판정이
+  -- 나오면 is_active만 되돌리면 됩니다. 코드 경로는 그대로 남아 있습니다.
+  ('H24_LIVE_IN','24시간 상주',  24, 1, true,  false, false, 9,
+   '비활성 (2026-08-21). U5(휴게·대기 시간 판정) 확정 전까지 선택 불가. 확정되면 is_active를 되돌린다');
 
 -- 의료행위 감지 사전 (초기 세트. 운영하며 확장할 것) ---------------------------
 INSERT INTO restricted_act_keywords (keyword, category) VALUES

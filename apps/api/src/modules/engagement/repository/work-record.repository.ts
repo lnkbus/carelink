@@ -4,7 +4,8 @@ import { DbService } from '../../../core/db/db.service';
 export interface WorkRecordRow {
   id: string; engagement_id: string; source_type: string; source_id: string | null;
   work_date: Date; started_at: Date | null; ended_at: Date | null;
-  break_minutes: number; normal_minutes: number; night_minutes: number;
+  break_minutes: number; break_source: string;
+  normal_minutes: number; night_minutes: number;
   overtime_minutes: number; holiday_minutes: number;
   approved_by: string | null; approved_at: Date | null;
   correction_of: string | null; created_at: Date;
@@ -21,11 +22,19 @@ export interface AssignmentWorkFacts {
   assignment_id: string; worker_user_id: string;
   engagement_id: string | null; shift_pattern_code: string | null;
   started_at: Date | null; ended_at: Date | null;
+  /**
+   * 실제로 기록된 휴게 (분). 기록이 하나도 없으면 null입니다.
+   *
+   * **0과 null이 다릅니다.** 0은 "찍었는데 0분"이고 null은 "안 찍었다"입니다.
+   * null이면 공제하지 않습니다 — 못 쉰 사람의 임금을 빼면 체불이고,
+   * 휴게를 부여했다는 입증책임은 사용자에게 있습니다 (§54).
+   */
+  break_minutes: number | null;
 }
 
 const COLS = `id, engagement_id, source_type, source_id, work_date, started_at, ended_at,
-              break_minutes, normal_minutes, night_minutes, overtime_minutes, holiday_minutes,
-              approved_by, approved_at, correction_of, created_at`;
+              break_minutes, break_source, normal_minutes, night_minutes, overtime_minutes,
+              holiday_minutes, approved_by, approved_at, correction_of, created_at`;
 
 @Injectable()
 export class WorkRecordRepository {
@@ -74,12 +83,33 @@ export class WorkRecordRepository {
             -- 나중에 정정된 로그는 제외합니다.
             AND NOT EXISTS (SELECT 1 FROM service_logs c WHERE c.correction_of = l.id)
        )
+       , breaks AS (
+         -- 휴게 시작·종료를 시각 순으로 짝지어 실제 분을 셉니다.
+         -- 짝이 맞지 않는 기록(시작만 있고 종료가 없음)은 세지 않습니다 —
+         -- 얼마나 쉬었는지 알 수 없는 것을 추정해서 빼면 그게 체불입니다.
+         SELECT sum(
+                  EXTRACT(EPOCH FROM (b.ends_at - b.starts_at)) / 60
+                )::int AS minutes,
+                count(*) AS pairs
+           FROM (
+             SELECT l.occurred_at AS starts_at,
+                    lead(l.occurred_at) OVER (ORDER BY l.occurred_at) AS ends_at,
+                    l.log_type,
+                    lead(l.log_type) OVER (ORDER BY l.occurred_at) AS next_type
+               FROM service_logs l
+              WHERE l.assignment_id = $1
+                AND l.log_type IN ('BREAK_START','BREAK_END')
+                AND NOT EXISTS (SELECT 1 FROM service_logs c WHERE c.correction_of = l.id)
+           ) b
+          WHERE b.log_type = 'BREAK_START' AND b.next_type = 'BREAK_END'
+       )
        SELECT a.id AS assignment_id,
               cg.user_id AS worker_user_id,
               e.id AS engagement_id,
               r.shift_pattern_code,
               (SELECT occurred_at FROM latest WHERE log_type = 'SHIFT_START' AND rn = 1) AS started_at,
-              (SELECT occurred_at FROM latest WHERE log_type = 'SHIFT_END'   AND rn = 1) AS ended_at
+              (SELECT occurred_at FROM latest WHERE log_type = 'SHIFT_END'   AND rn = 1) AS ended_at,
+              (SELECT CASE WHEN pairs > 0 THEN minutes ELSE NULL END FROM breaks) AS break_minutes
          FROM care_assignments a
          JOIN caregivers cg ON cg.id = a.caregiver_id
          JOIN care_requests r ON r.id = a.care_request_id
@@ -110,18 +140,19 @@ export class WorkRecordRepository {
   async create(input: {
     engagementId: string; sourceType: string; sourceId: string | null;
     workDate: string; startedAt: string | null; endedAt: string | null;
-    breakMinutes: number; normalMinutes: number; nightMinutes: number;
+    breakMinutes: number; breakSource?: string;
+    normalMinutes: number; nightMinutes: number;
     overtimeMinutes: number; holidayMinutes: number; correctionOf?: string | null;
   }): Promise<WorkRecordRow> {
     const row = await this.db.one<{ id: string }>(
       `INSERT INTO work_records
          (engagement_id, source_type, source_id, work_date, started_at, ended_at,
-          break_minutes, normal_minutes, night_minutes, overtime_minutes, holiday_minutes,
-          correction_of)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id`,
+          break_minutes, break_source, normal_minutes, night_minutes, overtime_minutes,
+          holiday_minutes, correction_of)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING id`,
       [input.engagementId, input.sourceType, input.sourceId, input.workDate,
-       input.startedAt, input.endedAt, input.breakMinutes, input.normalMinutes,
-       input.nightMinutes, input.overtimeMinutes, input.holidayMinutes,
+       input.startedAt, input.endedAt, input.breakMinutes, input.breakSource ?? 'NOT_RECORDED',
+       input.normalMinutes, input.nightMinutes, input.overtimeMinutes, input.holidayMinutes,
        input.correctionOf ?? null],
     );
     return (await this.findById(row!.id))!;

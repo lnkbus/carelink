@@ -29,19 +29,25 @@ function toLocal(d: Date): Date {
 }
 
 /**
- * 교대 패턴별 소정 휴게시간 (분).
+ * 교대 패턴별 **계획된** 휴게시간 (분).
  *
  * 근로기준법 §54: 4시간 근무 시 30분, 8시간 시 1시간 이상.
  *
- * **H24_LIVE_IN이 여기 없는 것이 핵심입니다.** 24시간 상주에서 자는 시간을
- * 휴게로 볼지 근로로 볼지가 U5이고, 아직 정해지지 않았습니다. 판례는
- * "사용자의 지휘·감독 아래 있으면 근로시간"으로 보는데, 자는 동안에도
- * 환자 호출에 응해야 하면 그 시간이 근로시간이 됩니다.
+ * ── 이 표는 이제 계산에 쓰이지 않습니다 ────────────────────────────────
+ * 2026-08-21 결정으로 휴게는 **간병사가 앱에서 찍은 실제 기록**으로 셉니다.
+ * 이 표는 "계획이 얼마였는가"를 비교해 어긋난 건을 운영자에게 올리는
+ * 용도로만 남습니다.
  *
- * 임의로 값을 넣으면 그 값으로 계산된 근무 기록이 쌓이고, U5가 반대로
- * 나오면 전부 다시 집계해야 합니다. 그래서 값을 두지 않았습니다.
+ * 계획값을 그대로 공제하지 않는 이유는 단순합니다 — **못 쉰 사람의 임금을
+ * 빼면 임금체불이고, 그건 소급 청구 대상입니다.** 반대로 기록이 없다고
+ * 조용히 넘기면 휴게를 부여했다는 증명이 없어 §54 위반 입증에 방어할 수
+ * 없습니다. 그래서 공제는 하지 않되 미기록 사실을 남기고 사람에게 올립니다.
+ *
+ * **H24_LIVE_IN이 여기 없습니다.** 2026-08-21 결정으로 24시간 상주는
+ * `shift_patterns.is_active = false`가 됐습니다. 값이 없으면 집계도 막힙니다 —
+ * 비활성 이전에 만들어진 배정이 남아 있을 수 있기 때문입니다.
  */
-const BREAK_MINUTES_BY_PATTERN: Record<string, number> = {
+const PLANNED_BREAK_BY_PATTERN: Record<string, number> = {
   H8_3SHIFT: 60,
   H12_2SHIFT: 90,
   DAY: 60,
@@ -49,23 +55,14 @@ const BREAK_MINUTES_BY_PATTERN: Record<string, number> = {
 };
 
 /**
- * 실제 근무 길이가 짧으면 계획된 휴게를 그대로 빼지 않습니다.
+ * 실제 기록이 계획보다 짧아도 **깎지 않습니다.**
  *
- * 위 표는 **계획된** 휴게이고, 실제 교대가 계획보다 짧게 끝나는 일은 흔합니다
- * (조기 퇴원·보호자 요청·교대 인계). 계획값을 그대로 빼면 3시간 일한 사람의
- * 근로시간이 2시간이 되고, 극단적으로는 음수가 됩니다.
- *
- * 근로기준법 §54의 발생 기준으로 상한을 둡니다 — 8시간 이상이면 1시간,
- * 4시간 이상이면 30분, 그 미만은 휴게 부여 의무가 없습니다. 계획값이 법정
- * 하한보다 크면(2교대 90분) 실제 근무가 8시간을 넘는 한 계획값을 그대로 씁니다.
- *
- * **U5와 무관합니다.** 여기서 다루는 것은 정형 교대의 소정 휴게이고,
- * 24시간 상주의 대기·수면 시간 판정은 아래에서 여전히 막습니다.
+ * 여기서 하는 것은 상한 확인뿐입니다 — 기록된 휴게가 실제 체류시간보다
+ * 길 수는 없습니다. 그런 기록이 들어오면 오기록이고, 그대로 빼면 근로시간이
+ * 음수가 됩니다.
  */
-function statutoryBreakCap(elapsedMinutes: number, planned: number): number {
-  if (elapsedMinutes >= 8 * 60) return planned;
-  if (elapsedMinutes >= 4 * 60) return Math.min(planned, 30);
-  return 0;
+function cap(recorded: number, elapsedMinutes: number): number {
+  return Math.max(0, Math.min(recorded, elapsedMinutes));
 }
 
 /**
@@ -133,7 +130,18 @@ export class WorkRecordService {
       startedAt: source.started_at,
       endedAt: source.ended_at,
       shiftPatternCode: source.shift_pattern_code,
+      recordedBreakMinutes: source.break_minutes,
     });
+
+    // 휴게 기록이 없는 근무는 조용히 넘어가지 않습니다. 공제는 하지 않되
+    // 사실을 남기고 운영자 큐에 올립니다 — 특정 병동에 몰리면 그 현장이
+    // 휴게를 못 주고 있다는 신호입니다.
+    if (split.breakSource === 'NOT_RECORDED') {
+      this.log.warn(
+        `work_record: 배정 ${input.assignmentId}에 휴게 기록이 없습니다 — ` +
+        '공제하지 않고 운영자 확인 대상으로 둡니다 (§54 이행 증명)',
+      );
+    }
 
     const record = await this.repo.create({
       engagementId: source.engagement_id,
@@ -166,14 +174,16 @@ export class WorkRecordService {
    */
   private splitMinutes(input: {
     startedAt: Date; endedAt: Date; shiftPatternCode: string | null;
+    recordedBreakMinutes: number | null;
   }): {
-    breakMinutes: number; normalMinutes: number;
+    breakMinutes: number; breakSource: string; normalMinutes: number;
     nightMinutes: number; overtimeMinutes: number; holidayMinutes: number;
   } {
     const pattern = input.shiftPatternCode ?? 'H8_3SHIFT';
-    const breakMinutes = BREAK_MINUTES_BY_PATTERN[pattern];
 
-    if (breakMinutes === undefined) {
+    // 비활성 패턴(24시간 상주)은 여전히 집계하지 않습니다. 비활성 이전에
+    // 만들어진 배정이 남아 있을 수 있고, 그 건의 근로시간 판정은 U5 그대로입니다.
+    if (PLANNED_BREAK_BY_PATTERN[pattern] === undefined) {
       throw new DomainError('ENGAGEMENT_PAYOUT_UNAVAILABLE', {
         shiftPatternCode: pattern,
         blockedBy: ['U5: 24시간 간병의 근로시간 규정 적용 방식 (휴게·대기 시간 판정)'],
@@ -187,7 +197,15 @@ export class WorkRecordService {
     const elapsed = Math.max(
       0, Math.round((input.endedAt.getTime() - input.startedAt.getTime()) / 60_000),
     );
-    const appliedBreak = statutoryBreakCap(elapsed, breakMinutes);
+
+    // ── 휴게: 기록된 것만 공제합니다 ────────────────────────────────────
+    //
+    // 기록이 없으면(null) 0분입니다. 계획된 60분을 대신 빼지 않습니다 —
+    // 실제로 못 쉰 사람의 임금을 뺀 것이 되고, 그건 임금체불입니다.
+    // 대신 NOT_RECORDED로 남겨 왜 0분인지 되짚을 수 있게 합니다.
+    const recorded = input.recordedBreakMinutes;
+    const breakSource = recorded === null ? 'NOT_RECORDED' : 'RECORDED';
+    const appliedBreak = recorded === null ? 0 : cap(recorded, elapsed);
     const worked = Math.max(0, elapsed - appliedBreak);
 
     // 야간(22:00~06:00)은 시계 계산입니다. U5와 무관합니다.
@@ -207,7 +225,8 @@ export class WorkRecordService {
     const holidayMinutes = 0;
 
     return {
-      breakMinutes: appliedBreak, normalMinutes, nightMinutes, overtimeMinutes, holidayMinutes,
+      breakMinutes: appliedBreak, breakSource,
+      normalMinutes, nightMinutes, overtimeMinutes, holidayMinutes,
     };
   }
 
@@ -272,6 +291,8 @@ export class WorkRecordService {
       startedAt: original.started_at?.toISOString() ?? null,
       endedAt: original.ended_at?.toISOString() ?? null,
       breakMinutes: input.breakMinutes,
+      // 정정은 사람이 확인한 값입니다. 앱 기록과 구분합니다.
+      breakSource: 'CORRECTED',
       normalMinutes: input.normalMinutes,
       nightMinutes: input.nightMinutes,
       overtimeMinutes: input.overtimeMinutes,

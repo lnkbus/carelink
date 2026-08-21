@@ -204,6 +204,28 @@ const Map<String, Map<AppLocale, String>> _dict = {
   'shift.ended': {
     AppLocale.ko: '종료함', AppLocale.vi: 'Đã kết thúc', AppLocale.ru: 'Завершена', AppLocale.en: 'Ended',
   },
+  'break.start': {
+    AppLocale.ko: '휴게 시작', AppLocale.vi: 'Bắt đầu nghỉ',
+    AppLocale.ru: 'Начать перерыв', AppLocale.en: 'Start break',
+  },
+  'break.end': {
+    AppLocale.ko: '휴게 종료', AppLocale.vi: 'Kết thúc nghỉ',
+    AppLocale.ru: 'Закончить перерыв', AppLocale.en: 'End break',
+  },
+  'break.onBreak': {
+    AppLocale.ko: '휴게 중', AppLocale.vi: 'Đang nghỉ',
+    AppLocale.ru: 'Перерыв', AppLocale.en: 'On break',
+  },
+  'break.help': {
+    AppLocale.ko: '쉬실 때 눌러 주세요. 찍은 시간만 휴게로 처리되고, 찍지 않으면 임금에서 빠지지 않습니다.',
+    AppLocale.vi: 'Hãy bấm khi bạn nghỉ. Chỉ thời gian đã ghi mới tính là nghỉ; nếu không ghi, lương không bị trừ.',
+    AppLocale.ru: 'Нажмите, когда отдыхаете. Перерывом считается только отмеченное время; без отметки из зарплаты ничего не вычитается.',
+    AppLocale.en: 'Tap when you take a break. Only recorded time counts as a break; if you do not record it, nothing is deducted from your pay.',
+  },
+  'break.total': {
+    AppLocale.ko: '오늘 휴게', AppLocale.vi: 'Nghỉ hôm nay',
+    AppLocale.ru: 'Перерыв сегодня', AppLocale.en: 'Break today',
+  },
   'shift.logs': {
     AppLocale.ko: '기록', AppLocale.vi: 'Nhật ký', AppLocale.ru: 'Записи', AppLocale.en: 'Records',
   },

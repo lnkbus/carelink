@@ -161,13 +161,19 @@ VALUES
   ('SEG_F_VN_COLLEGE',  '베트남 양성대학 (D-2)',      'D-2',  30, NULL, 6, false, '2~3년 장기 자산');
 
 -- 교대 패턴 -------------------------------------------------------------------
-INSERT INTO shift_patterns (code, label_ko, hours_per_worker, workers_per_day, requires_approval, is_recommended, sort_order, note) VALUES
-  ('H8_3SHIFT',  '8시간 3교대',  8,  3, false, true,  1, '급여화 시범사업 원칙. 권장 기본값'),
-  ('H12_2SHIFT', '12시간 2교대', 12, 2, false, true,  2, NULL),
-  ('DAY',        '주간 전담',    10, 1, false, true,  3, NULL),
-  ('NIGHT',      '야간 전담',    12, 1, false, true,  4, '야간수당 별도'),
-  ('H24_LIVE_IN','24시간 상주',  24, 1, true,  false, 9,
-   '비권장. 운영자 승인 필수. 직접고용 인력에게는 근로시간 규정 검토 완료 전 배정 금지');
+INSERT INTO shift_patterns (code, label_ko, hours_per_worker, workers_per_day, requires_approval, is_recommended, is_active, sort_order, note) VALUES
+  ('H8_3SHIFT',  '8시간 3교대',  8,  3, false, true,  true,  1, '급여화 시범사업 원칙. 권장 기본값'),
+  ('H12_2SHIFT', '12시간 2교대', 12, 2, false, true,  true,  2, NULL),
+  ('DAY',        '주간 전담',    10, 1, false, true,  true,  3, NULL),
+  ('NIGHT',      '야간 전담',    12, 1, false, true,  true,  4, '야간수당 별도'),
+  -- 2026-08-21 경영 판단으로 **비활성**. 24시간 상주에서 자는 시간을 휴게로
+  -- 볼지 근로로 볼지(U5)가 정해지지 않았고, 정해지지 않은 채로 배치하면
+  -- 나중에 소급 임금 청구나 연장근로 한도 위반이 됩니다. 3교대로 대체합니다.
+  --
+  -- **행을 지우지 않은 이유**: 과거 요청이 이 코드를 참조하고, 노무 판정이
+  -- 나오면 is_active만 되돌리면 됩니다. 코드 경로는 그대로 남아 있습니다.
+  ('H24_LIVE_IN','24시간 상주',  24, 1, true,  false, false, 9,
+   '비활성 (2026-08-21). U5(휴게·대기 시간 판정) 확정 전까지 선택 불가. 확정되면 is_active를 되돌린다');
 
 -- 의료행위 감지 사전 (초기 세트. 운영하며 확장할 것) ---------------------------
 INSERT INTO restricted_act_keywords (keyword, category) VALUES

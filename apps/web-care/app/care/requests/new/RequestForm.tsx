@@ -14,7 +14,8 @@ import { errorLabel } from '@/lib/labels';
 const SHIFTS = [
   { code: 'H8_3SHIFT', label: '8시간 3교대', note: '권장' },
   { code: 'H12_2SHIFT', label: '12시간 2교대', note: '' },
-  { code: 'H24_LIVE_IN', label: '24시간 상주', note: '담당자 확인 후 진행' },
+  { code: 'DAY', label: '주간 전담', note: '' },
+  { code: 'NIGHT', label: '야간 전담', note: '' },
 ];
 
 const MOBILITY = [
@@ -65,7 +66,7 @@ export function RequestForm({
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           hospitalId, ward: ward || null,
-          serviceType: shift === 'H24_LIVE_IN' ? 'H24' : 'DAY',
+          serviceType: shift === 'NIGHT' ? 'NIGHT' : 'DAY',
           shiftPatternCode: shift,
           startAt: kstToIso(startAt),
           supportItems: items,
@@ -118,12 +119,13 @@ export function RequestForm({
             )}
           </button>
         ))}
-        {shift === 'H24_LIVE_IN' && (
-          <div className="cf-note">
-            24시간 상주는 담당자가 확인한 뒤 진행됩니다. 간병사가 잠을 자지 못하는
-            근무라 기본으로 권하지 않습니다 — 3교대로도 같은 시간을 채울 수 있습니다.
-          </div>
-        )}
+        {/* 24시간 상주는 목록에 없습니다 (2026-08-21 결정). 왜 없는지 적어
+            두지 않으면 "왜 안 보이냐"는 문의가 그대로 옵니다. */}
+        <div className="cf-note">
+          24시간 내내 필요하시면 <b>8시간 3교대</b>를 고르세요. 세 분이 나눠
+          맡습니다. 한 분이 24시간 상주하는 방식은 운영하지 않습니다 — 잠을
+          못 자는 상태로는 안전을 담보할 수 없습니다.
+        </div>
       </div>
 
       <div className="cf-card">

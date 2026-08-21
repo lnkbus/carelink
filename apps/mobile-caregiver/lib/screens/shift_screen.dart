@@ -64,6 +64,26 @@ class _ShiftScreenState extends State<ShiftScreen> {
     }
   }
 
+  /// 휴게 시작·종료.
+  ///
+  /// QR을 요구하지 않습니다. 휴게는 병실 밖에서 일어나야 정상이고, 병실 QR을
+  /// 찍으라고 하면 자리를 뜨지 말라는 뜻이 됩니다 — 그러면 그건 휴게가 아니라
+  /// 대기시간입니다 (근로기준법 §50③).
+  Future<void> _break(String type) async {
+    final app = AppScope.of(context);
+    setState(() { _busy = true; _error = null; });
+    try {
+      await app.api.post('/care-assignments/${widget.assignmentId}/logs', {'logType': type});
+      await _load();
+    } on ApiException catch (e) {
+      if (mounted) setState(() => _error = errorKey(e.code));
+    } catch (_) {
+      if (mounted) setState(() => _error = 'error.network');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _boundary(String which) async {
     final app = AppScope.of(context);
     setState(() { _busy = true; _error = null; });
@@ -89,6 +109,20 @@ class _ShiftScreenState extends State<ShiftScreen> {
     final d = _detail;
     final started = _logs.any((l) => l.logType == 'SHIFT_START');
     final ended = _logs.any((l) => l.logType == 'SHIFT_END');
+    // 휴게 로그를 시각 순으로 훑어 지금 쉬는 중인지와 누적 분을 셉니다.
+    final breaks = _logs.where((l) => l.logType.startsWith('BREAK_')).toList()
+      ..sort((a, b) => a.occurredAt.compareTo(b.occurredAt));
+    var breakMinutes = 0;
+    DateTime? openedAt;
+    for (final l in breaks) {
+      if (l.logType == 'BREAK_START') {
+        openedAt = l.occurredAt;
+      } else if (openedAt != null) {
+        breakMinutes += l.occurredAt.difference(openedAt).inMinutes;
+        openedAt = null;
+      }
+    }
+    final onBreak = openedAt != null;
 
     return Scaffold(
       appBar: AppBar(
@@ -171,6 +205,47 @@ class _ShiftScreenState extends State<ShiftScreen> {
                 const SizedBox(height: CL.s5),
               ],
 
+              // ── 휴게 (근로기준법 §54) ────────────────────────────────
+              //
+              // 근무를 시작한 뒤에만 보입니다. 시작 전에 휴게를 찍을 일은
+              // 없고, 버튼이 있으면 잘못 눌립니다.
+              if (started && !ended) ...[
+                FieldCard(
+                  tone: onBreak ? Tone.flag : null,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          if (onBreak)
+                            StatusPill(tone: Tone.flag, label: app.t('break.onBreak'))
+                          else
+                            Text(app.t('break.total'),
+                                style: const TextStyle(fontSize: CL.caption, color: CL.textSub)),
+                          const Spacer(),
+                          Text('$breakMinutes분',
+                              style: const TextStyle(
+                                  fontSize: CL.body, fontFamily: CL.monoFamily,
+                                  fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                      const SizedBox(height: CL.s4),
+                      SecondaryButton(
+                        label: app.t(onBreak ? 'break.end' : 'break.start'),
+                        onPressed: _busy ? null : () => _break(onBreak ? 'BREAK_END' : 'BREAK_START'),
+                      ),
+                      const SizedBox(height: CL.s3),
+                      // 찍지 않으면 손해가 아니라는 것을 명시합니다. 반대로
+                      // 적으면 아무도 찍지 않습니다.
+                      Text(app.t('break.help'),
+                          style: const TextStyle(
+                              fontSize: CL.caption, color: CL.textMuted, height: 1.4)),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: CL.s5),
+              ],
+
               // ── SCR-404 ──────────────────────────────────────────────
               if (!ended) ...[
                 Text(app.t('shift.scanQr'),
@@ -225,7 +300,13 @@ class _ShiftScreenState extends State<ShiftScreen> {
                         const SizedBox(width: CL.s4),
                         Expanded(
                           child: Text(
-                            app.t(l.logType == 'SHIFT_START' ? 'shift.started' : 'shift.ended'),
+                            app.t(switch (l.logType) {
+                              'SHIFT_START' => 'shift.started',
+                              'SHIFT_END' => 'shift.ended',
+                              'BREAK_START' => 'break.start',
+                              'BREAK_END' => 'break.end',
+                              _ => 'shift.logs',
+                            }),
                             style: const TextStyle(fontSize: CL.body),
                           ),
                         ),

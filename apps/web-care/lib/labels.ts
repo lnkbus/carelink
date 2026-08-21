@@ -65,6 +65,12 @@ const ERRORS: Record<string, string> = {
     '적어 주신 내용에 간병사가 할 수 없는 일이 포함된 것 같습니다. 담당자가 확인 후 연락드립니다.',
   CARE_UNKNOWN_SERVICE_ITEM:
     '선택할 수 없는 항목입니다. 투약·주사·처치 같은 의료행위는 간병사가 할 수 없습니다.',
+  QUALITY_SHIFT_NOT_AVAILABLE:
+    '지금은 24시간 상주를 신청할 수 없습니다. 8시간 3교대로 같은 시간을 채울 수 있습니다.',
+  CARE_REST_PERIOD_TOO_SHORT:
+    '이 간병사는 직전 근무와 너무 가까워 배정할 수 없습니다. 다른 분을 선택해 주세요.',
+  CARE_SHIFT_OVERLAP:
+    '이 간병사는 같은 시간에 다른 근무가 있습니다. 다른 분을 선택해 주세요.',
   QUALITY_SHIFT_NEEDS_APPROVAL:
     '24시간 상주는 담당자 확인 후 진행됩니다. 접수됐고 곧 연락드립니다.',
   QUALITY_SHIFT_NOT_ALLOWED_FOR_WORKER:

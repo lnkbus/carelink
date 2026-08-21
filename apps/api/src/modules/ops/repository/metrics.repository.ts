@@ -89,6 +89,19 @@ export class MetricsRepository {
         UNION ALL
        SELECT 'DOC_UNDER_REVIEW', d.id::text, d.doc_type::text, NULL
          FROM documents d WHERE d.status = 'UNDER_REVIEW'
+        UNION ALL
+       -- 휴게 기록 없이 끝난 근무. 공제하지 않았으므로 임금 문제는 없지만,
+       -- 휴게를 부여했다는 증명도 없습니다 (§54). 특정 병동에 몰리면
+       -- 그 현장이 휴게를 못 주고 있다는 신호입니다.
+       SELECT 'BREAK_NOT_RECORDED', w.id::text,
+              COALESCE(h.name, '') || ' ' || COALESCE(r.ward, ''), NULL
+         FROM work_records w
+         JOIN care_assignments a ON a.id = w.source_id AND w.source_type = 'CARE_ASSIGNMENT'
+         JOIN care_requests r ON r.id = a.care_request_id
+         LEFT JOIN hospitals h ON h.id = r.hospital_id
+        WHERE w.break_source = 'NOT_RECORDED'
+          AND w.approved_at IS NULL
+          AND w.correction_of IS NULL
         ORDER BY sla_hours_left NULLS LAST`,
     );
   }

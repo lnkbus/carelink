@@ -8,7 +8,7 @@ import {
   CareRepository, type CareAssignmentRow, type CareRequestRow, type CaregiverFactsRow,
 } from '../repository/care.repository';
 import {
-  assignmentMachine, careRequestMachine, CARE_ASSIGNMENT_SLA_HOURS,
+  assignmentMachine, careRequestMachine, CARE_ASSIGNMENT_SLA_HOURS, MIN_REST_HOURS,
   type AssignmentStatus, type CareRequestStatus,
 } from '../state/care.state';
 
@@ -87,6 +87,22 @@ export class CareService {
       throw new DomainError('CARE_UNKNOWN_SERVICE_ITEM', {
         unknown,
         reason: 'service items must come from the catalog; medical acts are not in it by design',
+      });
+    }
+
+    // 비활성 교대 패턴은 신규 요청에서 고를 수 없습니다.
+    //
+    // 매칭 시점이 아니라 **생성 시점**에 막습니다. 나중에 막으면 보호자가
+    // 신청을 다 마친 뒤에 "이 방식은 안 됩니다"를 듣게 되고, 그때는 이미
+    // 다른 경로를 찾아본 뒤입니다.
+    const requested = input.shiftPatternCode ?? 'H8_3SHIFT';
+    const pattern = await this.repo.findShiftPattern(requested);
+    if (pattern && !pattern.is_active) {
+      throw new DomainError('QUALITY_SHIFT_NOT_AVAILABLE', {
+        shiftPatternCode: requested,
+        label: pattern.label_ko,
+        reason: 'this shift pattern is not open for new requests',
+        alternative: 'H8_3SHIFT',
       });
     }
 
@@ -196,6 +212,62 @@ export class CareService {
     });
   }
 
+  /**
+   * 퇴근~출근 최소 간격 (§5.12-1).
+   *
+   * **24시간 패턴을 막는 것만으로는 부족합니다.** 같은 인력이 8시간 교대를
+   * 연달아 세 번 받으면 실제로는 24시간 근무이고, 서류상으로는 3교대라
+   * 합법으로 보입니다 — 그쪽이 더 위험합니다. 아무도 이상하다고 느끼지
+   * 않으니까요.
+   *
+   * 근로기준법이 명시적으로 요구하는 값은 아닙니다(EU 지침이 11시간).
+   * 우회를 막는 실효적 장치가 이것뿐이라 상수로 둡니다.
+   *
+   * 겹치는 근무는 애초에 불가능하므로 함께 막습니다 — 한 사람이 두 병실에
+   * 동시에 있을 수 없습니다.
+   */
+  private async assertRestPeriod(request: CareRequestRow, caregiverId: string): Promise<void> {
+    const startAt = request.start_at;
+    const pattern = request.shift_pattern_code
+      ? await this.repo.findShiftPattern(request.shift_pattern_code)
+      : null;
+    const endAt = request.end_at
+      ?? (pattern ? new Date(startAt.getTime() + pattern.hours_per_worker * 3_600_000) : null);
+    // 종료 시각을 알 수 없으면 판단할 근거가 없습니다. 막지 않습니다 —
+    // 근거 없이 막으면 운영자가 우회 경로를 요구하게 됩니다.
+    if (!endAt) return;
+
+    const neighbours = await this.repo.neighbouringShifts(
+      caregiverId, startAt.toISOString(), endAt.toISOString(),
+    );
+
+    for (const n of neighbours) {
+      if (n.care_request_id === request.id) continue;
+
+      const overlaps = n.starts_at < endAt && n.ends_at > startAt;
+      if (overlaps) {
+        throw new DomainError('CARE_SHIFT_OVERLAP', {
+          conflictingRequestId: n.care_request_id,
+          reason: 'this caregiver is already assigned to an overlapping shift',
+        });
+      }
+
+      const gapHours = n.ends_at <= startAt
+        ? (startAt.getTime() - n.ends_at.getTime()) / 3_600_000
+        : (n.starts_at.getTime() - endAt.getTime()) / 3_600_000;
+
+      if (gapHours < MIN_REST_HOURS) {
+        throw new DomainError('CARE_REST_PERIOD_TOO_SHORT', {
+          conflictingRequestId: n.care_request_id,
+          gapHours: Math.round(gapHours * 10) / 10,
+          requiredHours: MIN_REST_HOURS,
+          reason:
+            'consecutive shifts without enough rest amount to a 24-hour shift on paper as three 8-hour ones',
+        });
+      }
+    }
+  }
+
   async approveShiftPattern(id: string, actorUserId: string): Promise<CareRequestRow> {
     const before = await this.getRequest(id);
     await this.repo.approveShiftPattern(id, actorUserId);
@@ -263,6 +335,7 @@ export class CareService {
     const request = await this.getRequest(input.careRequestId);
     await this.assertShiftPatternAllowed(request);
     await this.assertShiftPatternAllowedForWorker(request, input.caregiverId);
+    await this.assertRestPeriod(request, input.caregiverId);
 
     if (request.status !== 'MATCHING') {
       careRequestMachine.assert(request.status, 'MATCHING');

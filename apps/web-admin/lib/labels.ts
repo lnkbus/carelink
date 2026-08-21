@@ -44,6 +44,7 @@ const DICT: Record<string, string> = {
   OPS_REVIEW: '업무범위 검토',
   ORG_PENDING_VERIFICATION: '기관 검증 대기',
   DOC_UNDER_REVIEW: '서류 검토 대기',
+  BREAK_NOT_RECORDED: '휴게 기록 없음',
 
   // 매칭 제외 사유
   CLEARANCE_INCOMPLETE: '클리어런스 미완',
@@ -97,6 +98,9 @@ const ERROR_DICT: Record<string, string> = {
   COMMON_INVALID_TRANSITION: '허용되지 않는 상태 변경입니다.',
   RECRUITING_ATTRIBUTION_LOCKED: '유입 출처가 이미 기록되어 있습니다. 첫 접점이 우선합니다.',
   IAM_TOKEN_INVALID: '세션이 만료되었습니다. 다시 로그인하세요.',
+  QUALITY_SHIFT_NOT_AVAILABLE: '지금은 선택할 수 없는 교대 방식입니다. 3교대로 진행하세요.',
+  CARE_REST_PERIOD_TOO_SHORT: '직전 근무와의 간격이 11시간 미만입니다. 연속 교대는 사실상 24시간 근무가 됩니다.',
+  CARE_SHIFT_OVERLAP: '이 간병사에게 겹치는 근무가 이미 있습니다.',
   TRACK_NO_REQUIREMENTS: '요건이 하나도 없는 트랙은 열 수 없습니다. 무엇을 확인할지 먼저 정의하세요.',
   COMMON_VALIDATION_FAILED: '입력값을 다시 확인하세요.',
   NETWORK: '서버에 연결하지 못했습니다. 잠시 후 다시 시도하세요.',

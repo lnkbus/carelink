@@ -108,9 +108,66 @@ export class CareRepository {
     );
   }
 
-  findShiftPattern(code: string): Promise<{ code: string; requires_approval: boolean; label_ko: string } | null> {
+  findShiftPattern(code: string): Promise<{
+    code: string; requires_approval: boolean; is_active: boolean;
+    label_ko: string; hours_per_worker: number;
+  } | null> {
     return this.db.one(
-      `SELECT code, requires_approval, label_ko FROM shift_patterns WHERE code = $1`, [code],
+      `SELECT code, requires_approval, is_active, label_ko,
+              hours_per_worker::float AS hours_per_worker
+         FROM shift_patterns WHERE code = $1`,
+      [code],
+    );
+  }
+
+  /** 신규 요청에서 고를 수 있는 교대 패턴. 비활성은 내려보내지 않습니다. */
+  listShiftPatterns(): Promise<{
+    code: string; label_ko: string; hours_per_worker: number; workers_per_day: number;
+    requires_approval: boolean; is_recommended: boolean; note: string | null;
+  }[]> {
+    return this.db.query(
+      `SELECT code, label_ko, hours_per_worker::float AS hours_per_worker,
+              workers_per_day, requires_approval, is_recommended, note
+         FROM shift_patterns
+        WHERE is_active
+        ORDER BY sort_order`,
+    );
+  }
+
+  /**
+   * 이 인력의 직전·직후 근무.
+   *
+   * **퇴근~출근 간격을 보기 위한 것입니다.** 24시간 패턴을 막아도 8시간
+   * 교대를 연달아 세 번 받으면 실제로는 24시간이고, 서류상으로는 합법으로
+   * 보입니다 — 그쪽이 더 위험합니다.
+   *
+   * 종료 시각이 없는 요청은 교대 패턴의 시간으로 채웁니다. 없으면 판단할
+   * 근거가 없으므로 그 건은 검사에서 빠집니다 (막지 않습니다).
+   */
+  neighbouringShifts(caregiverId: string, startAt: string, endAt: string): Promise<{
+    care_request_id: string; starts_at: Date; ends_at: Date;
+  }[]> {
+    return this.db.query(
+      `SELECT r.id AS care_request_id,
+              r.start_at AS starts_at,
+              COALESCE(
+                r.end_at,
+                r.start_at + make_interval(mins => (sp.hours_per_worker * 60)::int)
+              ) AS ends_at
+         FROM care_assignments a
+         JOIN care_requests r  ON r.id = a.care_request_id
+         LEFT JOIN shift_patterns sp ON sp.code = r.shift_pattern_code
+        WHERE a.caregiver_id = $1
+          AND a.status IN ('OFFERED','ACCEPTED','ASSIGNED','IN_SERVICE')
+          AND (r.end_at IS NOT NULL OR sp.hours_per_worker IS NOT NULL)
+          -- 검사 대상 구간의 앞뒤 하루씩만 봅니다. 전체를 스캔할 이유가 없습니다.
+          AND r.start_at <= ($3::timestamptz + interval '1 day')
+          AND COALESCE(
+                r.end_at,
+                r.start_at + make_interval(mins => (sp.hours_per_worker * 60)::int)
+              ) >= ($2::timestamptz - interval '1 day')
+        ORDER BY r.start_at`,
+      [caregiverId, startAt, endAt],
     );
   }
 

@@ -131,11 +131,23 @@ b=('MEDICATION','INJECTION','SUCTION','WOUND_CARE','BLOOD_SUGAR','ENEMA')
 print(','.join(i['code'] for i in json.load(sys.stdin) if i['code'] in b) or 'none')")
 [ "$MED" = "none" ] && ok "카탈로그에 의료행위 항목 없음" || bad "카탈로그에 의료행위" "$MED"
 
-# ── 5. 24시간 상주는 승인 없이 매칭에 들어가지 않는다 (§5.12) ───────────
-head_ "5. 24시간 상주 — 운영자 승인 게이트"
-R3=$(mkreq "303호" "H24_LIVE_IN" | J "['id']")
-E=$(curl -sS -X PATCH "$B/care-requests/$R3/status" "${A[@]}" -d '{"status":"MATCHING"}' | code)
-[ "$E" = "QUALITY_SHIFT_NEEDS_APPROVAL" ] && ok "승인 없는 24시간은 매칭 차단" || bad "24시간이 승인 없이 통과" "code=$E"
+# ── 5. 24시간 상주는 신청 자체가 안 된다 (2026-08-21 결정) ─────────────
+head_ "5. 24시간 상주 — 비활성"
+E=$(mkreq "303호" "H24_LIVE_IN" | code)
+[ "$E" = "QUALITY_SHIFT_NOT_AVAILABLE" ] && ok "24시간 상주는 신청 단계에서 차단" || bad "24시간이 신청됨" "code=$E"
+N=$(curl -sS "$B/care-services/catalog" "${A[@]}" -o /dev/null -w '%{http_code}')
+ACT=$(psql "$DB" -tAqc "SELECT is_active FROM shift_patterns WHERE code='H24_LIVE_IN';" | tr -d '[:space:]')
+[ "$ACT" = "f" ] && ok "shift_patterns에서 비활성 (행은 남아 있음)" || bad "H24_LIVE_IN이 활성" "is_active=$ACT"
+
+# ── 5-1. 연속 교대로 24시간을 채울 수 없다 (§5.12-1) ────────────────────
+head_ "5-1. 연속 교대 — 퇴근~출근 11시간"
+RA=$(curl -sS -X POST "$B/care-requests" "${G[@]}" -d "{\"hospitalId\":\"$HOSP\",\"ward\":\"401호\",\"serviceType\":\"DAY\",\"shiftPatternCode\":\"H8_3SHIFT\",\"startAt\":\"2026-12-20T00:00:00Z\",\"endAt\":\"2026-12-20T08:00:00Z\",\"supportItems\":[\"MEAL_SUPPORT\"]}" | J "['id']")
+curl -sS -X PATCH "$B/care-requests/$RA/status" "${A[@]}" -d '{"status":"MATCHING"}' >/dev/null
+curl -sS -X POST "$B/care-requests/$RA/assign" "${G[@]}" -d "{\"caregiverId\":\"$CG\"}" >/dev/null
+RB=$(curl -sS -X POST "$B/care-requests" "${G[@]}" -d "{\"hospitalId\":\"$HOSP\",\"ward\":\"402호\",\"serviceType\":\"DAY\",\"shiftPatternCode\":\"H8_3SHIFT\",\"startAt\":\"2026-12-20T08:00:00Z\",\"endAt\":\"2026-12-20T16:00:00Z\",\"supportItems\":[\"MEAL_SUPPORT\"]}" | J "['id']")
+curl -sS -X PATCH "$B/care-requests/$RB/status" "${A[@]}" -d '{"status":"MATCHING"}' >/dev/null
+E=$(curl -sS -X POST "$B/care-requests/$RB/assign" "${G[@]}" -d "{\"caregiverId\":\"$CG\"}" | code)
+[ "$E" = "CARE_REST_PERIOD_TOO_SHORT" ] && ok "연달아 붙인 교대는 차단 (서류상 3교대·실제 24시간)" || bad "연속 교대가 통과" "code=$E"
 
 # ── 6. 3단계 확정 (§6-4) ────────────────────────────────────────────────
 head_ "6. 배정 확정 — 보호자 선택 → 간병사 수락 → 운영자 확인"
@@ -201,6 +213,17 @@ curl -sS -X PUT "$B/admin/tracks/$TID/requirements" "${A[@]}" -d '{"requirements
 ACT=$(curl -sS -X PATCH "$B/admin/tracks/$TID/active" "${A[@]}" -d '{"isActive":true}' | J "['isActive']")
 [ "$ACT" = "True" ] && ok "요건을 정의하면 열림 — 배포 없이" || bad "요건이 있는데 열리지 않음" "$ACT"
 psql "$DB" -q -c "DELETE FROM tracks WHERE id='$TID'; DELETE FROM industries WHERE id='$IID';" 2>/dev/null
+
+# ── 11-1. 휴게 — 기록된 것만 공제 (§54) ─────────────────────────────────
+head_ "11-1. 휴게 — 미기록은 공제하지 않는다"
+SRC=$(psql "$DB" -tAqc "SELECT break_source FROM work_records WHERE source_id='$AID';" | tr -d '[:space:]')
+if [ -z "$SRC" ]; then
+  ok "아직 집계 전 (다음 단계에서 확인)"
+else
+  [ "$SRC" = "NOT_RECORDED" ] && ok "휴게 미기록이 NOT_RECORDED로 남음" || bad "출처가 예상과 다름" "$SRC"
+  MIN=$(psql "$DB" -tAqc "SELECT break_minutes FROM work_records WHERE source_id='$AID';" | tr -d '[:space:]')
+  [ "$MIN" = "0" ] && ok "미기록 근무에서 휴게를 공제하지 않음 (임금체불 방지)" || bad "미기록인데 공제됨" "$MIN분"
+fi
 
 # ── 12. 급여 계산 차단 (§6-8) ───────────────────────────────────────────
 head_ "12. 24시간 상주 근무 기록 — U5로 차단"
