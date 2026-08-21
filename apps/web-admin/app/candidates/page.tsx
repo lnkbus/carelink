@@ -1,23 +1,15 @@
 import { redirect } from 'next/navigation';
 import type { Candidate, Paged } from '@carelink/shared-types';
-import {
-  DataTable, ExpiryCountdown, KpiChip, KpiRow, PageHeader, Section, StatusPill, Td, Tr,
-} from '@carelink/ui';
+import { KpiChip, KpiRow, PageHeader, Section } from '@carelink/ui';
 import { Shell } from '@/components/Shell';
 import { ApiError, apiGet } from '@/lib/api';
-import { label } from '@/lib/labels';
+import { CandidateTable } from './CandidateTable';
 import { StatusFilter } from './StatusFilter';
 import { redirectToLogin } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 
 const STATUSES = ['DRAFT', 'DOC_REVIEW', 'TRAINING', 'READY', 'MATCHED', 'PLACED'] as const;
-
-const STATUS_TONE: Record<string, 'signal' | 'flag' | 'alert' | 'action' | 'neutral'> = {
-  READY: 'signal', PLACED: 'signal', MATCHED: 'action',
-  DOC_REVIEW: 'flag', TRAINING: 'flag',
-  SUSPENDED: 'alert', INACTIVE: 'neutral', DRAFT: 'neutral',
-};
 
 /**
  * SCR-502 후보자 관리.
@@ -78,51 +70,7 @@ export default async function CandidatesPage({
           aside={<StatusFilter statuses={[...STATUSES]} current={searchParams.status} q={searchParams.q} />}
           note="체류자격 만료는 날짜가 아니라 남은 일수로 봅니다 — 날짜만 보면 계산을 놓치고, 놓치면 불법 취업이 됩니다."
         >
-          <DataTable
-            columns={[
-              { key: 'code', label: 'ID', width: 110 },
-              { key: 'name', label: '이름', width: 120 },
-              { key: 'track', label: '트랙' },
-              { key: 'status', label: '상태', width: 110 },
-              { key: 'location', label: '지역', width: 120 },
-              { key: 'nationality', label: '국적', width: 90 },
-              { key: 'visa', label: '체류자격', width: 160 },
-              { key: 'available', label: '근무 가능', width: 110 },
-            ]}
-            empty="조건에 맞는 후보자가 없습니다"
-          >
-            {data.items.map((c) => {
-              const days = c.visaExpiresInDays ?? null;
-              const urgent = days !== null && days <= 30;
-              return (
-                <Tr key={c.id} tone={urgent ? 'alert' : undefined}>
-                  <Td mono>{c.displayCode}</Td>
-                  <Td>{c.name ?? '—'}</Td>
-                  <Td>
-                    {c.tracks.length === 0
-                      ? <span style={{ color: 'var(--cl-text-disabled)' }}>미선택</span>
-                      : c.tracks.map((t) => t.labelKo).join(' · ')}
-                  </Td>
-                  <Td>
-                    <StatusPill tone={STATUS_TONE[c.status] ?? 'neutral'} label={label(c.status)} />
-                  </Td>
-                  <Td>{c.currentLocation ?? '—'}</Td>
-                  <Td tone="muted">{c.nationality ?? '—'}</Td>
-                  <Td>
-                    {c.visaStatusCode
-                      ? (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--cl-s2)' }}>
-                          <span style={{ fontFamily: 'var(--cl-font-mono)' }}>{c.visaStatusCode}</span>
-                          <ExpiryCountdown days={days} date={c.visaExpiresOn ?? null} compact />
-                        </span>
-                      )
-                      : <span style={{ color: 'var(--cl-text-disabled)' }}>미확인</span>}
-                  </Td>
-                  <Td mono tone="muted">{c.availableFrom ?? '—'}</Td>
-                </Tr>
-              );
-            })}
-          </DataTable>
+          <CandidateTable items={data.items} />
         </Section>
 
         <p style={{ marginTop: 'var(--cl-s5)', fontSize: 'var(--cl-caption)', color: 'var(--cl-text-muted)' }}>
