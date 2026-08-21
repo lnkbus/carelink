@@ -96,7 +96,19 @@ login() {
   echo "$out"
 }
 reissue() { curl -sS -X POST "$B/auth/refresh" -H 'content-type: application/json' -d "{\"refreshToken\":\"$1\"}" | J "['accessToken']"; }
-role() { curl -sS -X POST "$B/auth/roles" -H "authorization: Bearer $1" -H 'content-type: application/json' -d "$2" >/dev/null; }
+# 역할 부여 실패를 삼키지 않습니다.
+#
+# 종전에는 응답을 버렸습니다. 그래서 존재하지 않는 역할 코드
+# (PATIENT_GUARDIAN — 실제 값은 PATIENT_FAMILY)를 보내고도 아무 일 없이
+# 지나갔고, 보호자 계정에 **역할이 하나도 없는 채로** 데모가 돌았습니다.
+# API에 역할 게이트가 없어서 화면이 그냥 열렸기 때문에 아무도 몰랐습니다.
+role() {
+  local out
+  out=$(curl -sS -X POST "$B/auth/roles" -H "authorization: Bearer $1" -H 'content-type: application/json' -d "$2")
+  echo "$out" | grep -q '"code"' && die "역할 부여 실패: $2
+  $out"
+  return 0
+}
 
 # ── 재실행 ──────────────────────────────────────────────────────────────
 #
@@ -286,7 +298,7 @@ say "6/6 병원 · 보호자 · 간병 요청"
 H1=$(psql "$DB" -tAqc "INSERT INTO hospitals (name, region, is_partner) VALUES ('서울성모병원','서울',true) RETURNING id;" | tr -d '[:space:]')
 q "INSERT INTO hospitals (name, region, is_partner) VALUES ('분당서울대병원','경기',true),('강남세브란스병원','서울',true);"
 read -r GT GR GU <<<"$(login 01055550001)"
-role "$GT" '{"role":"PATIENT_GUARDIAN","makePrimary":true}'
+role "$GT" '{"role":"PATIENT_FAMILY","makePrimary":true}'
 GT=$(reissue "$GR"); G=(-H "authorization: Bearer $GT" -H 'content-type: application/json')
 
 # (a) 정상 요청 — 매칭까지 진행

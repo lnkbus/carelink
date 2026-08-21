@@ -79,6 +79,32 @@ class CL {
   static const monoFamily = 'monospace';
 }
 
+/// 간병사 화면의 **상향 스케일** (design/README §타이포 'Caregiver / Patient').
+///
+/// 같은 FIELD여도 후보자 앱과 간병사 앱은 사용자가 다릅니다. 후보자는
+/// 대개 조용한 곳에서 시간을 들여 보지만, 간병사는 40~65세이고 병실 앞에서
+/// 한 손으로 급하게 봅니다. 그래서 시안이 한 단계 위 값을 지정했습니다.
+///
+/// `CL`을 통째로 키우지 않은 이유: 후보자 앱이 같은 패키지를 씁니다.
+/// 한 벌만 두면 어느 한쪽은 반드시 시안과 어긋납니다.
+class CLUp {
+  const CLUp._();
+
+  static const display = 28.0;
+  static const title = 24.0;
+  static const subtitle = 19.0;
+  static const body = 18.0;
+  static const caption = 16.0;
+
+  /// 주요 버튼 76px. 출근 체크·근무 기록 저장처럼 **한 화면에 하나뿐인**
+  /// 큰 동작에 씁니다 (시안 SCR-401 · 403 · 404).
+  static const heroButtonHeight = 76.0;
+  static const primaryButtonHeight = 64.0;
+
+  /// 아이콘 26px 이상. 시안이 명시한 값입니다.
+  static const icon = 26.0;
+}
+
 /// 상태 표현 3종. 색·아이콘·텍스트가 항상 함께 갑니다.
 enum Tone { signal, flag, alert, action, neutral }
 

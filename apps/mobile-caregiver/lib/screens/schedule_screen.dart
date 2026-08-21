@@ -14,7 +14,11 @@ import '../models/models.dart';
 /// 작아지고, 여기 사용자는 48px 아래를 누르지 못합니다. 기간 목록 + 큰
 /// 버튼이 같은 일을 합니다.
 class ScheduleScreen extends StatefulWidget {
-  const ScheduleScreen({super.key});
+  const ScheduleScreen({super.key, this.embedded = false});
+
+  /// 하단 탭으로 열렸는가. 탭이면 뒤로가기 화살표를 띄우지 않습니다 —
+  /// 돌아갈 곳이 없는데 화살표가 있으면 누르고 아무 일도 안 일어납니다.
+  final bool embedded;
 
   @override
   State<ScheduleScreen> createState() => _ScheduleScreenState();
@@ -22,6 +26,7 @@ class ScheduleScreen extends StatefulWidget {
 
 class _ScheduleScreenState extends State<ScheduleScreen> {
   List<AvailabilityBlock>? _blocks;
+  List<Assignment>? _shifts;
   String? _error;
   bool _busy = false;
 
@@ -36,14 +41,109 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     setState(() => _error = null);
     try {
       final res = await app.api.get('/caregivers/me/availability') as List<dynamic>;
+      final shifts = await app.api.get('/caregivers/me/assignments') as List<dynamic>;
       if (!mounted) return;
-      setState(() => _blocks =
-          res.map((e) => AvailabilityBlock.fromJson(e as Map<String, dynamic>)).toList());
+      setState(() {
+        _blocks = res.map((e) => AvailabilityBlock.fromJson(e as Map<String, dynamic>)).toList();
+        _shifts = shifts.map((e) => Assignment.fromJson(e as Map<String, dynamic>)).toList();
+      });
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = errorKey(e.code));
     } catch (_) {
       if (mounted) setState(() => _error = 'error.network');
     }
+  }
+
+  /// 근무 카드 (시안 SCR-402).
+  ///
+  /// 지난 근무 중 기록이 없는 건은 **맨 위로** 올립니다. 그 건이 밀리면
+  /// 잊히고, 잊힌 근무는 집계되지 않습니다.
+  List<Widget> _shiftCards(AppState app) {
+    final shifts = _shifts;
+    if (shifts == null) return [StateNotice(message: app.t('common.loading'))];
+
+    final relevant = shifts.where((a) => !a.isOffer).toList()
+      ..sort((x, y) {
+        final ax = _needsRecord(x) ? 0 : 1;
+        final ay = _needsRecord(y) ? 0 : 1;
+        if (ax != ay) return ax - ay;
+        final sx = x.startAt, sy = y.startAt;
+        if (sx == null || sy == null) return 0;
+        return sy.compareTo(sx);
+      });
+    if (relevant.isEmpty) return [StateNotice(message: app.t('schedule.noShifts'))];
+
+    final hours = relevant.where((a) => a.isToday).length * 8;
+    return [
+      Row(
+        children: [
+          Text(app.t('schedule.thisWeek'),
+              style: const TextStyle(fontSize: CLUp.caption, color: CL.textMuted)),
+          const SizedBox(width: CL.s3),
+          Text(
+            '${relevant.length}${app.t('home.count')} · $hours${app.t('schedule.hours')}',
+            style: const TextStyle(
+              fontFamily: CL.monoFamily, fontSize: CLUp.caption, fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: CL.s4),
+      for (final a in relevant)
+        Padding(
+          padding: const EdgeInsets.only(bottom: CL.s4),
+          child: FieldCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      a.startAt == null ? '—' : _dayLabel(a.startAt!),
+                      style: const TextStyle(
+                        fontFamily: CL.monoFamily, fontSize: CLUp.caption, color: CL.textMuted,
+                      ),
+                    ),
+                    const Spacer(),
+                    StatusPill(tone: _tone(a), label: app.t(_stateKey(a))),
+                  ],
+                ),
+                const SizedBox(height: CL.s4),
+                Text(
+                  a.ward ?? app.t('shift.wardUnknown'),
+                  style: const TextStyle(fontSize: CLUp.body, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${a.hospitalName ?? '—'} · ${a.shiftStartTime ?? '—'}~${a.shiftEndTime ?? '—'}',
+                  style: const TextStyle(
+                    fontFamily: CL.monoFamily, fontSize: CLUp.caption, color: CL.textSub,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+    ];
+  }
+
+  /// 시작 시각이 지났는데 아직 IN_SERVICE도 완료도 아니면 기록이 빠진 것입니다.
+  bool _needsRecord(Assignment a) {
+    final start = a.startAt;
+    if (start == null) return false;
+    return start.isBefore(DateTime.now().toUtc()) && a.status == 'ASSIGNED';
+  }
+
+  String _stateKey(Assignment a) {
+    if (_needsRecord(a)) return 'schedule.state.needsRecord';
+    if (a.status == 'COMPLETED') return 'schedule.state.recorded';
+    return 'schedule.state.upcoming';
+  }
+
+  Tone _tone(Assignment a) {
+    if (_needsRecord(a)) return Tone.flag;
+    if (a.status == 'COMPLETED') return Tone.signal;
+    return Tone.action;
   }
 
   Future<void> _add(DateTimeRange range, String kind) async {
@@ -101,7 +201,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(app.t('schedule.title'), style: const TextStyle(fontSize: CL.subtitle)),
+        automaticallyImplyLeading: !widget.embedded,
+        title: Text(
+          app.t('schedule.title'),
+          style: const TextStyle(fontSize: CLUp.title, fontWeight: FontWeight.w700),
+        ),
         backgroundColor: CL.bg,
       ),
       body: SafeArea(
@@ -112,6 +216,24 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               StateNotice(tone: Tone.alert, message: app.t(_error!)),
               const SizedBox(height: CL.s5),
             ],
+
+            // ── 근무 일정 (시안 SCR-402) ──────────────────────────────
+            // 주간 요약 한 줄 + 근무 카드. 상태는 세 가지뿐입니다:
+            // 진행 예정 · 기록 완료 · **기록 필요**. 마지막 것이 이 화면의
+            // 존재 이유입니다 — 기록이 없으면 근무시간이 집계되지 않고,
+            // 그러면 분쟁에서 근거가 없습니다 (§5.4).
+            Text(app.t('schedule.shifts'),
+                style: const TextStyle(fontSize: CLUp.subtitle, fontWeight: FontWeight.w700)),
+            const SizedBox(height: CL.s4),
+            ..._shiftCards(app),
+            const SizedBox(height: CL.s7),
+
+            // ── 근무 가능 시간 ────────────────────────────────────────
+            // 시안에는 없지만 남깁니다. 간병사가 직접 관리해야 매칭 정확도가
+            // 올라가고, 없으면 운영자가 전화로 확인하게 됩니다 (SCR-402 notes).
+            Text(app.t('schedule.availability'),
+                style: const TextStyle(fontSize: CLUp.subtitle, fontWeight: FontWeight.w700)),
+            const SizedBox(height: CL.s4),
             if (blocks == null && _error == null)
               StateNotice(message: app.t('common.loading'))
             else if ((blocks ?? const []).isEmpty)
@@ -131,7 +253,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                         Expanded(
                           child: Text(
                             '${_d(b.startsAt)} – ${_d(b.endsAt)}',
-                            style: const TextStyle(fontSize: CL.body, fontFamily: CL.monoFamily),
+                            style: const TextStyle(fontSize: CLUp.body, fontFamily: CL.monoFamily),
                           ),
                         ),
                         // 48px 타깃. 아이콘만 두면 누르기 어렵습니다.
@@ -150,11 +272,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 ),
             const SizedBox(height: CL.s6),
             PrimaryButton(
+              up: true,
               label: '${app.t('schedule.add')} · ${app.t('schedule.available')}',
               onPressed: _busy ? null : () => _pick('AVAILABLE'),
             ),
             const SizedBox(height: CL.s3),
             SecondaryButton(
+              up: true,
               label: '${app.t('schedule.add')} · ${app.t('schedule.blocked')}',
               onPressed: _busy ? null : () => _pick('BLOCKED'),
             ),
@@ -169,4 +293,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     final l = t.toLocal();
     return '${l.month}/${l.day}';
   }
+}
+
+/// `08-20 목`. KST 기준입니다 — 화면은 전부 병원 벽시계를 씁니다.
+String _dayLabel(DateTime utc) {
+  const w = ['월', '화', '수', '목', '금', '토', '일'];
+  final d = utc.toUtc().add(const Duration(hours: 9));
+  final mm = d.month.toString().padLeft(2, '0');
+  final dd = d.day.toString().padLeft(2, '0');
+  return '$mm-$dd ${w[d.weekday - 1]}';
 }

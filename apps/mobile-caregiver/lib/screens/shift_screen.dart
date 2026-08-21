@@ -126,7 +126,7 @@ class _ShiftScreenState extends State<ShiftScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(app.t('detail.title'), style: const TextStyle(fontSize: CL.subtitle)),
+        title: Text(app.t('detail.title'), style: const TextStyle(fontSize: CLUp.subtitle)),
         backgroundColor: CL.bg,
       ),
       body: SafeArea(
@@ -147,7 +147,7 @@ class _ShiftScreenState extends State<ShiftScreen> {
                   tone: Tone.alert,
                   child: Text(
                     app.t('detail.scopeWarning'),
-                    style: const TextStyle(fontSize: CL.body, color: CL.alert, height: 1.5),
+                    style: const TextStyle(fontSize: CLUp.body, color: CL.alert, height: 1.5),
                   ),
                 ),
                 const SizedBox(height: CL.s5),
@@ -172,7 +172,7 @@ class _ShiftScreenState extends State<ShiftScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(app.t('detail.support'),
-                          style: const TextStyle(fontSize: CL.caption, color: CL.textSub)),
+                          style: const TextStyle(fontSize: CLUp.caption, color: CL.textSub)),
                       const SizedBox(height: CL.s3),
                       // 진단명 대신 이것을 봅니다. 목록은 서버 카탈로그에서
                       // 오고, 카탈로그에 의료행위는 존재하지 않습니다 (§6-2).
@@ -180,7 +180,7 @@ class _ShiftScreenState extends State<ShiftScreen> {
                         Padding(
                           padding: const EdgeInsets.only(bottom: CL.s2),
                           child: Text('· ${codeLabel(s, app.locale)}',
-                              style: const TextStyle(fontSize: CL.body)),
+                              style: const TextStyle(fontSize: CLUp.body)),
                         ),
                     ],
                   ),
@@ -195,10 +195,10 @@ class _ShiftScreenState extends State<ShiftScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(app.t('detail.cautions'),
-                          style: const TextStyle(fontSize: CL.caption, color: CL.flag)),
+                          style: const TextStyle(fontSize: CLUp.caption, color: CL.flag)),
                       const SizedBox(height: CL.s3),
                       Text(d.cautions!,
-                          style: const TextStyle(fontSize: CL.body, height: 1.5)),
+                          style: const TextStyle(fontSize: CLUp.body, height: 1.5)),
                     ],
                   ),
                 ),
@@ -221,16 +221,17 @@ class _ShiftScreenState extends State<ShiftScreen> {
                             StatusPill(tone: Tone.flag, label: app.t('break.onBreak'))
                           else
                             Text(app.t('break.total'),
-                                style: const TextStyle(fontSize: CL.caption, color: CL.textSub)),
+                                style: const TextStyle(fontSize: CLUp.caption, color: CL.textSub)),
                           const Spacer(),
                           Text('$breakMinutes분',
                               style: const TextStyle(
-                                  fontSize: CL.body, fontFamily: CL.monoFamily,
+                                  fontSize: CLUp.body, fontFamily: CL.monoFamily,
                                   fontWeight: FontWeight.w600)),
                         ],
                       ),
                       const SizedBox(height: CL.s4),
                       SecondaryButton(
+                      up: true,
                         label: app.t(onBreak ? 'break.end' : 'break.start'),
                         onPressed: _busy ? null : () => _break(onBreak ? 'BREAK_END' : 'BREAK_START'),
                       ),
@@ -239,7 +240,7 @@ class _ShiftScreenState extends State<ShiftScreen> {
                       // 적으면 아무도 찍지 않습니다.
                       Text(app.t('break.help'),
                           style: const TextStyle(
-                              fontSize: CL.caption, color: CL.textMuted, height: 1.4)),
+                              fontSize: CLUp.caption, color: CL.textMuted, height: 1.4)),
                     ],
                   ),
                 ),
@@ -249,7 +250,7 @@ class _ShiftScreenState extends State<ShiftScreen> {
               // ── SCR-404 ──────────────────────────────────────────────
               if (!ended) ...[
                 Text(app.t('shift.scanQr'),
-                    style: const TextStyle(fontSize: CL.caption, color: CL.textSub)),
+                    style: const TextStyle(fontSize: CLUp.caption, color: CL.textSub)),
                 const SizedBox(height: CL.s3),
                 SizedBox(
                   height: CL.heroButtonHeight,
@@ -258,7 +259,7 @@ class _ShiftScreenState extends State<ShiftScreen> {
                     // 이게 없으면 글자를 넣어도 버튼이 다시 그려지지 않아
                     // **영원히 비활성 상태로 남습니다.** 근무를 시작할 수 없습니다.
                     onChanged: (_) => setState(() {}),
-                    style: const TextStyle(fontSize: CL.body, fontFamily: CL.monoFamily),
+                    style: const TextStyle(fontSize: CLUp.body, fontFamily: CL.monoFamily),
                     decoration: InputDecoration(
                       hintText: '••••',
                       filled: true,
@@ -270,9 +271,10 @@ class _ShiftScreenState extends State<ShiftScreen> {
                 ),
                 const SizedBox(height: CL.s3),
                 Text(app.t('shift.qrHelp'),
-                    style: const TextStyle(fontSize: CL.caption, color: CL.textMuted, height: 1.4)),
+                    style: const TextStyle(fontSize: CLUp.caption, color: CL.textMuted, height: 1.4)),
                 const SizedBox(height: CL.s5),
                 PrimaryButton(
+                  up: true,
                   hero: true,
                   label: app.t(started ? 'shift.end' : 'shift.start'),
                   onPressed: _busy || _qr.text.trim().isEmpty
@@ -283,10 +285,10 @@ class _ShiftScreenState extends State<ShiftScreen> {
               ],
 
               Text(app.t('shift.logs'),
-                  style: const TextStyle(fontSize: CL.subtitle, fontWeight: FontWeight.w700)),
+                  style: const TextStyle(fontSize: CLUp.subtitle, fontWeight: FontWeight.w700)),
               const SizedBox(height: CL.s4),
               if (_logs.isEmpty)
-                const Text('—', style: TextStyle(fontSize: CL.body, color: CL.textMuted))
+                const Text('—', style: TextStyle(fontSize: CLUp.body, color: CL.textMuted))
               else
                 for (final l in _logs)
                   Padding(
@@ -296,7 +298,7 @@ class _ShiftScreenState extends State<ShiftScreen> {
                       children: [
                         Text(_t(l.occurredAt),
                             style: const TextStyle(
-                                fontSize: CL.caption, fontFamily: CL.monoFamily, color: CL.textMuted)),
+                                fontSize: CLUp.caption, fontFamily: CL.monoFamily, color: CL.textMuted)),
                         const SizedBox(width: CL.s4),
                         Expanded(
                           child: Text(
@@ -307,7 +309,7 @@ class _ShiftScreenState extends State<ShiftScreen> {
                               'BREAK_END' => 'break.end',
                               _ => 'shift.logs',
                             }),
-                            style: const TextStyle(fontSize: CL.body),
+                            style: const TextStyle(fontSize: CLUp.body),
                           ),
                         ),
                       ],
@@ -317,7 +319,7 @@ class _ShiftScreenState extends State<ShiftScreen> {
               // append-only라는 사실을 화면에 적습니다. 고칠 수 있다고
               // 생각하면 대충 찍고 나중에 고치려 합니다 (§5.4).
               Text(app.t('shift.appendOnly'),
-                  style: const TextStyle(fontSize: CL.caption, color: CL.textMuted, height: 1.5)),
+                  style: const TextStyle(fontSize: CLUp.caption, color: CL.textMuted, height: 1.5)),
             ],
           ],
         ),
@@ -346,13 +348,13 @@ class _Row extends StatelessWidget {
         children: [
           SizedBox(
             width: 96,
-            child: Text(label, style: const TextStyle(fontSize: CL.caption, color: CL.textSub)),
+            child: Text(label, style: const TextStyle(fontSize: CLUp.caption, color: CL.textSub)),
           ),
           Expanded(
             child: Text(
               value,
               style: TextStyle(
-                fontSize: CL.body,
+                fontSize: CLUp.body,
                 fontFamily: mono ? CL.monoFamily : null,
                 fontWeight: mono ? FontWeight.w600 : FontWeight.w400,
               ),

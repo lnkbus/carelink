@@ -86,7 +86,7 @@ done
 HOSP=$(psql "$DB" -tAqc "INSERT INTO hospitals (name, region, is_partner) VALUES ('스모크병원$RANDOM','서울',true) RETURNING id;" | tr -d '[:space:]')
 read -r GT GR GU <<<"$(login "$(phone)")"
 curl -sS -X POST "$B/auth/roles" -H "authorization: Bearer $GT" -H 'content-type: application/json' \
-  -d '{"role":"PATIENT_GUARDIAN","makePrimary":true}' >/dev/null
+  -d '{"role":"PATIENT_FAMILY","makePrimary":true}' >/dev/null
 GT=$(reissue "$GR"); G=(-H "authorization: Bearer $GT" -H 'content-type: application/json')
 
 mkreq() {

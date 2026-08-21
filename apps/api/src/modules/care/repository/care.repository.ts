@@ -21,6 +21,10 @@ export interface CareAssignmentRow {
   shift_start_time: string | null; shift_end_time: string | null;
   started_at: Date | null; ended_at: Date | null;
   caregiver_display_code?: string;
+  /** 홈 화면용. 환자 신원이 아니라 '어디서 언제'입니다. */
+  hospital_name?: string | null;
+  ward?: string | null;
+  start_at?: Date | null;
 }
 
 /**
@@ -533,9 +537,15 @@ export class CareRepository {
               a.offered_at, a.responded_at, a.confirmed_by,
               a.shift_start_time::text AS shift_start_time,
               a.shift_end_time::text AS shift_end_time,
-              a.started_at, a.ended_at, cg.display_code AS caregiver_display_code
+              a.started_at, a.ended_at, cg.display_code AS caregiver_display_code,
+              -- 홈 화면(SCR-401)이 병원·병실·시작 시각을 함께 보여줍니다.
+              -- 환자 신원이 아니라 '어디서 언제'입니다 — 간병사가 알아야
+              -- 하는 최소한이고, 이게 없으면 상세를 한 번 더 눌러야 합니다.
+              h.name AS hospital_name, r.ward, r.start_at
          FROM care_assignments a
          JOIN caregivers cg ON cg.id = a.caregiver_id
+         JOIN care_requests r ON r.id = a.care_request_id
+         LEFT JOIN hospitals h ON h.id = r.hospital_id
         WHERE cg.user_id = $1
           AND a.status NOT IN ('DECLINED','CANCELLED')
         ORDER BY a.offered_at DESC`,

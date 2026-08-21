@@ -20,6 +20,101 @@ const Map<String, Map<AppLocale, String>> _dict = {
     AppLocale.ru: 'CARELINK Уход',
     AppLocale.en: 'CARELINK Care',
   },
+  'tab.today': {
+    AppLocale.ko: '오늘', AppLocale.vi: 'Hôm nay', AppLocale.ru: 'Сегодня', AppLocale.en: 'Today',
+  },
+  'tab.schedule': {
+    AppLocale.ko: '일정', AppLocale.vi: 'Lịch', AppLocale.ru: 'График', AppLocale.en: 'Schedule',
+  },
+  'tab.payout': {
+    AppLocale.ko: '정산', AppLocale.vi: 'Thanh toán', AppLocale.ru: 'Расчёт', AppLocale.en: 'Pay',
+  },
+  'tab.profile': {
+    AppLocale.ko: '내 정보', AppLocale.vi: 'Của tôi', AppLocale.ru: 'Профиль', AppLocale.en: 'My info',
+  },
+  'payout.notOpen': {
+    AppLocale.ko: '정산 화면은 아직 열리지 않았습니다',
+    AppLocale.vi: 'Màn hình thanh toán chưa mở',
+    AppLocale.ru: 'Раздел расчёта пока не открыт',
+    AppLocale.en: 'The pay screen is not open yet',
+  },
+  'payout.notOpen.why': {
+    // 준비 중이라고만 쓰면 언제 열리냐는 문의가 옵니다. 무엇이 정해져야
+    // 열리는지 말합니다.
+    AppLocale.ko: '고용 형태(직접고용·위탁·중개)에 따라 정산 방식이 달라집니다. 확정되기 전에는 금액을 보여 드릴 수 없습니다. 근무 기록은 정상적으로 쌓이고 있습니다.',
+    AppLocale.vi: 'Cách thanh toán thay đổi theo hình thức tuyển dụng. Trước khi xác định, chúng tôi không thể hiển thị số tiền. Bản ghi ca làm việc vẫn được lưu.',
+    AppLocale.ru: 'Способ расчёта зависит от формы найма. До её определения суммы не показываются. Записи смен сохраняются.',
+    AppLocale.en: 'How pay is calculated depends on the employment model. Until that is settled we cannot show amounts. Your shift records are still being saved.',
+  },
+  'home.todayShift': {
+    AppLocale.ko: '오늘 근무', AppLocale.vi: 'Ca hôm nay',
+    AppLocale.ru: 'Смена сегодня', AppLocale.en: "Today's shift",
+  },
+  'home.checkList': {
+    AppLocale.ko: '오늘 확인할 것', AppLocale.vi: 'Cần kiểm tra hôm nay',
+    AppLocale.ru: 'Проверить сегодня', AppLocale.en: 'Check today',
+  },
+  'home.weekSummary': {
+    AppLocale.ko: '이번 주 근무', AppLocale.vi: 'Ca tuần này',
+    AppLocale.ru: 'Смены на неделе', AppLocale.en: 'Shifts this week',
+  },
+  'home.nextShift': {
+    AppLocale.ko: '다음 근무', AppLocale.vi: 'Ca tiếp theo',
+    AppLocale.ru: 'Следующая смена', AppLocale.en: 'Next shift',
+  },
+  'home.offline': {
+    AppLocale.ko: '인터넷이 끊겨도 기록은 저장됩니다',
+    AppLocale.vi: 'Bản ghi vẫn được lưu khi mất mạng',
+    AppLocale.ru: 'Записи сохраняются даже без интернета',
+    AppLocale.en: 'Your records are saved even offline',
+  },
+  'home.beforeStart': {
+    AppLocale.ko: '시작 전', AppLocale.vi: 'Chưa bắt đầu',
+    AppLocale.ru: 'До начала', AppLocale.en: 'Not started',
+  },
+  'home.inService': {
+    AppLocale.ko: '근무 중', AppLocale.vi: 'Đang làm', AppLocale.ru: 'В смене', AppLocale.en: 'On shift',
+  },
+  'home.count': {
+    AppLocale.ko: '건', AppLocale.vi: 'ca', AppLocale.ru: 'смен', AppLocale.en: 'shifts',
+  },
+  'shift.wardUnknown': {
+    AppLocale.ko: '병실 미지정', AppLocale.vi: 'Chưa có phòng',
+    AppLocale.ru: 'Палата не указана', AppLocale.en: 'Room not set',
+  },
+  'schedule.shifts': {
+    AppLocale.ko: '근무 일정', AppLocale.vi: 'Lịch ca làm',
+    AppLocale.ru: 'График смен', AppLocale.en: 'My shifts',
+  },
+  'schedule.availability': {
+    AppLocale.ko: '근무 가능 시간', AppLocale.vi: 'Thời gian có thể làm',
+    AppLocale.ru: 'Доступное время', AppLocale.en: 'When I can work',
+  },
+  'schedule.thisWeek': {
+    AppLocale.ko: '이번 주', AppLocale.vi: 'Tuần này',
+    AppLocale.ru: 'Эта неделя', AppLocale.en: 'This week',
+  },
+  'schedule.hours': {
+    AppLocale.ko: '시간', AppLocale.vi: 'giờ', AppLocale.ru: 'ч', AppLocale.en: 'hours',
+  },
+  'schedule.state.upcoming': {
+    AppLocale.ko: '진행 예정', AppLocale.vi: 'Sắp tới',
+    AppLocale.ru: 'Предстоит', AppLocale.en: 'Upcoming',
+  },
+  'schedule.state.recorded': {
+    AppLocale.ko: '기록 완료', AppLocale.vi: 'Đã ghi',
+    AppLocale.ru: 'Записано', AppLocale.en: 'Recorded',
+  },
+  'schedule.state.needsRecord': {
+    // 이 상태가 이 화면의 존재 이유입니다. 기록이 없으면 근무시간이 집계되지
+    // 않고, 그러면 분쟁에서 근거가 없습니다 (§5.4).
+    AppLocale.ko: '기록 필요', AppLocale.vi: 'Cần ghi lại',
+    AppLocale.ru: 'Нужна запись', AppLocale.en: 'Needs record',
+  },
+  'schedule.noShifts': {
+    AppLocale.ko: '예정된 근무가 없습니다', AppLocale.vi: 'Không có ca nào',
+    AppLocale.ru: 'Смен нет', AppLocale.en: 'No shifts scheduled',
+  },
   'common.loading': {
     AppLocale.ko: '불러오는 중',
     AppLocale.vi: 'Đang tải',

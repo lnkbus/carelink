@@ -44,6 +44,9 @@ export class CareController {
 
   /** POST /api/v1/care-requests — SCR-303 */
   @Post('care-requests')
+  // 보호자 전용입니다. 게이트가 없어서 후보자·간병사 토큰으로도 간병 요청이
+  // 만들어졌습니다 — 실제로 CANDIDATE 토큰으로 201이 나왔습니다.
+  @Roles('PATIENT_FAMILY', 'ADMIN', 'SUPER_ADMIN')
   async create(
     @CurrentViewer() viewer: Viewer,
     @Body() dto: CreateCareRequestDto,
@@ -78,6 +81,7 @@ export class CareController {
   }
 
   @Get('care-requests/me/list')
+  @Roles('PATIENT_FAMILY', 'ADMIN', 'SUPER_ADMIN')
   async mine(@CurrentViewer() viewer: Viewer): Promise<CareRequestDto[]> {
     if (!viewer.userId) throw new DomainError('IAM_TOKEN_INVALID');
     return (await this.care.listRequests({ requesterId: viewer.userId })).map(toRequestDto);
@@ -128,6 +132,7 @@ export class CareController {
 
   /** 1단계 — 보호자가 고른 간병사에게 제안. 아직 확정이 아닙니다. */
   @Post('care-requests/:id/assign')
+  @Roles('PATIENT_FAMILY', 'ADMIN', 'SUPER_ADMIN')
   async offer(
     @CurrentViewer() viewer: Viewer,
     @Param('id', ParseUUIDPipe) id: string,
@@ -389,5 +394,8 @@ function toAssignmentDto(a: CareAssignmentRow, ownerUserId: string): CareAssignm
     shiftEndTime: a.shift_end_time,
     confirmedBy: a.confirmed_by,
     caregiverId: a.caregiver_id,
+    hospitalName: a.hospital_name ?? null,
+    ward: a.ward ?? null,
+    startAt: a.start_at ?? null,
   });
 }

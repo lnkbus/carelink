@@ -126,6 +126,7 @@ class PrimaryButton extends StatelessWidget {
     required this.onPressed,
     this.hero = false,
     this.tone = Tone.action,
+    this.up = false,
   });
 
   final String label;
@@ -133,11 +134,16 @@ class PrimaryButton extends StatelessWidget {
   final bool hero;
   final Tone tone;
 
+  /// 간병사 화면의 상향 스케일 (design/README §타이포). 높이 76/64 · 글자 18.
+  final bool up;
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: hero ? CL.heroButtonHeight : CL.primaryButtonHeight,
+      height: up
+          ? (hero ? CLUp.heroButtonHeight : CLUp.primaryButtonHeight)
+          : (hero ? CL.heroButtonHeight : CL.primaryButtonHeight),
       child: FilledButton(
         onPressed: onPressed,
         style: FilledButton.styleFrom(
@@ -151,7 +157,7 @@ class PrimaryButton extends StatelessWidget {
           // 라벨은 한국어 기준 2.5배까지 늘어납니다 ('여정' → 'Профессиональный путь').
           // 줄바꿈을 허용하고 잘라내지 않습니다.
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: CL.body, fontWeight: FontWeight.w700),
+          style: TextStyle(fontSize: up ? CLUp.body : CL.body, fontWeight: FontWeight.w700),
         ),
       ),
     );
@@ -160,16 +166,19 @@ class PrimaryButton extends StatelessWidget {
 
 /// 부가 버튼. 그래도 48px 아래로 내려가지 않습니다.
 class SecondaryButton extends StatelessWidget {
-  const SecondaryButton({super.key, required this.label, required this.onPressed});
+  const SecondaryButton({super.key, required this.label, required this.onPressed, this.up = false});
 
   final String label;
   final VoidCallback? onPressed;
+
+  /// 간병사 화면의 상향 스케일.
+  final bool up;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: CL.minTapTarget,
+      height: up ? CLUp.primaryButtonHeight : CL.minTapTarget,
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
@@ -177,7 +186,7 @@ class SecondaryButton extends StatelessWidget {
           side: const BorderSide(color: CL.lineStrong),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(CL.rCard)),
         ),
-        child: Text(label, style: const TextStyle(fontSize: CL.body)),
+        child: Text(label, style: TextStyle(fontSize: up ? CLUp.body : CL.body)),
       ),
     );
   }

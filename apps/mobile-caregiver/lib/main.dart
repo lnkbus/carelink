@@ -4,6 +4,9 @@ import 'core/app_state.dart';
 import 'core/i18n/strings.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/payout_screen.dart';
+import 'screens/profile_screen.dart';
+import 'screens/schedule_screen.dart';
 
 /// CARELINK 간병사 앱 (SCR-401~404).
 ///
@@ -48,18 +51,80 @@ class _CaregiverAppState extends State<CaregiverApp> {
               useMaterial3: true,
               scaffoldBackgroundColor: CL.bg,
               colorScheme: ColorScheme.fromSeed(seedColor: CL.action),
-              // 본문 기본 16px. 고령·저숙련 사용자가 다수입니다 (SCR-401 notes).
+              // 본문 기본 **18px**. 40~65세가 병실 앞에서 한 손으로 봅니다 —
+              // 후보자 앱(16px)보다 한 단계 위입니다 (design/README §타이포).
               textTheme: const TextTheme(
-                bodyMedium: TextStyle(fontSize: CL.body, color: CL.text),
+                bodyMedium: TextStyle(fontSize: CLUp.body, color: CL.text),
+                bodyLarge: TextStyle(fontSize: CLUp.body, color: CL.text),
               ),
             ),
             home: !widget.state.ready
                 ? const _Splash()
                 : widget.state.signedIn
-                    ? const HomeScreen()
+                    ? const CaregiverShell()
                     : const LoginScreen(),
           );
         },
+      ),
+    );
+  }
+}
+
+/// 하단 탭 4개 (시안 SCR-401~405 공통 하단바).
+///
+/// IndexedStack을 쓰는 이유: 탭을 오갈 때마다 다시 불러오면 병실 앞에서
+/// 매번 로딩을 봅니다. 상태를 살려 둡니다.
+class CaregiverShell extends StatefulWidget {
+  const CaregiverShell({super.key});
+
+  @override
+  State<CaregiverShell> createState() => _CaregiverShellState();
+}
+
+class _CaregiverShellState extends State<CaregiverShell> {
+  int _index = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final app = AppScope.of(context);
+
+    return Scaffold(
+      body: IndexedStack(
+        index: _index,
+        children: const [
+          HomeScreen(),
+          ScheduleScreen(embedded: true),
+          PayoutScreen(),
+          ProfileScreen(embedded: true),
+        ],
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _index,
+        onDestinationSelected: (i) => setState(() => _index = i),
+        // 라벨은 러시아어에서 2.5배까지 늘어납니다. 높이를 넉넉히 둡니다.
+        height: 76,
+        destinations: [
+          NavigationDestination(
+            icon: const Icon(Icons.today_outlined, size: CLUp.icon),
+            selectedIcon: const Icon(Icons.today, size: CLUp.icon),
+            label: app.t('tab.today'),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.calendar_month_outlined, size: CLUp.icon),
+            selectedIcon: const Icon(Icons.calendar_month, size: CLUp.icon),
+            label: app.t('tab.schedule'),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.payments_outlined, size: CLUp.icon),
+            selectedIcon: const Icon(Icons.payments, size: CLUp.icon),
+            label: app.t('tab.payout'),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.person_outline, size: CLUp.icon),
+            selectedIcon: const Icon(Icons.person, size: CLUp.icon),
+            label: app.t('tab.profile'),
+          ),
+        ],
       ),
     );
   }

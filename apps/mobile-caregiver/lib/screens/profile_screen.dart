@@ -11,7 +11,10 @@ import '../core/app_state.dart';
 /// 간병사에게 보여 줄 것이 많지 않습니다 — 번호와 언어, 그리고 로그아웃.
 /// 근무·일정은 홈에 있고, 여기에 또 두면 두 곳을 다 봐야 합니다.
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  const ProfileScreen({super.key, this.embedded = false});
+
+  /// 하단 탭으로 열렸는가. 탭이면 뒤로가기 화살표를 띄우지 않습니다.
+  final bool embedded;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -68,18 +71,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final app = AppScope.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(app.t('profile.title'), style: const TextStyle(fontSize: CL.subtitle))),
+      appBar: AppBar(
+        automaticallyImplyLeading: !widget.embedded,
+        backgroundColor: CL.bg,
+        title: Text(
+          app.t('profile.title'),
+          style: const TextStyle(fontSize: CLUp.title, fontWeight: FontWeight.w700),
+        ),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(CL.s6),
         children: [
           FieldCard(
             child: Row(
               children: [
-                Text(app.t('profile.phone'), style: const TextStyle(fontSize: CL.body, color: CL.textMuted)),
+                Text(app.t('profile.phone'), style: const TextStyle(fontSize: CLUp.body, color: CL.textMuted)),
                 const Spacer(),
                 Text(
                   _loading ? app.t('common.loading') : (_phone ?? '—'),
-                  style: const TextStyle(fontFamily: CL.monoFamily, fontSize: CL.subtitle, fontWeight: FontWeight.w700),
+                  style: const TextStyle(fontFamily: CL.monoFamily, fontSize: CLUp.subtitle, fontWeight: FontWeight.w700),
                 ),
               ],
             ),
@@ -88,12 +98,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // 언어는 목록에 묻지 않고 펼쳐 둡니다 — 한국어를 못 읽는 사용자가
           // '설정' 글자를 찾아 들어가야 하면 못 찾습니다 (후보자 앱과 동일).
           const SizedBox(height: CL.s7),
-          Text(app.t('profile.language'), style: const TextStyle(fontSize: CL.subtitle, fontWeight: FontWeight.w700)),
+          Text(app.t('profile.language'), style: const TextStyle(fontSize: CLUp.subtitle, fontWeight: FontWeight.w700)),
           const SizedBox(height: CL.s4),
           LocaleSwitcher(current: app.locale, onChanged: app.setLocale),
 
           const SizedBox(height: CL.s7),
           SecondaryButton(
+            up: true,
             label: app.t('common.logout'),
             onPressed: () => _confirmLogout(app),
           ),
@@ -102,13 +113,3 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
-
-/// 홈 앱바의 진입점. 언어 칩 옆에 둡니다.
-Widget profileButton(BuildContext context, AppState app) => IconButton(
-      tooltip: app.t('profile.title'),
-      iconSize: 26,
-      icon: const Icon(Icons.person_outline, color: CL.textSub),
-      onPressed: () => Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const ProfileScreen()),
-      ),
-    );

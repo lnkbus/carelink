@@ -13,6 +13,9 @@ class Assignment {
     required this.offeredAt,
     this.shiftStartTime,
     this.shiftEndTime,
+    this.hospitalName,
+    this.ward,
+    this.startAt,
   });
 
   final String id;
@@ -22,6 +25,12 @@ class Assignment {
   final String? shiftStartTime;
   final String? shiftEndTime;
 
+  /// 어디서 · 언제. **환자 신원이 아닙니다** — 병원과 병실은 일하러 갈 곳이고,
+  /// 이게 없으면 홈에서 상세를 한 번 더 눌러야 합니다 (시안 SCR-401).
+  final String? hospitalName;
+  final String? ward;
+  final DateTime? startAt;
+
   static Assignment fromJson(Map<String, dynamic> j) => Assignment(
         id: j['id'] as String,
         careRequestId: j['careRequestId'] as String,
@@ -29,6 +38,9 @@ class Assignment {
         offeredAt: DateTime.parse(j['offeredAt'] as String),
         shiftStartTime: j['shiftStartTime'] as String?,
         shiftEndTime: j['shiftEndTime'] as String?,
+        hospitalName: j['hospitalName'] as String?,
+        ward: j['ward'] as String?,
+        startAt: j['startAt'] == null ? null : DateTime.parse(j['startAt'] as String),
       );
 
   bool get isOffer => status == 'OFFERED';

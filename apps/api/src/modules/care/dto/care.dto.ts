@@ -133,6 +133,16 @@ export class CareAssignmentDto {
   @Scope('self', 'caregiver', 'admin', 'org') respondedAt: Date | null;
   @Scope('self', 'caregiver', 'admin', 'org') shiftStartTime: string | null;
   @Scope('self', 'caregiver', 'admin', 'org') shiftEndTime: string | null;
+  /**
+   * 병원·병실·시작 시각.
+   *
+   * 시안(SCR-401)의 오늘 카드가 이 셋을 함께 보여 줍니다. 환자 신원이 아니라
+   * '어디서 언제'라서 간병사에게 나가도 됩니다 — 실명·나이·성별·진단명은
+   * 여기에도 CaregiverAssignmentDto에도 없습니다 (docs/11 §3.2).
+   */
+  @Scope('self', 'caregiver', 'admin', 'org') hospitalName: string | null;
+  @Scope('self', 'caregiver', 'admin', 'org') ward: string | null;
+  @Scope('self', 'caregiver', 'admin', 'org') startAt: Date | null;
   /** 운영자 확인자. 이것이 채워져야 확정입니다 (§6-4). */
   @Scope('admin') confirmedBy: string | null;
   @Scope('admin') caregiverId: string;
