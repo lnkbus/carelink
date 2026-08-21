@@ -60,6 +60,10 @@ export const DOMAIN_ERRORS = {
   ENGAGEMENT_DISPATCH_PERMIT_MISSING: { status: HttpStatus.FORBIDDEN, message: 'A dispatch permit number is required for dispatch engagements' },
   ENGAGEMENT_PAYOUT_UNAVAILABLE:{ status: HttpStatus.NOT_IMPLEMENTED, message: 'Payout calculation is blocked pending labour-law review (docs/12 U1/U2)' },
 
+  // ── care ───────────────────────────────────────────────────────────────
+  CARE_UNKNOWN_SERVICE_ITEM: { status: HttpStatus.BAD_REQUEST, message: 'Service item is not in the catalog' },
+  CARE_SLA_BREACHED:        { status: HttpStatus.CONFLICT,     message: 'Care request exceeded the assignment SLA' },
+
   // ── 공통 ───────────────────────────────────────────────────────────────
   COMMON_INVALID_TRANSITION:  { status: HttpStatus.CONFLICT,     message: 'State transition is not allowed' },
   COMMON_APPEND_ONLY:         { status: HttpStatus.FORBIDDEN,    message: 'Table is append-only; corrections must be new rows' },

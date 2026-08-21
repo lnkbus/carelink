@@ -11,6 +11,7 @@ import { IamModule } from './modules/iam/iam.module';
 import { JwtAuthGuard } from './modules/iam/guard/jwt-auth.guard';
 import { RolesGuard } from './modules/iam/guard/roles.guard';
 import { OpsModule } from './modules/ops/ops.module';
+import { CareModule } from './modules/care/care.module';
 import { EngagementModule } from './modules/engagement/engagement.module';
 import { MatchingModule } from './modules/matching/matching.module';
 import { OrgModule } from './modules/org/org.module';
@@ -43,8 +44,9 @@ import { TracksModule } from './modules/tracks/tracks.module';
     MatchingModule,
     RecruitingModule,
     EngagementModule,
+    CareModule,
     // 남은 것 (docs/02 §12):
-    //   CareModule (V2) · PayrollModule (V3 — U1·U2·U5 해결 전 착수 금지)
+    //   PayrollModule (V3 — U5 해결 전 착수 금지)
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
