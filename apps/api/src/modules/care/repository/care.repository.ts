@@ -219,6 +219,78 @@ export class CareRepository {
   // ── 근무 기록 (SCR-404 · 306) ─────────────────────────────────────────
   //
   // ***** APPEND-ONLY *****
+  /** 간병사 → 인력 user_id. 코어(engagement)에 물어보려면 이 값이 필요합니다. */
+  async caregiverUserId(caregiverId: string): Promise<string | null> {
+    const row = await this.db.one<{ user_id: string }>(
+      `SELECT user_id FROM caregivers WHERE id = $1`, [caregiverId],
+    );
+    return row?.user_id ?? null;
+  }
+
+  /**
+   * 24시간 상주 배정 현황 (docs/07 §5·§7).
+   *
+   * **비율이 지표입니다.** 건수만 보면 전체가 늘어난 것인지 24시간이 늘어난
+   * 것인지 구분되지 않습니다. 하향 관리 대상이라 추이가 필요합니다.
+   */
+  liveInSnapshot(): Promise<{
+    live_in: string; total: string; unapproved: string; direct_employment: string;
+  } | null> {
+    return this.db.one(
+      `WITH active AS (
+         SELECT a.id, r.shift_pattern_code, r.shift_approved_by, cg.user_id
+           FROM care_assignments a
+           JOIN care_requests r ON r.id = a.care_request_id
+           JOIN caregivers cg   ON cg.id = a.caregiver_id
+          WHERE a.status IN ('ASSIGNED','IN_SERVICE')
+       )
+       SELECT count(*) FILTER (WHERE shift_pattern_code = 'H24_LIVE_IN')::text AS live_in,
+              count(*)::text AS total,
+              count(*) FILTER (
+                WHERE shift_pattern_code = 'H24_LIVE_IN' AND shift_approved_by IS NULL
+              )::text AS unapproved,
+              count(*) FILTER (
+                WHERE shift_pattern_code = 'H24_LIVE_IN'
+                  AND EXISTS (
+                    SELECT 1 FROM engagements e
+                     WHERE e.worker_user_id = active.user_id
+                       AND e.status = 'ACTIVE'
+                       AND e.model = 'DIRECT_EMPLOYMENT'
+                  )
+              )::text AS direct_employment
+         FROM active`,
+    );
+  }
+
+  /**
+   * 24시간 상주를 연속으로 맡고 있는 인력.
+   *
+   * 건수보다 **한 사람이 얼마나 오래** 붙어 있었는지가 위험 신호입니다.
+   * 잠을 못 자는 상태가 길어지면 사고는 그 사람에게서 납니다 (docs/07 §4).
+   */
+  liveInWorkers(limit = 100): Promise<{
+    caregiver_id: string; display_code: string; user_id: string;
+    assignments: string; since: Date | null; days: string;
+  }[]> {
+    return this.db.query(
+      `SELECT cg.id AS caregiver_id, cg.display_code, cg.user_id,
+              count(*)::text AS assignments,
+              min(a.started_at) AS since,
+              COALESCE(
+                EXTRACT(DAY FROM (now() - min(a.started_at)))::int, 0
+              )::text AS days
+         FROM care_assignments a
+         JOIN care_requests r ON r.id = a.care_request_id
+         JOIN caregivers cg   ON cg.id = a.caregiver_id
+        WHERE a.status IN ('ASSIGNED','IN_SERVICE')
+          AND r.shift_pattern_code = 'H24_LIVE_IN'
+        GROUP BY cg.id, cg.display_code, cg.user_id
+        ORDER BY min(a.started_at)
+        LIMIT $1`,
+      [limit],
+    );
+  }
+
   // UPDATE도 DELETE도 없습니다. 정정은 correction_of로 새 행을 추가합니다 (§5.4).
   // 근무시간 분쟁에서 유일한 근거가 되는 데이터라, 고칠 수 있으면 근거가 아닙니다.
 

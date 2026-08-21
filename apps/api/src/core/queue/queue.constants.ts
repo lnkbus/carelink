@@ -21,8 +21,14 @@ export const JOBS = {
   CLEARANCE_EXPIRY_WARNING: { name: 'clearance-expiry-warning', cron: '30 9 * * *', warnDays: 30 },
   /** 매일 — 클리어런스 만료 시 EXPIRED 전이 + 신규 배정 차단. */
   CLEARANCE_EXPIRE: { name: 'clearance-expire', cron: '40 0 * * *' },
-  /** 요청 생성 시 — 자유 입력 스캔. 감지 시 OPS_REVIEW (자동 거절이 아니다). */
-  SCOPE_KEYWORD_SCAN: { name: 'scope-keyword-scan', cron: null },
+  /**
+   * 요청 생성 시 — 자유 입력 스캔. 감지 시 OPS_REVIEW (자동 거절이 아니다).
+   *
+   * **큐 처리기가 없습니다.** 요청 생성 시점의 동기 게이트로 구현했습니다 —
+   * 비동기로 돌리면 스캔 결과가 나오기 전에 요청이 간병사에게 전달됩니다.
+   * 그러면 의료행위 요구가 그대로 나간 뒤에 감지하는 셈이 됩니다.
+   */
+  SCOPE_KEYWORD_SCAN: { name: 'scope-keyword-scan', cron: null, inline: true },
   /** 매일 — data_retention_policies 기준 자동 파기. 수동 파기 정책은 지켜지지 않는다. */
   DATA_RETENTION_PURGE: { name: 'data-retention-purge', cron: '0 3 * * *', batchSize: 200 },
   /** 매 10분 — 간병 요청 후 4시간 미배정 → ISSUE. */

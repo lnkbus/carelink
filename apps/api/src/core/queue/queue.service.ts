@@ -69,7 +69,13 @@ export class QueueService implements OnApplicationBootstrap, OnModuleDestroy {
     this.log.log(
       `백그라운드 잡: 정의 ${total}종 · 반복 스케줄 ${repeating}종 · 처리기 구현 ${this.handlers.size}종`,
     );
-    const missing = Object.values(JOBS).map((j) => j.name).filter((n) => !this.handlers.has(n));
+    // inline 잡은 큐를 타지 않습니다 (scope-keyword-scan — 요청 생성 시점의
+    // 동기 게이트). 여기서 걸러 두지 않으면 매번 미구현으로 보고돼,
+    // 진짜 미구현이 생겼을 때 눈에 띄지 않습니다.
+    const missing = Object.values(JOBS)
+      .filter((j) => !('inline' in j && j.inline))
+      .map((j) => j.name)
+      .filter((n) => !this.handlers.has(n));
     if (missing.length > 0) {
       // 미구현 잡을 조용히 두면 만료 알림이 멈춘 것을 아무도 모른다.
       this.log.warn(`처리기 미구현: ${missing.join(', ')}`);

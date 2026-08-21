@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DomainError } from '../../../core/errors/domain-error';
 import { AuditService } from '../../ops/service/audit.service';
+import { EngagementService } from '../../engagement/service/engagement.service';
 import { ClearanceService } from '../../quality/service/clearance.service';
 import { ScopeScanService } from '../../quality/service/scope-scan.service';
 import {
@@ -38,6 +39,7 @@ export class CareService {
   constructor(
     private readonly repo: CareRepository,
     private readonly scopeScan: ScopeScanService,
+    private readonly engagements: EngagementService,
     private readonly clearances: ClearanceService,
     private readonly audit: AuditService,
   ) {}
@@ -156,6 +158,44 @@ export class CareService {
     });
   }
 
+  /**
+   * 직접고용 인력에게는 24시간 상주를 배정하지 않습니다 (§5.12).
+   *
+   * 요청 단위 승인(`assertShiftPatternAllowed`)은 **누가 갈지 정해지기 전**에
+   * 이뤄집니다. 그래서 인력별 판단은 여기서 다시 해야 합니다 — 운영자가
+   * 24시간을 승인했다는 사실이 직접고용 인력에게 배정해도 된다는 뜻은
+   * 아닙니다.
+   *
+   * 근로시간 규정 적용 방식(U5)이 정해지기 전까지, 직접고용 인력의 24시간
+   * 근무는 연장·야간 한도를 넘는지 계산할 수 없습니다. 계산할 수 없는 근무를
+   * 시키면 나중에 소급해서 위법이 됩니다.
+   */
+  private async assertShiftPatternAllowedForWorker(
+    request: CareRequestRow, caregiverId: string,
+  ): Promise<void> {
+    const code = request.shift_pattern_code;
+    if (!code) return;
+    const pattern = await this.repo.findShiftPattern(code);
+    if (!pattern?.requires_approval) return;
+
+    const workerUserId = await this.repo.caregiverUserId(caregiverId);
+    if (!workerUserId) return;
+
+    const model = await this.engagements.activeModel(workerUserId);
+    if (model !== 'DIRECT_EMPLOYMENT') return;
+
+    throw new DomainError('QUALITY_SHIFT_NOT_ALLOWED_FOR_WORKER', {
+      careRequestId: request.id,
+      shiftPatternCode: code,
+      engagementModel: model,
+      blockedBy: ['U5: 24시간 간병의 근로시간 규정 적용 방식'],
+      reason:
+        'direct-employment workers cannot be placed on 24-hour live-in shifts ' +
+        'until the working-time rules are settled',
+      reference: 'CLAUDE.md §5.12 · docs/07 §4',
+    });
+  }
+
   async approveShiftPattern(id: string, actorUserId: string): Promise<CareRequestRow> {
     const before = await this.getRequest(id);
     await this.repo.approveShiftPattern(id, actorUserId);
@@ -222,6 +262,7 @@ export class CareService {
   }): Promise<CareAssignmentRow> {
     const request = await this.getRequest(input.careRequestId);
     await this.assertShiftPatternAllowed(request);
+    await this.assertShiftPatternAllowedForWorker(request, input.caregiverId);
 
     if (request.status !== 'MATCHING') {
       careRequestMachine.assert(request.status, 'MATCHING');

@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
+import { EngagementModule } from '../engagement/engagement.module';
+import { QualityModule } from '../quality/quality.module';
 import { CareController } from './controller/care.controller';
 import { CareJobs } from './jobs/care.jobs';
+import { ShiftReviewJobs } from './jobs/shift-review.jobs';
 import { CareRepository } from './repository/care.repository';
 import { CareService } from './service/care.service';
 
@@ -12,8 +15,11 @@ import { CareService } from './service/care.service';
  * 코어(engagement · work_records · billing_lines)는 이 모듈을 알지 못합니다.
  */
 @Module({
+  // 버티컬이 코어를 참조합니다. 반대 방향은 없습니다 — 코어는 care를
+  // 알지 못합니다 (§5.14).
+  imports: [EngagementModule, QualityModule],
   controllers: [CareController],
-  providers: [CareRepository, CareService, CareJobs],
+  providers: [CareRepository, CareService, CareJobs, ShiftReviewJobs],
   exports: [CareService],
 })
 export class CareModule {}

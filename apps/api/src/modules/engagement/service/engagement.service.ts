@@ -104,6 +104,16 @@ export class EngagementService {
   }
 
   /** 남은 파견 가능 일수. 화면이 D-day로 보여줍니다. */
+  /**
+   * 인력의 현재 고용 모델. 활성 배치가 없으면 null입니다.
+   *
+   * 버티컬(care)이 코어의 테이블을 직접 읽지 않고 여기로 물어봅니다 (§5.1).
+   */
+  async activeModel(workerUserId: string): Promise<EngagementModel | null> {
+    const rows = await this.repo.list({ workerUserId, status: 'ACTIVE' });
+    return rows[0]?.model ?? null;
+  }
+
   async dispatchRemaining(workerUserId: string, organizationId: string): Promise<{
     used: number; limit: number; remaining: number;
   }> {
