@@ -4,11 +4,14 @@ import type { Viewer } from '../../../core/scope/scope.types';
 import { Roles } from '../../iam/guard/roles.guard';
 import { CurrentViewer } from '../../iam/guard/viewer.decorator';
 import {
-  AssignmentStatusDto, CareAssignmentDto, CareMatchResultDto, CareRequestDto,
-  CareRequestQueryDto, CareRequestStatusDto, CaregiverCardDto,
-  CreateCareRequestDto, OfferAssignmentDto,
+  AppendLogDto, AssignmentStatusDto, CareAssignmentDto, CaregiverAssignmentDto,
+  CareMatchResultDto, CareRequestDto, CareRequestQueryDto, CareRequestStatusDto,
+  CaregiverCardDto, CreateCareRequestDto, OfferAssignmentDto, ServiceLogDto,
+  ShiftBoundaryDto,
 } from '../dto/care.dto';
-import type { CareAssignmentRow, CareRequestRow } from '../repository/care.repository';
+import type {
+  CareAssignmentRow, CareRequestRow, ServiceLogRow,
+} from '../repository/care.repository';
 import { CareService } from '../service/care.service';
 
 /** SCR-303 간병 신청 · SCR-304 간병사 매칭 · SCR-505 간병 운영 */
@@ -156,6 +159,136 @@ export class CareController {
     const request = await this.care.getRequest(row.care_request_id);
     return toAssignmentDto(row, request.requester_id);
   }
+
+  // ── 근무 기록 (SCR-401 · 403 · 404 · 306) ───────────────────────────────
+
+  /** SCR-401·402 — 간병사 본인의 배정 목록. */
+  @Get('caregivers/me/assignments')
+  @Roles('CAREGIVER', 'ADMIN', 'SUPER_ADMIN')
+  async myAssignments(@CurrentViewer() viewer: Viewer): Promise<CareAssignmentDto[]> {
+    if (!viewer.userId) throw new DomainError('IAM_TOKEN_INVALID');
+    const rows = await this.care.assignmentsForCaregiver(viewer.userId);
+    // 간병사에게는 신청자 관계가 없으므로 self가 붙지 않습니다 — caregiver scope로 봅니다.
+    return rows.map((r) => toAssignmentDto(r, ''));
+  }
+
+  /**
+   * SCR-403 — 간병사용 근무 상세.
+   *
+   * **환자 실명·나이·성별·진단명이 나가지 않습니다.** 리포지토리 쿼리에 아예
+   * 없습니다 (docs/11 §3.2 · README §4 C4).
+   */
+  @Get('care-assignments/:id/caregiver-view')
+  async caregiverView(
+    @CurrentViewer() viewer: Viewer,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<CaregiverAssignmentDto> {
+    if (!viewer.userId) throw new DomainError('IAM_TOKEN_INVALID');
+    const v = await this.care.caregiverView(id, viewer.userId, viewer.scopes.includes('admin'));
+    return Object.assign(new CaregiverAssignmentDto(), {
+      assignmentId: v.assignment_id,
+      status: v.status,
+      hospitalName: v.hospital_name,
+      ward: v.ward,
+      shiftPatternCode: v.shift_pattern_code,
+      shiftStartTime: v.shift_start_time,
+      shiftEndTime: v.shift_end_time,
+      startAt: v.start_at,
+      endAt: v.end_at,
+      supportItems: v.support_items,
+      mobilityLevel: v.mobility_level,
+      cautions: v.cautions,
+      restrictedFlags: v.restricted_flags,
+    });
+  }
+
+  /** SCR-404 — 근무 시작. 기본은 병실 QR입니다 (§6-3). */
+  @Post('care-assignments/:id/start')
+  async startShift(
+    @CurrentViewer() viewer: Viewer,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ShiftBoundaryDto,
+  ): Promise<ServiceLogDto> {
+    const log = await this.care.recordShiftBoundary({
+      assignmentId: id, boundary: 'START',
+      checkMethod: dto.checkMethod, qrToken: dto.qrToken ?? null,
+      geoPoint: dto.geoPoint ?? null, memo: dto.memo ?? null,
+      actorUserId: viewer.userId!, isOperator: viewer.scopes.includes('admin'),
+    });
+    return toLogDto(log, viewer.userId!);
+  }
+
+  @Post('care-assignments/:id/end')
+  async endShift(
+    @CurrentViewer() viewer: Viewer,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ShiftBoundaryDto,
+  ): Promise<ServiceLogDto> {
+    const log = await this.care.recordShiftBoundary({
+      assignmentId: id, boundary: 'END',
+      checkMethod: dto.checkMethod, qrToken: dto.qrToken ?? null,
+      geoPoint: dto.geoPoint ?? null, memo: dto.memo ?? null,
+      actorUserId: viewer.userId!, isOperator: viewer.scopes.includes('admin'),
+    });
+    return toLogDto(log, viewer.userId!);
+  }
+
+  /**
+   * SCR-404 — 근무 기록 추가.
+   *
+   * **append-only입니다.** PATCH도 DELETE도 없습니다. 정정은 `correctionOf`로
+   * 새 행을 만듭니다 — 근무시간 분쟁에서 유일한 근거가 되는 데이터라,
+   * 고칠 수 있으면 근거가 아닙니다 (§5.4).
+   */
+  @Post('care-assignments/:id/logs')
+  async appendLog(
+    @CurrentViewer() viewer: Viewer,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: AppendLogDto,
+  ): Promise<ServiceLogDto> {
+    const log = await this.care.appendLog({
+      assignmentId: id, logType: dto.logType,
+      itemCode: dto.itemCode ?? null, memo: dto.memo ?? null,
+      correctionOf: dto.correctionOf ?? null,
+      actorUserId: viewer.userId!, isOperator: viewer.scopes.includes('admin'),
+    });
+    return toLogDto(log, viewer.userId!);
+  }
+
+  /**
+   * SCR-306 — 근무 기록 조회.
+   *
+   * 보호자가 가장 많이 하는 행동이 "잘 있나 확인"입니다. 시작·종료 기록만
+   * 실시간으로 보여줘도 문의가 크게 줍니다.
+   *
+   * 서술형 메모는 보호자에게 나가지 않습니다 — DTO scope가 자릅니다.
+   */
+  @Get('care-assignments/:id/logs')
+  async logs(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<ServiceLogDto[]> {
+    const [rows, requester] = await Promise.all([
+      this.care.listServiceLogs(id),
+      this.care.requesterOfAssignment(id),
+    ]);
+    return rows.map((r) => toLogDto(r, requester?.requester_id ?? ''));
+  }
+}
+
+function toLogDto(l: ServiceLogRow, ownerUserId: string): ServiceLogDto {
+  return Object.assign(new ServiceLogDto(), {
+    ownerUserId,
+    id: l.id,
+    logType: l.log_type,
+    itemCode: l.item_code,
+    occurredAt: l.occurred_at,
+    checkMethod: l.check_method,
+    corrected: l.corrected ?? false,
+    correctionOf: l.correction_of,
+    memo: l.memo,
+    geoPoint: l.geo_point,
+    createdBy: l.created_by,
+  });
 }
 
 function toRequestDto(r: CareRequestRow): CareRequestDto {

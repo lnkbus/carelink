@@ -935,6 +935,27 @@ CREATE TABLE service_logs (
 );
 CREATE INDEX idx_service_logs_assignment ON service_logs(assignment_id, occurred_at);
 
+-- append-only를 **DB가 강제한다**.
+--
+-- 애플리케이션에 PATCH·DELETE 엔드포인트를 두지 않는 것만으로는 부족하다.
+-- psql로 직접 붙으면 그대로 고쳐지고, 그러면 "근무시간 분쟁에서 유일한 근거"는
+-- 근거가 아니다. 운영 중 사고가 나서 급하게 고치고 싶어지는 순간이 반드시 오는데,
+-- 그때 막아 주는 것은 규칙이 아니라 트리거다.
+--
+-- 정정은 correction_of로 새 행을 넣는다 (§5.4).
+CREATE OR REPLACE FUNCTION forbid_mutation() RETURNS trigger AS $$
+BEGIN
+  RAISE EXCEPTION
+    '% 은(는) append-only 테이블입니다. 정정은 correction_of로 새 행을 추가하세요 (CLAUDE.md §5.4)',
+    TG_TABLE_NAME
+    USING ERRCODE = 'restrict_violation';
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER service_logs_append_only
+  BEFORE UPDATE OR DELETE ON service_logs
+  FOR EACH ROW EXECUTE FUNCTION forbid_mutation();
+
 -- 가격 산정 규칙. 예약 시점 견적과 종료 후 확정 청구가 같은 규칙을 쓴다.
 CREATE TABLE pricing_rules (
   id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -1052,6 +1073,15 @@ CREATE TABLE audit_logs (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_audit_target ON audit_logs(target_type, target_id, created_at DESC);
+
+-- 감사 로그도 append-only다 (§5.4).
+--
+-- 여기가 고쳐지면 "누가 언제 무엇을 봤는가"가 무너진다. 개인정보 조회 이력은
+-- 분쟁·감사에서 우리를 방어하는 유일한 기록이고, 고칠 수 있는 기록은 방어가
+-- 되지 않는다 (docs/11 §5).
+CREATE TRIGGER audit_logs_append_only
+  BEFORE UPDATE OR DELETE ON audit_logs
+  FOR EACH ROW EXECUTE FUNCTION forbid_mutation();
 
 -- =============================================================================
 -- 7. ENGAGEMENT — 고용·계약 모델

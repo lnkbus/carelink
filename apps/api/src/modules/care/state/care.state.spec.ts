@@ -64,3 +64,28 @@ describe('배정 SLA', () => {
     expect(CARE_ASSIGNMENT_SLA_HOURS).toBe(4);
   });
 });
+
+/**
+ * 근무 기록 (SCR-404).
+ *
+ * 배정 상태와 근무 경계가 어긋나면 "출근했는데 배정이 안 된 상태"나
+ * "퇴근했는데 진행 중"이 생깁니다. 정산 근거가 되는 데이터라 어긋나면 안 됩니다.
+ */
+describe('근무 시작·종료와 배정 상태', () => {
+  it('확정(ASSIGNED)된 배정만 근무를 시작할 수 있다', () => {
+    expect(assignmentMachine.can('ASSIGNED', 'IN_SERVICE')).toBe(true);
+    // 수락만 한 상태에서는 출근할 수 없습니다 — 운영자 확인이 빠졌습니다.
+    expect(assignmentMachine.can('ACCEPTED', 'IN_SERVICE')).toBe(false);
+    // 제안만 받은 상태도 마찬가지입니다.
+    expect(assignmentMachine.can('OFFERED', 'IN_SERVICE')).toBe(false);
+  });
+
+  it('근무 중에서만 종료할 수 있다', () => {
+    expect(assignmentMachine.can('IN_SERVICE', 'COMPLETED')).toBe(true);
+    expect(assignmentMachine.can('ASSIGNED', 'COMPLETED')).toBe(false);
+  });
+
+  it('완료 후에도 분쟁으로 갈 수 있다 — service_logs가 근거가 된다', () => {
+    expect(assignmentMachine.can('COMPLETED', 'DISPUTED')).toBe(true);
+  });
+});

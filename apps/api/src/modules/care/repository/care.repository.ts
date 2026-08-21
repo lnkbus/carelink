@@ -29,6 +29,15 @@ export interface CareAssignmentRow {
  * **국적이 없습니다.** 타입에도 쿼리에도 없어야 실수로 쓰이지 않습니다 (§5.10).
  * 보호자 화면에도 나가지 않습니다 (§6-21, 2026-08-21 확정).
  */
+export interface ServiceLogRow {
+  id: string; assignment_id: string; log_type: string; item_code: string | null;
+  occurred_at: Date; check_method: string | null; geo_point: unknown | null;
+  memo: string | null; correction_of: string | null;
+  created_by: string | null; created_at: Date;
+  /** 이 기록이 나중에 정정됐는가. 지우지 않으므로 표시로 구분합니다. */
+  corrected?: boolean;
+}
+
 export interface CaregiverFactsRow {
   caregiver_id: string; user_id: string; display_code: string;
   experience_yrs: number; rating_avg: number | null; completed_count: number;
@@ -204,6 +213,142 @@ export class CareRepository {
         WHERE r.status IN ('SUBMITTED','MATCHING','OFFER_SENT','OPS_REVIEW')
           AND r.sla_due_at IS NOT NULL AND r.sla_due_at <= now()
         ORDER BY r.sla_due_at`,
+    );
+  }
+
+  // ── 근무 기록 (SCR-404 · 306) ─────────────────────────────────────────
+  //
+  // ***** APPEND-ONLY *****
+  // UPDATE도 DELETE도 없습니다. 정정은 correction_of로 새 행을 추가합니다 (§5.4).
+  // 근무시간 분쟁에서 유일한 근거가 되는 데이터라, 고칠 수 있으면 근거가 아닙니다.
+
+  /**
+   * 근무 기록 적재.
+   *
+   * `check_method` 기본값은 **QR**입니다. GPS는 위치정보 수집·이용 동의와
+   * 법규 검토가 선행돼야 하므로 기본 경로로 두지 않습니다 (§6-3).
+   * 병실 QR은 동의 부담이 낮고 정확도도 높습니다.
+   */
+  async appendServiceLog(input: {
+    assignmentId: string; logType: string; itemCode: string | null;
+    occurredAt: string; checkMethod: string | null; geoPoint: unknown | null;
+    memo: string | null; correctionOf: string | null; createdBy: string;
+  }): Promise<ServiceLogRow> {
+    const row = await this.db.one<ServiceLogRow>(
+      `INSERT INTO service_logs
+         (assignment_id, log_type, item_code, occurred_at, check_method, geo_point,
+          memo, correction_of, created_by)
+       VALUES ($1,$2,$3,$4,$5::check_method,$6::jsonb,$7,$8,$9)
+       RETURNING id, assignment_id, log_type, item_code, occurred_at,
+                 check_method::text AS check_method, geo_point, memo,
+                 correction_of, created_by, created_at`,
+      [input.assignmentId, input.logType, input.itemCode, input.occurredAt,
+       input.checkMethod, input.geoPoint === null ? null : JSON.stringify(input.geoPoint),
+       input.memo, input.correctionOf, input.createdBy],
+    );
+    return row!;
+  }
+
+  /**
+   * 배정의 근무 기록.
+   *
+   * 정정된 원본도 함께 돌려줍니다 — 지우지 않는 것이 요점이므로 화면에서
+   * "정정됨"으로 표시하고 정정본과 나란히 보여줍니다.
+   */
+  listServiceLogs(assignmentId: string): Promise<ServiceLogRow[]> {
+    return this.db.query<ServiceLogRow>(
+      `SELECT id, assignment_id, log_type, item_code, occurred_at,
+              check_method::text AS check_method, geo_point, memo,
+              correction_of, created_by, created_at,
+              EXISTS (SELECT 1 FROM service_logs c WHERE c.correction_of = service_logs.id) AS corrected
+         FROM service_logs
+        WHERE assignment_id = $1
+        ORDER BY occurred_at, created_at`,
+      [assignmentId],
+    );
+  }
+
+  /** 배정이 속한 요청의 신청자. 로그 응답의 소유자 판정에 씁니다. */
+  requesterOfAssignment(assignmentId: string): Promise<{ requester_id: string } | null> {
+    return this.db.one(
+      `SELECT r.requester_id
+         FROM care_assignments a JOIN care_requests r ON r.id = a.care_request_id
+        WHERE a.id = $1`,
+      [assignmentId],
+    );
+  }
+
+  findServiceLog(id: string): Promise<ServiceLogRow | null> {
+    return this.db.one<ServiceLogRow>(
+      `SELECT id, assignment_id, log_type, item_code, occurred_at,
+              check_method::text AS check_method, geo_point, memo,
+              correction_of, created_by, created_at
+         FROM service_logs WHERE id = $1`,
+      [id],
+    );
+  }
+
+  /**
+   * 간병사가 이 배정의 담당자인가.
+   *
+   * 남의 근무에 기록을 남기는 경로를 막습니다 — 근무시간 분쟁의 근거 데이터라
+   * 누가 썼는지가 흐려지면 안 됩니다.
+   */
+  async isAssignedCaregiver(assignmentId: string, userId: string): Promise<boolean> {
+    const row = await this.db.one<{ ok: boolean }>(
+      `SELECT EXISTS (
+         SELECT 1 FROM care_assignments a
+           JOIN caregivers cg ON cg.id = a.caregiver_id
+          WHERE a.id = $1 AND cg.user_id = $2
+       ) AS ok`,
+      [assignmentId, userId],
+    );
+    return row?.ok ?? false;
+  }
+
+  /**
+   * 간병사에게 보여줄 근무 상세 (SCR-403).
+   *
+   * **환자 실명·진단명을 조회하지 않습니다.** 쿼리에 없어야 실수로 새지 않습니다.
+   * 병실·필요 지원·주의사항만 가져옵니다 (docs/11 §3.2 · README §4 C4).
+   */
+  caregiverAssignmentView(assignmentId: string): Promise<{
+    assignment_id: string; status: string; hospital_name: string | null;
+    ward: string | null; shift_pattern_code: string | null;
+    shift_start_time: string | null; shift_end_time: string | null;
+    start_at: Date; end_at: Date | null;
+    support_items: string[] | null; mobility_level: string | null;
+    cautions: string | null; restricted_flags: string[] | null;
+  } | null> {
+    return this.db.one(
+      `SELECT a.id AS assignment_id, a.status::text AS status,
+              h.name AS hospital_name, r.ward, r.shift_pattern_code,
+              a.shift_start_time::text AS shift_start_time,
+              a.shift_end_time::text AS shift_end_time,
+              r.start_at, r.end_at, r.support_items, r.mobility_level,
+              r.cautions, r.restricted_flags
+         FROM care_assignments a
+         JOIN care_requests r ON r.id = a.care_request_id
+         LEFT JOIN hospitals h ON h.id = r.hospital_id
+        WHERE a.id = $1`,
+      [assignmentId],
+    );
+  }
+
+  /** 간병사의 배정 목록 (SCR-401 · 402). */
+  assignmentsForCaregiver(userId: string): Promise<CareAssignmentRow[]> {
+    return this.db.query<CareAssignmentRow>(
+      `SELECT a.id, a.care_request_id, a.caregiver_id, a.status::text AS status,
+              a.offered_at, a.responded_at, a.confirmed_by,
+              a.shift_start_time::text AS shift_start_time,
+              a.shift_end_time::text AS shift_end_time,
+              a.started_at, a.ended_at, cg.display_code AS caregiver_display_code
+         FROM care_assignments a
+         JOIN caregivers cg ON cg.id = a.caregiver_id
+        WHERE cg.user_id = $1
+          AND a.status NOT IN ('DECLINED','CANCELLED')
+        ORDER BY a.offered_at DESC`,
+      [userId],
     );
   }
 

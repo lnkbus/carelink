@@ -131,3 +131,99 @@ export class CareAssignmentDto {
   @Scope('admin') confirmedBy: string | null;
   @Scope('admin') caregiverId: string;
 }
+
+// ── 근무 기록 (SCR-403 · 404 · 306) ─────────────────────────────────────────
+
+const CHECK_METHODS = ['QR', 'GPS', 'MANUAL'] as const;
+
+/**
+ * 근무 시작·종료.
+ *
+ * 기본은 **QR**입니다. GPS는 위치정보 동의와 법규 검토가 선행돼야 하므로
+ * 기본 경로가 아닙니다 (§6-3). `MANUAL`은 QR이 고장 났을 때의 예외이고,
+ * 어떤 방법으로 찍었는지가 기록에 남아 분쟁 시 근거의 무게를 정합니다.
+ */
+export class ShiftBoundaryDto {
+  @IsIn(CHECK_METHODS) checkMethod: (typeof CHECK_METHODS)[number];
+  /** 병실 QR 토큰. checkMethod가 QR이면 필수입니다. */
+  @IsOptional() @IsString() @Length(1, 200) qrToken?: string;
+  /** GPS 좌표. 동의가 있을 때만 들어옵니다. */
+  @IsOptional() geoPoint?: unknown;
+  @IsOptional() @IsString() @Length(1, 500) memo?: string;
+}
+
+const LOG_TYPES = ['SUPPORT', 'NOTE', 'ISSUE'] as const;
+
+export class AppendLogDto {
+  @IsIn(LOG_TYPES) logType: (typeof LOG_TYPES)[number];
+  /** 카탈로그 코드. 의료행위는 카탈로그에 없으므로 여기로 들어올 수 없습니다. */
+  @IsOptional() @IsString() @Length(1, 64) itemCode?: string;
+  @IsOptional() @IsString() @Length(1, 1000) memo?: string;
+  /**
+   * 정정 대상 기록.
+   *
+   * **기존 행을 고치지 않습니다.** 정정은 새 행이고 원본은 남습니다 (§5.4).
+   * 근무시간 분쟁에서 유일한 근거가 되는 데이터라, 고칠 수 있으면 근거가 아닙니다.
+   */
+  @IsOptional() @IsUUID() correctionOf?: string;
+}
+
+/**
+ * 간병사용 근무 상세 (SCR-403).
+ *
+ * **환자 실명·나이·성별·진단명이 없습니다.** 시안은 '김영수 어르신'을 넣었지만
+ * `docs/11` §3.2가 반대편에 있고, 시안이 틀린 것으로 정리됐습니다 (README §4 C4).
+ *
+ * 간병사가 알아야 하는 것은 어디서 무엇을 하는가입니다. 필드를 추가할 때
+ * "이게 없으면 일을 못 하는가"를 먼저 물어보세요.
+ */
+export class CaregiverAssignmentDto {
+  @Scope('caregiver', 'admin') assignmentId: string;
+  @Scope('caregiver', 'admin') status: string;
+  @Scope('caregiver', 'admin') hospitalName: string | null;
+  /** 환자 식별은 병실까지입니다. 실명 대신 여기를 씁니다. */
+  @Scope('caregiver', 'admin') ward: string | null;
+  @Scope('caregiver', 'admin') shiftPatternCode: string | null;
+  @Scope('caregiver', 'admin') shiftStartTime: string | null;
+  @Scope('caregiver', 'admin') shiftEndTime: string | null;
+  @Scope('caregiver', 'admin') startAt: Date;
+  @Scope('caregiver', 'admin') endAt: Date | null;
+  /** 필요한 지원. 진단명 대신 이것으로 치환합니다. */
+  @Scope('caregiver', 'admin') supportItems: string[] | null;
+  @Scope('caregiver', 'admin') mobilityLevel: string | null;
+  @Scope('caregiver', 'admin') cautions: string | null;
+  /**
+   * 업무범위 경고. 감지 이력이 있는 요청이면 간병사도 알아야 합니다 —
+   * 현장에서 같은 요구를 받을 수 있고, 그때 거절할 근거가 됩니다.
+   */
+  @Scope('caregiver', 'admin') restrictedFlags: string[] | null;
+}
+
+/**
+ * 근무 기록 한 줄.
+ *
+ * 보호자도 봅니다 (SCR-306) — "잘 있나 확인"이 가장 많은 행동이고, 시작·종료
+ * 기록만 실시간으로 보여줘도 문의가 크게 줍니다.
+ *
+ * 다만 **서술형 메모는 보호자에게 나가지 않습니다.** 환자 상태를 서술로 남기면
+ * 의료기록과 혼동되고, 간병사가 의료적 판단을 적는 경로가 됩니다 (SCR-306 notes).
+ * 보호자에게는 정형 항목(logType · itemCode · 시각)만 갑니다.
+ */
+export class ServiceLogDto {
+  @ScopeOwner() ownerUserId: string;
+
+  @Scope('self', 'caregiver', 'admin') id: string;
+  @Scope('self', 'caregiver', 'admin') logType: string;
+  @Scope('self', 'caregiver', 'admin') itemCode: string | null;
+  @Scope('self', 'caregiver', 'admin') occurredAt: Date;
+  @Scope('self', 'caregiver', 'admin') checkMethod: string | null;
+  /** 정정됐는가. 지우지 않으므로 표시로 구분합니다. */
+  @Scope('self', 'caregiver', 'admin') corrected: boolean;
+  @Scope('self', 'caregiver', 'admin') correctionOf: string | null;
+
+  /** 서술형은 기록자와 운영자만. 보호자에게는 나가지 않습니다. */
+  @Scope('caregiver', 'admin') memo: string | null;
+  /** GPS 좌표는 운영자만. 위치는 그 자체로 민감정보입니다. */
+  @Scope('admin') geoPoint: unknown | null;
+  @Scope('admin') createdBy: string | null;
+}

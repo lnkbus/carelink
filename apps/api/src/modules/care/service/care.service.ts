@@ -284,6 +284,192 @@ export class CareService {
   }
 
   overdueRequests() { return this.repo.overdueRequests(); }
+
+  // ── 근무 기록 (SCR-403 · 404 · 306) ───────────────────────────────────
+
+  /**
+   * 간병사용 근무 상세 (SCR-403).
+   *
+   * **환자 실명·진단명이 나가지 않습니다.** 리포지토리 쿼리에 아예 없습니다 —
+   * "이 원칙을 API scope 레벨에서 강제해야 합니다"(SCR-403 notes)는 화면에서
+   * 가리라는 뜻이 아니라 데이터가 나가지 않게 하라는 뜻입니다.
+   *
+   * 간병사가 알아야 하는 것은 **어디서 무엇을 하는가**입니다:
+   * 병원·병실·교대 시간·필요 지원·주의사항.
+   */
+  async caregiverView(assignmentId: string, userId: string, isOperator: boolean) {
+    if (!isOperator && !(await this.repo.isAssignedCaregiver(assignmentId, userId))) {
+      throw new DomainError('IAM_ROLE_FORBIDDEN', {
+        reason: 'only the assigned caregiver can view this assignment',
+      });
+    }
+    const view = await this.repo.caregiverAssignmentView(assignmentId);
+    if (!view) {
+      throw new DomainError('COMMON_NOT_FOUND', { targetType: 'care_assignment', targetId: assignmentId });
+    }
+    return view;
+  }
+
+  assignmentsForCaregiver(userId: string) { return this.repo.assignmentsForCaregiver(userId); }
+
+  listServiceLogs(assignmentId: string) { return this.repo.listServiceLogs(assignmentId); }
+  requesterOfAssignment(assignmentId: string) { return this.repo.requesterOfAssignment(assignmentId); }
+
+  /**
+   * 근무 시작·종료 (SCR-404).
+   *
+   * ── 체크 방법 ────────────────────────────────────────────────────────
+   * 기본은 **병실 QR**입니다. GPS는 위치정보 수집·이용 동의와 법규 검토가
+   * 선행돼야 하므로 기본 경로로 두지 않습니다 (§6-3). QR은 동의 부담이 낮고
+   * 정확도도 높습니다.
+   *
+   * `MANUAL`은 QR이 고장 났을 때의 예외입니다. 허용하되 **기록에 남깁니다** —
+   * 나중에 분쟁이 나면 어떤 방법으로 찍었는지가 근거의 무게를 정합니다.
+   *
+   * ── append-only ──────────────────────────────────────────────────────
+   * 시작·종료도 로그 한 행입니다. 배정 상태는 따라 움직이지만 로그 자체는
+   * 고치지 않습니다 (§5.4).
+   */
+  async recordShiftBoundary(input: {
+    assignmentId: string; boundary: 'START' | 'END';
+    checkMethod: 'QR' | 'GPS' | 'MANUAL'; qrToken: string | null;
+    geoPoint: unknown | null; memo: string | null;
+    actorUserId: string; isOperator: boolean;
+  }) {
+    if (!input.isOperator && !(await this.repo.isAssignedCaregiver(input.assignmentId, input.actorUserId))) {
+      throw new DomainError('IAM_ROLE_FORBIDDEN', {
+        reason: 'only the assigned caregiver can record work for this assignment',
+      });
+    }
+
+    const assignment = await this.repo.findAssignment(input.assignmentId);
+    if (!assignment) {
+      throw new DomainError('COMMON_NOT_FOUND', { targetType: 'care_assignment', targetId: input.assignmentId });
+    }
+
+    // QR로 찍는다면 토큰이 병실과 맞아야 합니다. 토큰 없이 QR이라고 주장하는
+    // 요청은 사실상 MANUAL이므로 거부합니다 — 방법을 속이면 근거가 무너집니다.
+    if (input.checkMethod === 'QR' && !input.qrToken) {
+      throw new DomainError('CARE_QR_TOKEN_REQUIRED', {
+        reason: 'QR check-in requires the room token; use MANUAL if the code cannot be scanned',
+      });
+    }
+    if (input.checkMethod === 'QR') {
+      await this.assertQrTokenMatches(assignment.care_request_id, input.qrToken!);
+    }
+
+    const to = input.boundary === 'START' ? 'IN_SERVICE' : 'COMPLETED';
+    assignmentMachine.assert(assignment.status, to as AssignmentStatus);
+
+    const log = await this.repo.appendServiceLog({
+      assignmentId: input.assignmentId,
+      logType: input.boundary === 'START' ? 'SHIFT_START' : 'SHIFT_END',
+      itemCode: null,
+      occurredAt: new Date().toISOString(),
+      checkMethod: input.checkMethod,
+      // GPS 좌표는 동의가 있을 때만 들어옵니다. 없으면 NULL입니다.
+      geoPoint: input.checkMethod === 'GPS' ? input.geoPoint : null,
+      memo: input.memo,
+      correctionOf: null,
+      createdBy: input.actorUserId,
+    });
+
+    await this.repo.setAssignmentStatus(input.assignmentId, to as AssignmentStatus, null);
+
+    // 요청 상태도 따라 올립니다.
+    const request = await this.getRequest(assignment.care_request_id);
+    const requestTo: CareRequestStatus = input.boundary === 'START' ? 'IN_SERVICE' : 'COMPLETED';
+    if (request.status !== requestTo && careRequestMachine.can(request.status, requestTo)) {
+      await this.repo.setRequestStatus(request.id, requestTo);
+    }
+
+    await this.audit.record({
+      actorUserId: input.actorUserId, action: 'STATUS_CHANGE',
+      targetType: 'service_log', targetId: log.id,
+      after: { logType: log.log_type, checkMethod: input.checkMethod, assignmentId: input.assignmentId },
+    });
+    return log;
+  }
+
+  /**
+   * 병실 QR 토큰 검증.
+   *
+   * 토큰은 `병원ID:병실` 형태입니다. 다른 병실 QR로 찍으면 근무지가 아닌
+   * 곳에서 출근 처리되므로 막습니다.
+   *
+   * 실제 운영에서는 서명·만료가 붙어야 합니다. 지금은 병실 일치까지만 봅니다 —
+   * 서명 키 관리 방식이 정해지지 않았고, 임의로 정하면 나중에 전부 재발급해야
+   * 합니다. 그때까지는 이 검사가 최소선입니다.
+   */
+  private async assertQrTokenMatches(careRequestId: string, token: string): Promise<void> {
+    const request = await this.getRequest(careRequestId);
+    const expected = `${request.hospital_id ?? ''}:${request.ward ?? ''}`;
+    if (token !== expected) {
+      throw new DomainError('CARE_QR_TOKEN_MISMATCH', {
+        reason: 'this QR code belongs to a different room',
+        // 기대값을 응답에 넣지 않습니다 — 넣으면 아무 데서나 위조할 수 있습니다.
+      });
+    }
+  }
+
+  /**
+   * 서비스 기록 추가 (SCR-404 · 306).
+   *
+   * `item_code`는 카탈로그에서 옵니다 — 의료행위가 기록으로 들어오는 경로를
+   * 막습니다 (§6-2). 서술형은 `memo` 하나뿐이고 보호자에게는 정형 항목만
+   * 나갑니다 (SCR-306 notes: 의료기록과 혼동될 수 있음).
+   */
+  async appendLog(input: {
+    assignmentId: string; logType: string; itemCode: string | null;
+    memo: string | null; correctionOf: string | null;
+    actorUserId: string; isOperator: boolean;
+  }) {
+    if (!input.isOperator && !(await this.repo.isAssignedCaregiver(input.assignmentId, input.actorUserId))) {
+      throw new DomainError('IAM_ROLE_FORBIDDEN', {
+        reason: 'only the assigned caregiver can record work for this assignment',
+      });
+    }
+
+    if (input.itemCode) {
+      const catalog = new Set((await this.repo.listServiceItems()).map((i) => i.code));
+      if (!catalog.has(input.itemCode)) {
+        throw new DomainError('CARE_UNKNOWN_SERVICE_ITEM', {
+          itemCode: input.itemCode,
+          reason: 'log items must come from the catalog; medical acts are not in it by design',
+        });
+      }
+    }
+
+    // 정정 대상이 있으면 같은 배정의 기록인지 확인합니다.
+    if (input.correctionOf) {
+      const original = await this.repo.findServiceLog(input.correctionOf);
+      if (!original || original.assignment_id !== input.assignmentId) {
+        throw new DomainError('COMMON_NOT_FOUND', {
+          targetType: 'service_log', targetId: input.correctionOf,
+          reason: 'correction target must belong to the same assignment',
+        });
+      }
+    }
+
+    const log = await this.repo.appendServiceLog({
+      assignmentId: input.assignmentId,
+      logType: input.logType,
+      itemCode: input.itemCode,
+      occurredAt: new Date().toISOString(),
+      checkMethod: null,
+      geoPoint: null,
+      memo: input.memo,
+      correctionOf: input.correctionOf,
+      createdBy: input.actorUserId,
+    });
+
+    await this.audit.record({
+      actorUserId: input.actorUserId, action: 'STATUS_CHANGE',
+      targetType: 'service_log', targetId: log.id,
+      after: { logType: log.log_type, itemCode: log.item_code, correctionOf: log.correction_of },
+    });
+    return log;
+  }
 }
 
 function toCard(f: CaregiverFactsRow): CaregiverCard {

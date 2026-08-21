@@ -63,6 +63,9 @@ export const DOMAIN_ERRORS = {
   // ── care ───────────────────────────────────────────────────────────────
   CARE_UNKNOWN_SERVICE_ITEM: { status: HttpStatus.BAD_REQUEST, message: 'Service item is not in the catalog' },
   CARE_SLA_BREACHED:        { status: HttpStatus.CONFLICT,     message: 'Care request exceeded the assignment SLA' },
+  CARE_QR_TOKEN_REQUIRED:   { status: HttpStatus.BAD_REQUEST,  message: 'QR check-in requires the room token' },
+  CARE_QR_TOKEN_MISMATCH:   { status: HttpStatus.FORBIDDEN,    message: 'This QR code belongs to a different room' },
+  CARE_LOG_IMMUTABLE:       { status: HttpStatus.FORBIDDEN,    message: 'Service logs are append-only; corrections must be new rows' },
 
   // ── 공통 ───────────────────────────────────────────────────────────────
   COMMON_INVALID_TRANSITION:  { status: HttpStatus.CONFLICT,     message: 'State transition is not allowed' },
