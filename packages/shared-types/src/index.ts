@@ -450,3 +450,42 @@ export interface ServiceLog {
   /** 서술형 메모. 보호자 scope에서는 잘려 나갑니다 (SCR-306 notes). */
   memo?: string | null;
 }
+
+
+// ── 산업 · 트랙 (SCR-507) ──────────────────────────────────────────────────
+
+export interface Industry {
+  id: string;
+  code: string;
+  labelKo: string;
+  isActive: boolean;
+}
+
+export interface TrackRequirement {
+  kind: string;
+  refCode: string | null;
+  mandatory: boolean;
+  note: string | null;
+}
+
+export interface Track {
+  id: string;
+  code: string;
+  labelKo: string;
+  labelVi: string | null;
+  /** NONE | TRAINING_REQUIRED | NATIONAL_LICENSE */
+  qualificationType: string;
+  isActive: boolean;
+  requirements?: TrackRequirement[];
+  /**
+   * 체류자격 코드 목록. **운영자에게만 나갑니다** (§6-12).
+   * 기관 화면에서는 키 자체가 없으므로 optional입니다.
+   */
+  visaTypes?: string[] | null;
+}
+
+export interface TrackWeights {
+  trackId: string;
+  /** rule_code → 배점. 코드가 아니라 이 표가 점수의 출처입니다 (§5.5). */
+  weights: Record<string, number>;
+}

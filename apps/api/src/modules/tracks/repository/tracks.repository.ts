@@ -2,9 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { DbService } from '../../../core/db/db.service';
 import type { VisaEligibility } from '../tracks.types';
 
-export interface IndustryRow { id: string; code: string; label_ko: string; is_active: boolean; sort_order: number }
+export interface IndustryRow {
+  id: string; code: string; label_ko: string; is_active: boolean;
+  launched_on?: Date | null; sort_order: number;
+}
 export interface TrackRow {
   id: string; industry_id: string; code: string; label_ko: string; label_vi: string | null;
+  label_en?: string | null;
   qualification_type: string; visa_types: string[] | null; is_active: boolean; sort_order: number;
 }
 export interface TrackRequirementRow {
@@ -64,6 +68,98 @@ export class TracksRepository {
       `SELECT track_id, rule_code, max_points FROM track_matching_weights WHERE track_id = $1`,
       [trackId],
     );
+  }
+
+  // ── SCR-507 쓰기 ────────────────────────────────────────────────────
+  //
+  // **이 화면이 버티컬 확장의 실행 창구입니다** (SCR-507 notes). 농업·미용을
+  // 열 때 개발자가 아니라 운영자가 여기서 산업과 트랙을 만듭니다. 코드
+  // 배포가 필요한 경우는 그 산업에 전용 모듈이 필요할 때뿐입니다 (§5.8).
+
+  async createIndustry(input: {
+    code: string; labelKo: string; sortOrder: number;
+  }): Promise<IndustryRow> {
+    // **is_active를 여기서 켜지 않습니다.** 산업을 만드는 것과 여는 것은
+    // 다른 결정입니다 — 트랙과 요건이 갖춰지기 전에 열면 후보자가
+    // 아무것도 할 수 없는 트랙에 지원합니다.
+    return (await this.db.one<IndustryRow>(
+      `INSERT INTO industries (code, label_ko, sort_order, is_active)
+       VALUES ($1, $2, $3, false)
+       RETURNING id, code, label_ko, is_active, launched_on, sort_order`,
+      [input.code, input.labelKo, input.sortOrder],
+    ))!;
+  }
+
+  async setIndustryActive(id: string, isActive: boolean): Promise<IndustryRow | null> {
+    return this.db.one<IndustryRow>(
+      `UPDATE industries
+          SET is_active = $2,
+              launched_on = CASE WHEN $2 AND launched_on IS NULL THEN current_date ELSE launched_on END
+        WHERE id = $1
+       RETURNING id, code, label_ko, is_active, launched_on, sort_order`,
+      [id, isActive],
+    );
+  }
+
+  async createTrack(input: {
+    industryId: string; code: string; labelKo: string;
+    labelVi: string | null; labelEn: string | null;
+    qualificationType: string; visaTypes: string[]; sortOrder: number;
+  }): Promise<TrackRow> {
+    return (await this.db.one<TrackRow>(
+      `INSERT INTO tracks
+         (industry_id, code, label_ko, label_vi, label_en,
+          qualification_type, visa_types, sort_order, is_active)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,false)
+       RETURNING id, industry_id, code, label_ko, label_vi, label_en,
+                 qualification_type, visa_types, is_active, sort_order`,
+      [input.industryId, input.code, input.labelKo, input.labelVi, input.labelEn,
+       input.qualificationType, input.visaTypes, input.sortOrder],
+    ))!;
+  }
+
+  async setTrackActive(id: string, isActive: boolean): Promise<TrackRow | null> {
+    return this.db.one<TrackRow>(
+      `UPDATE tracks SET is_active = $2 WHERE id = $1
+       RETURNING id, industry_id, code, label_ko, label_vi, label_en,
+                 qualification_type, visa_types, is_active, sort_order`,
+      [id, isActive],
+    );
+  }
+
+  /**
+   * 요건 전체 교체.
+   *
+   * 한 건씩 추가·삭제하는 API를 두지 않았습니다 — 운영자가 화면에서 보는
+   * 것은 '이 트랙의 요건 목록'이고, 저장은 그 목록 전체입니다. 부분 API를
+   * 두면 화면 상태와 서버 상태가 어긋나는 경로가 생깁니다.
+   */
+  async replaceRequirements(trackId: string, rows: {
+    kind: string; refCode: string | null; isMandatory: boolean; note: string | null;
+  }[]): Promise<void> {
+    await this.db.tx(async (client) => {
+      await client.query(`DELETE FROM track_requirements WHERE track_id = $1`, [trackId]);
+      for (const r of rows) {
+        await client.query(
+          `INSERT INTO track_requirements (track_id, kind, ref_code, is_mandatory, note)
+           VALUES ($1,$2,$3,$4,$5)`,
+          [trackId, r.kind, r.refCode, r.isMandatory, r.note],
+        );
+      }
+    });
+  }
+
+  /** 매칭 가중치 전체 교체. 점수는 코드가 아니라 이 테이블에서 옵니다 (§5.5). */
+  async replaceWeights(trackId: string, rows: { ruleCode: string; maxPoints: number }[]): Promise<void> {
+    await this.db.tx(async (client) => {
+      await client.query(`DELETE FROM track_matching_weights WHERE track_id = $1`, [trackId]);
+      for (const r of rows) {
+        await client.query(
+          `INSERT INTO track_matching_weights (track_id, rule_code, max_points) VALUES ($1,$2,$3)`,
+          [trackId, r.ruleCode, r.maxPoints],
+        );
+      }
+    });
   }
 
   findVisaEligibility(trackId: string, visaCode: string): Promise<VisaEligibilityRow | null> {

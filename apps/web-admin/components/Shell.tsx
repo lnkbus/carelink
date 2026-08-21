@@ -33,6 +33,14 @@ const NAV = [
       { href: '/cohorts', label: '코호트', screen: 'SCR-511' },
     ],
   },
+  {
+    group: '설정',
+    items: [
+      // 버티컬 확장의 실행 창구입니다. 농업·미용을 열 때 개발자가 아니라
+      // 운영자가 여기서 산업과 트랙을 만듭니다 (§5.8).
+      { href: '/tracks', label: '산업 · 트랙', screen: 'SCR-507' },
+    ],
+  },
 ];
 
 export function Shell({ children }: { children: React.ReactNode }) {

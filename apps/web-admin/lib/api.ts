@@ -46,7 +46,7 @@ export async function apiGet<T>(path: string, params?: Record<string, string | n
 
 /** 서버 액션·라우트 핸들러용. */
 export async function apiSend<T>(
-  method: 'POST' | 'PATCH',
+  method: 'POST' | 'PATCH' | 'PUT',
   path: string,
   payload?: unknown,
   token?: string,

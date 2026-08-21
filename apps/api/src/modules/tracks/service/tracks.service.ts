@@ -46,6 +46,108 @@ export class TracksService {
     return track;
   }
 
+  // ── SCR-507 — 버티컬 확장의 실행 창구 ────────────────────────────────
+
+  async createIndustry(input: {
+    code: string; labelKo: string; sortOrder: number; actorUserId: string;
+  }): Promise<IndustryRow> {
+    const row = await this.repo.createIndustry(input);
+    await this.audit.record({
+      actorUserId: input.actorUserId, action: 'STATUS_CHANGE',
+      targetType: 'industry', targetId: row.id,
+      after: { code: row.code, labelKo: row.label_ko, isActive: false },
+    });
+    return row;
+  }
+
+  /**
+   * 산업·트랙 공개.
+   *
+   * 만드는 것과 여는 것을 분리한 이유는, 트랙과 요건이 갖춰지기 전에 열면
+   * 후보자가 아무것도 할 수 없는 트랙에 지원하기 때문입니다.
+   *
+   * **트랙을 열 때 요건이 하나도 없으면 막습니다.** 요건 없는 트랙은
+   * 아무나 배치 가능하다는 뜻이 되고, 그건 이 플랫폼이 파는 것의 반대입니다.
+   */
+  async setTrackActive(trackId: string, isActive: boolean, actorUserId: string): Promise<TrackRow> {
+    const before = await this.getTrack(trackId);
+    if (isActive) {
+      const reqs = await this.repo.listRequirements(trackId);
+      if (reqs.length === 0) {
+        throw new DomainError('TRACK_NO_REQUIREMENTS', {
+          trackId, trackCode: before.code,
+          reason: 'a track with no requirements would accept anyone; define them before opening it',
+        });
+      }
+    }
+    const row = await this.repo.setTrackActive(trackId, isActive);
+    await this.audit.record({
+      actorUserId, action: 'STATUS_CHANGE', targetType: 'track', targetId: trackId,
+      before: { isActive: before.is_active }, after: { isActive },
+    });
+    return row!;
+  }
+
+  async setIndustryActive(id: string, isActive: boolean, actorUserId: string): Promise<IndustryRow> {
+    const row = await this.repo.setIndustryActive(id, isActive);
+    if (!row) throw new DomainError('COMMON_NOT_FOUND', { targetType: 'industry', targetId: id });
+    await this.audit.record({
+      actorUserId, action: 'STATUS_CHANGE', targetType: 'industry', targetId: id,
+      after: { isActive },
+    });
+    return row;
+  }
+
+  async createTrack(input: {
+    industryId: string; code: string; labelKo: string;
+    labelVi: string | null; labelEn: string | null;
+    qualificationType: string; visaTypes: string[];
+    sortOrder: number; actorUserId: string;
+  }): Promise<TrackRow> {
+    const row = await this.repo.createTrack(input);
+    await this.audit.record({
+      actorUserId: input.actorUserId, action: 'STATUS_CHANGE',
+      targetType: 'track', targetId: row.id,
+      after: { code: row.code, industryId: input.industryId, isActive: false },
+    });
+    return row;
+  }
+
+  /**
+   * 요건 교체.
+   *
+   * **자격 요건을 시스템이 판정하지 않습니다** (SCR-507 notes · §6-1).
+   * 여기 등록되는 것은 '무엇을 확인해야 하는가'이고, 확인 결과는 사람이
+   * 입력합니다. 그래서 요건 행에 합격/불합격 같은 필드가 없습니다.
+   */
+  async replaceRequirements(trackId: string, rows: {
+    kind: string; refCode: string | null; isMandatory: boolean; note: string | null;
+  }[], actorUserId: string): Promise<TrackRequirementRow[]> {
+    await this.getTrack(trackId);
+    const before = await this.repo.listRequirements(trackId);
+    await this.repo.replaceRequirements(trackId, rows);
+    await this.audit.record({
+      actorUserId, action: 'STATUS_CHANGE', targetType: 'track_requirements', targetId: trackId,
+      before: { count: before.length, kinds: before.map((r) => r.kind) },
+      after: { count: rows.length, kinds: rows.map((r) => r.kind) },
+    });
+    return this.repo.listRequirements(trackId);
+  }
+
+  /** 매칭 가중치 교체. 운영 중 조정이 반드시 발생하므로 코드가 아니라 여기입니다 (§5.5). */
+  async replaceWeights(
+    trackId: string, rows: { ruleCode: string; maxPoints: number }[], actorUserId: string,
+  ): Promise<Record<string, number>> {
+    await this.getTrack(trackId);
+    const before = await this.getWeights(trackId);
+    await this.repo.replaceWeights(trackId, rows);
+    await this.audit.record({
+      actorUserId, action: 'STATUS_CHANGE', targetType: 'track_matching_weights', targetId: trackId,
+      before, after: Object.fromEntries(rows.map((r) => [r.ruleCode, r.maxPoints])),
+    });
+    return this.getWeights(trackId);
+  }
+
   /** 트랙별 요구 서류·자격·교육. 화면 로직을 분기하지 말고 이 값을 렌더한다. */
   getRequirements(trackId: string): Promise<TrackRequirementRow[]> {
     return this.repo.listRequirements(trackId);

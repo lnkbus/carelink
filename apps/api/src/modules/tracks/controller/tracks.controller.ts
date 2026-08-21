@@ -1,9 +1,11 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Put, Query } from '@nestjs/common';
 import type { Viewer } from '../../../core/scope/scope.types';
 import { Roles } from '../../iam/guard/roles.guard';
 import { CurrentViewer } from '../../iam/guard/viewer.decorator';
 import {
-  EligibilityImpactDto, IndustryDto, RecordEligibilityDto, TrackDto, TrackRequirementDto, VisaEligibilityDto,
+  ActiveDto, CreateIndustryDto, CreateTrackDto, EligibilityImpactDto, IndustryDto,
+  RecordEligibilityDto, ReplaceRequirementsDto, ReplaceWeightsDto, TrackDto,
+  TrackRequirementDto, TrackWeightsDto, VisaEligibilityDto,
 } from '../dto/tracks.dto';
 import { TracksService } from '../service/tracks.service';
 import type { TrackRow } from '../repository/tracks.repository';
@@ -35,6 +37,140 @@ export class TracksController {
   @Get('tracks/:trackId')
   async getTrack(@Param('trackId', ParseUUIDPipe) trackId: string): Promise<TrackDto> {
     return this.toTrackDto(await this.tracks.getTrack(trackId), true);
+  }
+
+  // ── SCR-507 산업 · 트랙 · 요건 관리 ──────────────────────────────────
+  //
+  // **버티컬 확장의 실행 창구입니다** (SCR-507 notes). 농업·미용·요리를
+  // 추가할 때 개발자가 아니라 운영자가 여기서 산업과 트랙을 열고 요구사항을
+  // 정의합니다. 코드 배포가 필요한 경우는 그 산업에 전용 모듈이 필요할
+  // 때뿐입니다 (§5.8).
+
+  /** 비활성 포함 전체. 운영자는 아직 열지 않은 산업도 봐야 합니다. */
+  @Get('admin/industries')
+  @Roles('ADMIN', 'SUPER_ADMIN')
+  async adminIndustries(): Promise<IndustryDto[]> {
+    const rows = await this.tracks.listIndustries(false);
+    return rows.map((r) =>
+      Object.assign(new IndustryDto(), { id: r.id, code: r.code, labelKo: r.label_ko, isActive: r.is_active }),
+    );
+  }
+
+  @Post('admin/industries')
+  @Roles('ADMIN', 'SUPER_ADMIN')
+  async createIndustry(
+    @CurrentViewer() viewer: Viewer,
+    @Body() dto: CreateIndustryDto,
+  ): Promise<IndustryDto> {
+    const row = await this.tracks.createIndustry({
+      code: dto.code, labelKo: dto.labelKo, sortOrder: dto.sortOrder ?? 0,
+      actorUserId: viewer.userId!,
+    });
+    return Object.assign(new IndustryDto(), {
+      id: row.id, code: row.code, labelKo: row.label_ko, isActive: row.is_active,
+    });
+  }
+
+  @Patch('admin/industries/:id/active')
+  @Roles('ADMIN', 'SUPER_ADMIN')
+  async setIndustryActive(
+    @CurrentViewer() viewer: Viewer,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ActiveDto,
+  ): Promise<IndustryDto> {
+    const row = await this.tracks.setIndustryActive(id, dto.isActive, viewer.userId!);
+    return Object.assign(new IndustryDto(), {
+      id: row.id, code: row.code, labelKo: row.label_ko, isActive: row.is_active,
+    });
+  }
+
+  @Get('admin/tracks')
+  @Roles('ADMIN', 'SUPER_ADMIN')
+  async adminTracks(@Query('industry') industryId?: string): Promise<TrackDto[]> {
+    const rows = await this.tracks.listTracks(industryId ?? null, false);
+    return Promise.all(rows.map((r) => this.toTrackDto(r, true)));
+  }
+
+  @Post('admin/tracks')
+  @Roles('ADMIN', 'SUPER_ADMIN')
+  async createTrack(
+    @CurrentViewer() viewer: Viewer,
+    @Body() dto: CreateTrackDto,
+  ): Promise<TrackDto> {
+    const row = await this.tracks.createTrack({
+      industryId: dto.industryId, code: dto.code, labelKo: dto.labelKo,
+      labelVi: dto.labelVi ?? null, labelEn: dto.labelEn ?? null,
+      qualificationType: dto.qualificationType, visaTypes: dto.visaTypes ?? [],
+      sortOrder: dto.sortOrder ?? 0, actorUserId: viewer.userId!,
+    });
+    return this.toTrackDto(row, true);
+  }
+
+  /**
+   * 트랙 공개·비공개.
+   *
+   * 요건이 하나도 없는 트랙은 열리지 않습니다. 요건 없는 트랙은 아무나
+   * 배치 가능하다는 뜻이 되고, 그건 이 플랫폼이 파는 것의 반대입니다.
+   */
+  @Patch('admin/tracks/:trackId/active')
+  @Roles('ADMIN', 'SUPER_ADMIN')
+  async setTrackActive(
+    @CurrentViewer() viewer: Viewer,
+    @Param('trackId', ParseUUIDPipe) trackId: string,
+    @Body() dto: ActiveDto,
+  ): Promise<TrackDto> {
+    return this.toTrackDto(
+      await this.tracks.setTrackActive(trackId, dto.isActive, viewer.userId!), true,
+    );
+  }
+
+  /**
+   * 요건 교체.
+   *
+   * **자격 요건을 시스템이 판정하지 않습니다** (SCR-507 notes · §6-1).
+   * 여기 등록되는 것은 '무엇을 확인해야 하는가'이고, 확인 결과는 사람이
+   * 입력합니다.
+   */
+  @Put('admin/tracks/:trackId/requirements')
+  @Roles('ADMIN', 'SUPER_ADMIN')
+  async replaceRequirements(
+    @CurrentViewer() viewer: Viewer,
+    @Param('trackId', ParseUUIDPipe) trackId: string,
+    @Body() dto: ReplaceRequirementsDto,
+  ): Promise<TrackRequirementDto[]> {
+    const rows = await this.tracks.replaceRequirements(
+      trackId,
+      dto.requirements.map((r) => ({
+        kind: r.kind, refCode: r.refCode ?? null,
+        isMandatory: r.mandatory ?? true, note: r.note ?? null,
+      })),
+      viewer.userId!,
+    );
+    return rows.map((r) => Object.assign(new TrackRequirementDto(), {
+      kind: r.kind, refCode: r.ref_code, mandatory: r.is_mandatory, note: r.note,
+    }));
+  }
+
+  @Get('admin/tracks/:trackId/weights')
+  @Roles('ADMIN', 'SUPER_ADMIN')
+  async weights(@Param('trackId', ParseUUIDPipe) trackId: string): Promise<TrackWeightsDto> {
+    return Object.assign(new TrackWeightsDto(), {
+      trackId, weights: await this.tracks.getWeights(trackId),
+    });
+  }
+
+  /** 매칭 가중치. 점수를 코드에 박지 않는 이유가 이 화면입니다 (§5.5). */
+  @Put('admin/tracks/:trackId/weights')
+  @Roles('ADMIN', 'SUPER_ADMIN')
+  async replaceWeights(
+    @CurrentViewer() viewer: Viewer,
+    @Param('trackId', ParseUUIDPipe) trackId: string,
+    @Body() dto: ReplaceWeightsDto,
+  ): Promise<TrackWeightsDto> {
+    const weights = await this.tracks.replaceWeights(
+      trackId, dto.weights.map((w) => ({ ruleCode: w.ruleCode, maxPoints: w.maxPoints })), viewer.userId!,
+    );
+    return Object.assign(new TrackWeightsDto(), { trackId, weights });
   }
 
   /** 트랙 × 비자 매트릭스 원본. 운영자 전용 (SCR-507). */

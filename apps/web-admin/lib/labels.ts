@@ -97,8 +97,12 @@ const ERROR_DICT: Record<string, string> = {
   COMMON_INVALID_TRANSITION: '허용되지 않는 상태 변경입니다.',
   RECRUITING_ATTRIBUTION_LOCKED: '유입 출처가 이미 기록되어 있습니다. 첫 접점이 우선합니다.',
   IAM_TOKEN_INVALID: '세션이 만료되었습니다. 다시 로그인하세요.',
+  TRACK_NO_REQUIREMENTS: '요건이 하나도 없는 트랙은 열 수 없습니다. 무엇을 확인할지 먼저 정의하세요.',
+  COMMON_VALIDATION_FAILED: '입력값을 다시 확인하세요.',
+  NETWORK: '서버에 연결하지 못했습니다. 잠시 후 다시 시도하세요.',
 };
 
-export function errorLabel(code: string): string {
+export function errorLabel(code: string | null): string {
+  if (!code) return ERROR_DICT.NETWORK;
   return ERROR_DICT[code] ?? code;
 }
