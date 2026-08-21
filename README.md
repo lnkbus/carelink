@@ -27,9 +27,9 @@
 | 10.4 | `quality` | SCR-509 | ✅ 클리어런스 6종 게이트 · 업무범위 스캔 |
 | 10.5 | `engagement` | SCR-508 | ✅ 모델 3종 골격 · 컴플라이언스 게이트 (급여 계산은 차단) |
 | — | `packages/ui` | — | ✅ 토큰 + 신규 컴포넌트 5종 (DESK) |
-| — | `web-admin` | SCR-501·502·503·504·507·508·509·510·511 | ✅ Next.js 14 · 9화면 실데이터 렌더 확인 |
-| — | `web-org` | SCR-201·202·203·204·205 | ✅ Next.js 14 · 5화면 · 개인정보 게이트 3조건 검증 |
-| — | `mobile-candidate` | SCR-001·002·101~110 | ✅ Flutter 3.24 · ko/vi/ru/en · 브라우저에서 로그인→홈 실동작 확인 |
+| — | `apps/web` `/admin` | SCR-501·502·503·504·507·508·509·510·511 | ✅ Next.js 14 · 9화면 실데이터 렌더 확인 |
+| — | `apps/web` `/org` | SCR-201·202·203·204·205 | ✅ Next.js 14 · 5화면 · 개인정보 게이트 3조건 검증 |
+| — | `apps/mobile` 후보자 셸 | SCR-001·002·101~110 | ✅ Flutter 3.24 · ko/vi/ru/en · 브라우저에서 로그인→홈 실동작 확인 |
 | — | Docker | — | ✅ `docker compose up -d --build` 한 번에 전체 스택 |
 | 11 | `care` (V2) | SCR-303 · 304 · 505 | ✅ 요청·3단계 배정·업무범위 게이트·SLA 잡 |
 | 12 | `care` (V2) | SCR-401~404 · 306 | ✅ 병실 QR 체크인 · append-only 근무 기록(DB 트리거) |
@@ -37,11 +37,12 @@
 | 12.5 | `engagement` (V2) | — | ✅ `service_logs` → `work_records` 집계 (24시간 상주는 U5로 차단) |
 | — | `iam` · `ops` | SCR-110 | ✅ 탈퇴 요청·철회 + `data-retention-purge` (원본만 파기, 결과값 보존) |
 | — | `care` | — | ✅ `shift-24h-review` 리포트 + 직접고용 24시간 배정 차단 (§5.12) |
-| — | `web-care` | SCR-301~307 | ✅ Next.js 14 · 보호자 반응형 웹 7화면 · 브라우저에서 신청→매칭→제안 실동작 확인 |
-| — | `mobile-caregiver` | SCR-401~404 | ✅ Flutter 3.24 · ko/vi/ru/en · 브라우저에서 제안→수락→QR 체크인 실동작 확인 |
-| — | `packages/field_ui` | — | ✅ FIELD 토큰·API 클라이언트·위젯 공용화 (후보자 앱 · 간병사 앱) |
+| — | `apps/mobile` 보호자 셸 | SCR-301~307 | ✅ Flutter 3.24 · 8화면 · 실 API로 신청→매칭→제안 확인 |
+| — | `apps/mobile` 간병사 셸 | SCR-401~404 | ✅ Flutter 3.24 · ko/vi/ru/en · 브라우저에서 제안→수락→QR 체크인 실동작 확인 |
+| — | `packages/field_ui` | — | ✅ FIELD 토큰·API 클라이언트·위젯 공용화 |
+| — | 통합 | — | ✅ 웹 3개 → `apps/web` 한 벌 · 앱 2개 + 보호자 웹 → `apps/mobile` 한 벌 (CLAUDE.md §4.1) |
 
-단위 테스트 **246건** 통과 (API 212 · 후보자 앱 23 · 간병사 앱 11).
+단위 테스트 **270건** 통과 (API 228 · 앱 42).
 실환경 스모크 **29건** 통과 — `pnpm smoke` (게이트가 살아 있는지만 봅니다). 상태머신 전이는 전부 테스트가 있습니다.
 
 **개인정보 게이트 실측** (`GET /candidates/{id}`, 같은 후보자·다른 뷰어):
@@ -278,9 +279,9 @@ MVP 초기 공급의 주력)는 절차가 없고, `REQUIRES_CONVERSION`(D-10→E
 ```
 ✅ 1~10.5  스키마 → iam → talent → org → matching → ops
            → recruiting → quality → engagement           V1 백엔드 완료
-✅         packages/ui + web-admin 8화면                 운영 콘솔 완료
-✅         web-org 5화면                                 기관 웹 완료
-✅         mobile-candidate 12화면 · 4개 언어             후보자 앱 완료
+✅         packages/ui + apps/web /admin 11화면          운영 콘솔 완료
+✅         apps/web /org 5화면                           기관 웹 완료
+✅         apps/mobile 후보자 셸 12화면 · 4개 언어        후보자 앱 완료
 ✅         docker compose                                V1 전체 완료
 ──────────────────────────────────────────────────────────
 1. 실기기 검증 — 터치 타깃·글꼴 확대·Keystore (docs/14 §3-3)
@@ -312,8 +313,9 @@ MVP 초기 공급의 주력)는 절차가 없고, `REQUIRES_CONVERSION`(D-10→E
 
 ```bash
 docker compose up -d --build
-#  :3000  API          :3100  운영 콘솔
-#  :3200  기관 웹       :3300  후보자 앱(웹 빌드)
+#  :3000  API
+#  :3100  웹    — 로그인하면 운영자는 /admin, 기관은 /org
+#  :3300  앱    — 후보자 · 간병사 · 보호자 (--profile mobile)
 ```
 
 **개별 실행**
@@ -321,9 +323,8 @@ docker compose up -d --build
 ```bash
 pnpm db:migrate && pnpm db:seed
 pnpm api:dev        # :3000/api/v1
-pnpm admin:dev      # :3100  운영 콘솔
-pnpm org:dev        # :3200  기관 웹
-cd apps/mobile-candidate && flutter run -d chrome \
+pnpm web:dev        # :3100  운영 콘솔(/admin) + 기관 웹(/org)
+cd apps/mobile && flutter run -d chrome \
   --dart-define=CARELINK_API_URL=http://localhost:3000/api/v1
 ```
 

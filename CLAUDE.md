@@ -76,16 +76,46 @@ apps/api/src/modules/{iam,talent,org,matching,care,ops}/
        entity/
        state/        상태머신 정의
 
-apps/web-org/        Organization Web  (V1)
-apps/web-admin/      Admin Console     (V1)
-apps/web-care/       Patient 반응형 웹 (V2)
-apps/mobile-candidate/  Flutter (V1)
-apps/mobile-caregiver/  Flutter (V2)
+apps/web/            DESK 웹 한 벌 — Next.js  (:3100)
+  └─ app/
+       login/          공용 로그인. 역할이 랜딩을 정합니다
+       admin/          Admin Console      (V1)
+       org/            Organization Web   (V1)
+       no-access/      역할이 없는 계정 안내
+     middleware.ts     구역 문지기 (/admin은 운영자, /org는 기관)
+
+apps/mobile/         FIELD 앱 한 벌 — Flutter (:3300 웹 빌드)
+  └─ lib/
+       shells/         역할별 하단 탭 — candidate · caregiver · guardian
+       screens/
+         candidate/    SCR-101~110  (V1)
+         caregiver/    SCR-401~404  (V2)
+         guardian/     SCR-301~307  (V2)
+       core/           app_state(세션·로케일·활성 역할) · i18n
 
 packages/shared-types/  OpenAPI 생성 타입
-packages/ui/            공용 디자인 시스템
+packages/ui/            DESK 디자인 시스템 (웹)
+packages/field_ui/      FIELD 디자인 시스템 (앱)
 infra/migrations/
 ```
+
+### 4.1 웹은 하나, 앱도 하나입니다
+
+**배포 단위를 역할별로 쪼개지 마세요.** 종전에는 웹 3개(운영·기관·보호자) ·
+앱 2개(후보자·간병사)였고, 그것이 사용자에게는 이렇게 보였습니다:
+
+- 담당자가 자기 주소를 외워야 했고, 잘못 들어가면 로그인 화면에서 막혔습니다.
+  계정은 멀쩡한데 문이 틀린 것이라 화면이 이유를 말해 줄 방법이 없었습니다.
+- 한 계정이 역할을 여러 개 가지면 앱을 두 개 설치해야 했습니다. 요양보호사
+  자격을 딴 후보자가 간병사로 일을 시작하는 경로가 실제로 있고 (docs/08),
+  그때 다시 가입하는 사람이 생깁니다 — 계정이 갈라지면 경력도 서류도
+  이어지지 않습니다.
+
+역할은 **배포가 아니라 라우팅**으로 가릅니다. 웹은 `middleware.ts`가,
+앱은 `AppState.activeRole`이 정합니다.
+
+DESK(웹)와 FIELD(앱)를 나누는 경계는 유지합니다 — 마우스와 표를 쓰는 화면과
+장갑 낀 손으로 몇 초 안에 쓰는 화면은 글꼴 크기부터 다릅니다 (docs/18).
 
 ---
 

@@ -397,14 +397,17 @@ carelink/
 │  ├─ api/                      NestJS
 │  │  └─ src/modules/{iam,talent,org,matching,care,ops}/
 │  │     └─ <module>/{controller,service,repository,dto,entity,state}
-│  ├─ web-org/                  Next.js — Organization Web
-│  ├─ web-admin/                Next.js — Admin Console
-│  ├─ web-care/                 Next.js — Patient 반응형 웹 (V2)
-│  ├─ mobile-candidate/         Flutter
-│  └─ mobile-caregiver/         Flutter (V2)
+│  ├─ web/                      Next.js — DESK 한 벌 (:3100)
+│  │    ├─ app/admin/             Admin Console
+│  │    ├─ app/org/               Organization Web
+│  │    └─ middleware.ts          역할이 구역을 정함
+│  └─ mobile/                   Flutter — FIELD 한 벌 (:3300 웹 빌드)
+│       └─ lib/shells/           역할이 셸을 정함
+│            candidate · caregiver · guardian
 ├─ packages/
 │  ├─ shared-types/             API 타입 (OpenAPI 생성)
-│  └─ ui/                       공용 디자인 시스템
+│  ├─ ui/                       DESK 디자인 시스템 (웹)
+│  └─ field_ui/                 FIELD 디자인 시스템 (앱)
 └─ infra/
    ├─ docker-compose.yml
    └─ migrations/

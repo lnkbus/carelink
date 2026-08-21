@@ -63,17 +63,15 @@ fi
 
 say "확인"
 cat <<TXT
-  http://localhost:3100   운영 콘솔
-  http://localhost:3200   기관 웹
-  http://localhost:3400   보호자 웹
+  http://localhost:3100   웹 — 로그인하면 역할이 갈라 줍니다
+                          운영자 → /admin · 기관 담당자 → /org
 TXT
 if [ -n "$MOBILE" ]; then
   cat <<TXT
-  http://localhost:3300   후보자 앱 (웹 빌드)
-  http://localhost:3500   간병사 앱 (웹 빌드)
+  http://localhost:3300   앱 (웹 빌드) — 후보자 · 간병사 · 보호자
 TXT
 else
-  echo "  (후보자·간병사 앱은 --mobile 로 함께 띄웁니다)"
+  echo "  (앱은 --mobile 로 함께 띄웁니다)"
 fi
 cat <<'TXT'
 
