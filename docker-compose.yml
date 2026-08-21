@@ -6,9 +6,9 @@
 #   :3000  API            (/api/v1)
 #   :3100  웹              운영 콘솔 + 기관 웹. 로그인하면 역할이 갈라 줍니다 —
 #                          운영자는 /admin, 기관 담당자는 /org.
-#   :3300  후보자 앱(웹)    SCR-101~110 — 검증용. 실배포는 스토어입니다.
-#   :3400  보호자 웹        SCR-301~307
-#   :3500  간병사 앱(웹)    SCR-401~404 — 검증용. 실배포는 스토어입니다.
+#   :3300  앱(웹 빌드)     후보자 · 간병사 · 보호자. 역할이 셸을 정합니다.
+#                          SCR-101~110 · 301~307 · 401~404
+#                          검증용입니다 — 실배포는 스토어입니다.
 #   :5432  PostgreSQL 16
 #   :6379  Redis 7
 #
@@ -90,7 +90,7 @@ services:
       AUTH_EXPOSE_OTP_CODE: ${AUTH_EXPOSE_OTP_CODE:-true}
       # 브라우저에서 API를 직접 부르는 출처. 와일드카드를 쓰지 않습니다 —
       # 이 API는 후보자의 실명·연락처·체류자격을 다룹니다.
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3100,http://localhost:3300,http://localhost:3400,http://localhost:3500}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3100,http://localhost:3300}
     ports: ['3000:3000']
 
   # 웹 한 벌 — 운영 콘솔(/admin)과 기관 웹(/org)이 같은 서비스입니다.
@@ -112,22 +112,19 @@ services:
       NEXT_PUBLIC_API_URL: http://localhost:3000/api/v1
     ports: ['3100:3100']
 
-  # 보호자 반응형 웹 (SCR-301~306). 별도 앱을 만들지 않습니다 — 보호자는
-  # 설치 의사가 낮고 대개 병원에서 링크로 들어옵니다 (SCR-301 notes).
-  web-care:
-    build:
-      context: .
-      dockerfile: apps/web-care/Dockerfile
-    depends_on:
-      api: { condition: service_healthy }
-    environment:
-      CARELINK_API_URL: http://api:3000/api/v1
-      NEXT_PUBLIC_API_URL: http://localhost:3000/api/v1
-    ports: ['3400:3400']
-
-  # 후보자 앱 — 웹 빌드. 화면 흐름·번역·API 연동 확인용입니다.
-  # 터치 타깃과 글꼴 크기는 실기기에서 최종 확인하세요 (docs/14 §3).
-  mobile-web:
+  # FIELD 앱 한 벌 — 후보자 · 간병사 · 보호자. 웹 빌드입니다.
+  #
+  # 셋으로 나눠 두었을 때는 한 계정이 역할을 여러 개 가지면 앱을 두 개
+  # 설치해야 했고, 실제로는 다시 가입하는 사람이 생겼습니다. 계정이 갈라지면
+  # 경력도 서류도 이어지지 않습니다. 이제 앱은 하나이고 역할이 셸을 정합니다.
+  #
+  # 보호자 화면은 종전에 별도 Next.js 웹(:3400)이었습니다. '보호자는 설치
+  # 의사가 낮고 링크로 들어온다'는 이유였는데 (SCR-301 notes), 이 웹 빌드가
+  # 그 경로를 그대로 대신합니다.
+  #
+  # 화면 흐름·번역·API 연동 확인용입니다. 터치 타깃과 글꼴 크기는
+  # 실기기에서 최종 확인하세요 (docs/14 §3).
+  app:
     # Flutter 이미지가 2GB대라 첫 빌드가 깁니다. 기본에서 빼 두었습니다.
     #   docker compose --profile mobile up -d --build
     profiles: ['mobile']
@@ -135,25 +132,12 @@ services:
       # 공용 FIELD 패키지(packages/field_ui)가 path 의존이라 컨텍스트가
       # 리포 루트여야 합니다. 앱 디렉터리만 주면 pub get이 실패합니다.
       context: .
-      dockerfile: apps/mobile-candidate/Dockerfile
+      dockerfile: apps/mobile/Dockerfile
       args:
         CARELINK_API_URL: http://localhost:3000/api/v1
     depends_on:
       api: { condition: service_healthy }
     ports: ['3300:80']
-
-  # 간병사 앱 — 웹 빌드 (SCR-401~404). 검증용입니다.
-  # 터치 타깃과 글꼴 크기는 실기기에서 최종 확인하세요 (docs/14 §3).
-  caregiver-web:
-    profiles: ['mobile']
-    build:
-      context: .
-      dockerfile: apps/mobile-caregiver/Dockerfile
-      args:
-        CARELINK_API_URL: http://localhost:3000/api/v1
-    depends_on:
-      api: { condition: service_healthy }
-    ports: ['3500:80']
 
   # 시드·스모크 실행용. 맥에 psql·redis-cli가 없어도 됩니다.
   #   docker compose run --rm tools demo
