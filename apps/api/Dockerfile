@@ -4,6 +4,13 @@ WORKDIR /repo
 
 RUN corepack enable
 
+# pnpm 10은 --prod로 전환할 때 node_modules를 지워도 되는지 **묻습니다.**
+# 도커 빌드에는 TTY가 없어 그 물음이 곧바로 실패가 됩니다
+# (ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY).
+#
+# CI=true가 공식 해법입니다. 비대화 모드로 진행합니다.
+ENV CI=true
+
 # 워크스페이스 매니페스트만 먼저 복사해 의존성 레이어를 캐시합니다.
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/api/package.json apps/api/
@@ -12,7 +19,8 @@ RUN pnpm install --frozen-lockfile --filter @carelink/api...
 COPY apps/api apps/api
 RUN pnpm --filter @carelink/api exec tsc -p tsconfig.json
 
-# 실행에 필요한 것만 남깁니다.
+# 실행에 필요한 것만 남깁니다. devDependencies(jest·typescript 등)가
+# 런타임 이미지에 들어가면 크기도 크고 공격 표면도 넓어집니다.
 RUN pnpm install --frozen-lockfile --prod --filter @carelink/api...
 
 # ── runtime ─────────────────────────────────────────────────────────────────
