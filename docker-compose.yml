@@ -4,8 +4,8 @@
 #
 # 뜨는 것:
 #   :3000  API            (/api/v1)
-#   :3100  운영 콘솔       SCR-501·502·503·504·507·508·509·510·511
-#   :3200  기관 웹         SCR-201·202·203·204·205
+#   :3100  웹              운영 콘솔 + 기관 웹. 로그인하면 역할이 갈라 줍니다 —
+#                          운영자는 /admin, 기관 담당자는 /org.
 #   :3300  후보자 앱(웹)    SCR-101~110 — 검증용. 실배포는 스토어입니다.
 #   :3400  보호자 웹        SCR-301~307
 #   :3500  간병사 앱(웹)    SCR-401~404 — 검증용. 실배포는 스토어입니다.
@@ -90,13 +90,18 @@ services:
       AUTH_EXPOSE_OTP_CODE: ${AUTH_EXPOSE_OTP_CODE:-true}
       # 브라우저에서 API를 직접 부르는 출처. 와일드카드를 쓰지 않습니다 —
       # 이 API는 후보자의 실명·연락처·체류자격을 다룹니다.
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3100,http://localhost:3200,http://localhost:3300,http://localhost:3400,http://localhost:3500}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3100,http://localhost:3300,http://localhost:3400,http://localhost:3500}
     ports: ['3000:3000']
 
-  web-admin:
+  # 웹 한 벌 — 운영 콘솔(/admin)과 기관 웹(/org)이 같은 서비스입니다.
+  #
+  # 나눠 두었을 때는 담당자가 주소를 외워야 했고, 잘못 들어간 사람은 로그인
+  # 화면에서 막혔습니다 — 계정은 멀쩡한데 문이 틀린 것이라 원인을 알 수
+  # 없었습니다. 이제 로그인 한 번에 역할이 목적지를 정합니다.
+  web:
     build:
       context: .
-      dockerfile: apps/web-admin/Dockerfile
+      dockerfile: apps/web/Dockerfile
     depends_on:
       api: { condition: service_healthy }
     environment:
@@ -106,17 +111,6 @@ services:
       # 둘을 같은 값으로 두면 한쪽이 반드시 실패합니다.
       NEXT_PUBLIC_API_URL: http://localhost:3000/api/v1
     ports: ['3100:3100']
-
-  web-org:
-    build:
-      context: .
-      dockerfile: apps/web-org/Dockerfile
-    depends_on:
-      api: { condition: service_healthy }
-    environment:
-      CARELINK_API_URL: http://api:3000/api/v1
-      NEXT_PUBLIC_API_URL: http://localhost:3000/api/v1
-    ports: ['3200:3200']
 
   # 보호자 반응형 웹 (SCR-301~306). 별도 앱을 만들지 않습니다 — 보호자는
   # 설치 의사가 낮고 대개 병원에서 링크로 들어옵니다 (SCR-301 notes).
