@@ -1057,8 +1057,29 @@ CREATE TABLE engagements (
   ended_on               DATE,
   end_reason             VARCHAR(120),
   previous_engagement_id UUID REFERENCES engagements(id),  -- 모델 전환 시 연결
+
+  -- ── 근로자파견 (2026-08-21 U1·U2 확정) ────────────────────────────────
+  -- 노무사 검토 결과 해당 직군은 파견 허용 업무이고 파견사업 허가를 보유합니다.
+  -- CARELINK가 파견사업주, 기관이 사용사업주입니다.
+  --
+  -- 파견법 §6은 동일 사용사업주에게 동일 근로자를 **2년 초과** 파견하지
+  -- 못하게 합니다. 초과하면 사용사업주(병원)에게 **직접고용 의무**가 발생해
+  -- 계약 관계가 통째로 뒤집힙니다. 그래서 개시일을 별도 컬럼으로 둡니다 —
+  -- started_on은 배치 시작일이고, 파견 기간은 같은 인력×기관 조합의 **누적**이라
+  -- 배치 한 건의 기간과 다릅니다.
+  is_dispatch            BOOLEAN NOT NULL DEFAULT false,
+  dispatch_started_on    DATE,
+  -- 파견사업 허가번호. 파견 계약서에 기재 의무가 있습니다.
+  dispatch_permit_no     VARCHAR(64),
+  CONSTRAINT engagements_dispatch_needs_start
+    CHECK (NOT is_dispatch OR dispatch_started_on IS NOT NULL),
+
   created_at             TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+-- 2년 제한 조회는 인력×기관 조합으로 들어옵니다.
+CREATE INDEX idx_engagements_dispatch
+  ON engagements(worker_user_id, organization_id, dispatch_started_on)
+  WHERE is_dispatch;
 CREATE INDEX idx_engagements_worker ON engagements(worker_user_id, status);
 CREATE INDEX idx_engagements_org ON engagements(organization_id, status);
 

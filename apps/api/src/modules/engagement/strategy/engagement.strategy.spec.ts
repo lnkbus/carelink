@@ -19,7 +19,11 @@ describe('EngagementStrategy — 3종 골격 (docs/04 §3.4)', () => {
     } catch (e) {
       const err = e as DomainError;
       expect(err.code).toBe('ENGAGEMENT_PAYOUT_UNAVAILABLE');
-      expect(err.details?.blockedBy).toEqual(expect.arrayContaining([expect.stringContaining('U1')]));
+      // U1·U2는 2026-08-21 해소됐다 (파견으로 확정). U5 하나가 남아 있다.
+      expect(err.details?.blockedBy).toEqual(expect.arrayContaining([expect.stringContaining('U5')]));
+      expect(err.details?.resolved).toEqual(
+        expect.arrayContaining([expect.stringContaining('U1'), expect.stringContaining('U2')]),
+      );
     }
   });
 

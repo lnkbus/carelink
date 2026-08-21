@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { EngagementController } from './controller/engagement.controller';
+import { DispatchJobs } from './jobs/dispatch.jobs';
 import { EngagementRepository } from './repository/engagement.repository';
 import { EngagementService } from './service/engagement.service';
 import { EngagementStrategyFactory } from './strategy/engagement-strategy.factory';
@@ -12,7 +13,7 @@ import { EngagementStrategyFactory } from './strategy/engagement-strategy.factor
  */
 @Module({
   controllers: [EngagementController],
-  providers: [EngagementRepository, EngagementStrategyFactory, EngagementService],
+  providers: [EngagementRepository, EngagementStrategyFactory, EngagementService, DispatchJobs],
   exports: [EngagementService, EngagementStrategyFactory],
 })
 export class EngagementModule {}

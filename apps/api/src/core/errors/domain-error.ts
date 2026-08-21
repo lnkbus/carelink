@@ -56,6 +56,8 @@ export const DOMAIN_ERRORS = {
   // ── engagement ─────────────────────────────────────────────────────────
   ENGAGEMENT_COMPLIANCE_INCOMPLETE: { status: HttpStatus.FORBIDDEN, message: 'Compliance checks are not all PASS' },
   ENGAGEMENT_MODEL_IMMUTABLE: { status: HttpStatus.CONFLICT,     message: 'Employment model cannot be updated; end this engagement and create a new one' },
+  ENGAGEMENT_DISPATCH_LIMIT: { status: HttpStatus.FORBIDDEN, message: 'Dispatch to this organization would exceed the 2-year statutory limit' },
+  ENGAGEMENT_DISPATCH_PERMIT_MISSING: { status: HttpStatus.FORBIDDEN, message: 'A dispatch permit number is required for dispatch engagements' },
   ENGAGEMENT_PAYOUT_UNAVAILABLE:{ status: HttpStatus.NOT_IMPLEMENTED, message: 'Payout calculation is blocked pending labour-law review (docs/12 U1/U2)' },
 
   // ── 공통 ───────────────────────────────────────────────────────────────

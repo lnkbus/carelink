@@ -31,6 +31,15 @@ export const JOBS = {
   TICKET_SLA: { name: 'ticket-sla', cron: '*/10 * * * *', slaHours: 4 },
   /** 매일 — H24_LIVE_IN 배정 현황 리포트 (docs/07 §7). */
   SHIFT_24H_REVIEW: { name: 'shift-24h-review', cron: '0 8 * * *' },
+
+  /**
+   * 파견 2년 한도 사전 경고 (파견법 §6 · 2026-08-21 U1·U2 확정).
+   *
+   * 한도를 넘기면 사용사업주에게 직접고용 의무가 발생해 계약 관계가 뒤집힙니다.
+   * 그때는 이미 사람이 현장에 있으므로 사후 대응이 불가능합니다.
+   * 대체 인력 확보에 시간이 걸려 90일/30일 2단계로 돌립니다.
+   */
+  DISPATCH_LIMIT_WARNING: { name: 'dispatch-limit-warning', cron: '50 9 * * *', warnDays: [90, 30] },
 } as const;
 
 export type JobName = (typeof JOBS)[keyof typeof JOBS]['name'];

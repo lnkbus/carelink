@@ -1,4 +1,4 @@
-import { IsDateString, IsIn, IsOptional, IsString, IsUUID, Length } from 'class-validator';
+import { IsBoolean, IsDateString, IsIn, IsOptional, IsString, IsUUID, Length } from 'class-validator';
 import { Scope } from '../../../core/scope/scope.decorator';
 
 const MODELS = ['DIRECT_EMPLOYMENT', 'DELEGATION', 'BROKERAGE'] as const;
@@ -14,6 +14,16 @@ export class CreateEngagementDto {
   /** 고용 모델은 배치 단위다. 전역 설정이 아니다 (§5.7). */
   @IsIn(MODELS) model: (typeof MODELS)[number];
   @IsOptional() @IsDateString() startedOn?: string;
+  /**
+   * 근로자파견 여부 (2026-08-21 U1·U2 확정).
+   *
+   * 참이면 파견법 §6의 2년 제한과 §7의 허가번호 기재 의무가 걸립니다.
+   * 서비스가 생성 시점에 누적 일수를 확인하고 초과분을 막습니다.
+   */
+  @IsOptional() @IsBoolean() isDispatch?: boolean;
+  @IsOptional() @IsDateString() dispatchStartedOn?: string;
+  /** 근로자파견사업 허가번호. 파견 건은 이것 없이 만들 수 없습니다. */
+  @IsOptional() @IsString() @Length(1, 64) dispatchPermitNo?: string;
 }
 
 export class EngagementStatusDto {
@@ -54,6 +64,14 @@ export class EngagementDto {
   @Scope('admin', 'org') displayCode: string | null;
   /** 인력의 user_id는 운영자만 본다. */
   @Scope('admin') workerUserId: string;
+
+  // 파견 정보. 기관도 봐야 합니다 — 2년 한도는 사용사업주의 의무이기도 합니다.
+  @Scope('admin', 'org') isDispatch: boolean;
+  @Scope('admin', 'org') dispatchStartedOn: string | null;
+  /** 남은 파견 가능 일수. 화면은 D-day로 보여줍니다. */
+  @Scope('admin', 'org') dispatchDaysLeft: number | null;
+  /** 허가번호는 운영자만. 기관 화면에 노출할 이유가 없습니다. */
+  @Scope('admin') dispatchPermitNo: string | null;
 }
 
 export class ModelSpecDto {
@@ -62,4 +80,18 @@ export class ModelSpecDto {
   @Scope('admin', 'org') complianceChecks: { code: string; labelKey: string; blocking: boolean }[];
   @Scope('admin') taxTreatment: string;
   @Scope('admin') revenueRecognition: string;
+}
+
+/**
+ * 파견 2년 한도 현황 (파견법 §6).
+ *
+ * 기관도 봐야 합니다 — 한도를 넘기면 직접고용 의무가 생기는 쪽이 기관입니다.
+ */
+export class DispatchStatusDto {
+  @Scope('admin', 'org') isDispatch: boolean;
+  @Scope('admin', 'org') daysUsed: number;
+  @Scope('admin', 'org') daysLeft: number;
+  @Scope('admin', 'org') limitDays: number;
+  /** 참이면 이미 넘겼습니다. 경고가 아니라 사고입니다. */
+  @Scope('admin', 'org') exceeded: boolean;
 }

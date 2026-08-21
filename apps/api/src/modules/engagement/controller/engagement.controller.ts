@@ -4,7 +4,7 @@ import { Roles } from '../../iam/guard/roles.guard';
 import { CurrentViewer } from '../../iam/guard/viewer.decorator';
 import {
   ComplianceCheckDto, ComplianceCheckInputDto, CreateEngagementDto, EngagementDto,
-  EngagementStatusDto, ModelSpecDto, SwitchModelDto,
+  DispatchStatusDto, EngagementStatusDto, ModelSpecDto, SwitchModelDto,
 } from '../dto/engagement.dto';
 import type { ComplianceCheckRow, EngagementRow } from '../repository/engagement.repository';
 import { EngagementService } from '../service/engagement.service';
@@ -36,6 +36,25 @@ export class EngagementController {
     return toDto(await this.engagements.getById(id));
   }
 
+  /**
+   * GET /api/v1/engagements/{id}/dispatch — 파견 2년 한도 잔여.
+   *
+   * 배치 한 건의 기간이 아니라 **같은 인력×기관의 누적**입니다 (파견법 §6).
+   * 종료·재배치를 반복해도 누적은 이어집니다.
+   */
+  @Get(':id/dispatch')
+  async dispatch(@Param('id', ParseUUIDPipe) id: string): Promise<DispatchStatusDto> {
+    const e = await this.engagements.getById(id);
+    const r = await this.engagements.dispatchRemaining(e.worker_user_id, e.organization_id);
+    return Object.assign(new DispatchStatusDto(), {
+      isDispatch: e.is_dispatch,
+      daysUsed: r.used,
+      daysLeft: r.remaining,
+      limitDays: r.limit,
+      exceeded: r.remaining <= 0,
+    });
+  }
+
   @Get(':id/compliance')
   async checks(@Param('id', ParseUUIDPipe) id: string): Promise<ComplianceCheckDto[]> {
     return (await this.engagements.listChecks(id)).map(toCheckDto);
@@ -48,6 +67,9 @@ export class EngagementController {
       workerUserId: dto.workerUserId, candidateId: dto.candidateId ?? null,
       organizationId: dto.organizationId, trackId: dto.trackId, jobId: dto.jobId ?? null,
       model: dto.model, startedOn: dto.startedOn ?? null,
+      isDispatch: dto.isDispatch ?? false,
+      dispatchStartedOn: dto.dispatchStartedOn ?? null,
+      dispatchPermitNo: dto.dispatchPermitNo ?? null,
       previousEngagementId: null, actorUserId: viewer.userId!,
     });
     return toDto(row);
@@ -97,6 +119,12 @@ function toDto(e: EngagementRow): EngagementDto {
     startedOn: e.started_on ? e.started_on.toISOString().slice(0, 10) : null,
     endedOn: e.ended_on ? e.ended_on.toISOString().slice(0, 10) : null,
     endReason: e.end_reason, previousEngagementId: e.previous_engagement_id,
+    isDispatch: e.is_dispatch,
+    dispatchStartedOn: e.dispatch_started_on ? e.dispatch_started_on.toISOString().slice(0, 10) : null,
+    dispatchPermitNo: e.dispatch_permit_no,
+    // 목록에서 인력×기관 누적을 건마다 조회하면 N+1이 됩니다.
+    // 잔여 일수는 /engagements/{id}/dispatch 에서 따로 봅니다.
+    dispatchDaysLeft: null,
     displayCode: e.display_code ?? null, workerUserId: e.worker_user_id,
   });
 }

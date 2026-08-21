@@ -4,16 +4,27 @@ import type {
 } from './engagement.strategy';
 
 /**
- * 직접고용. CARELINK가 사용자(使用者)가 되어 근로계약을 맺는다.
+ * 직접고용 + 근로자파견. CARELINK가 사용자(使用者)로서 근로계약을 맺고,
+ * 파견사업주로서 기관(사용사업주)에 파견한다.
  *
- * 급여 계산 로직은 **구현하지 않는다.** docs/12 §3의 U1·U2가 막고 있다:
- *   U1 기관 현장 배치가 도급인가 파견인가 — 지휘·명령권 설계
- *   U2 해당 직군의 파견 허용 여부 / 근로자공급사업 허가 필요 여부
+ * ── 2026-08-21 U1·U2 확정 ────────────────────────────────────────────────
+ * 노무사 검토 결과 해당 직군은 **파견 허용 업무**이고 근로자파견사업 허가를
+ * 보유한다. 따라서 지휘·명령권은 사용사업주에 있고, 도급으로 위장할 필요가 없다.
  *
- * 여기에 U5(24시간 간병의 근로시간 규정 적용 방식)까지 걸린다.
- * 지금 임의로 가정해 구현하면 나중에 전면 재작업이 발생하고, 그 사이에 계산된
- * 급여는 전부 다시 정산해야 한다. 인터페이스와 스키마까지만 만들고 대기한다
- * (CLAUDE.md §6-8 · docs/04 §8).
+ * 확정으로 열린 것: 계약 구조, 기관 영업, 현장 지휘 설계.
+ * 확정과 함께 **새로 생긴 의무**:
+ *   - 파견 기간 2년 제한 (§6) — `dispatch.limit.ts`가 강제한다
+ *   - 허가번호 기재 (§7) — 파견 건은 허가번호 없이 만들 수 없다
+ *   - 차별적 처우 금지 (§21) — 사용사업주의 동종 근로자 대비
+ *
+ * ── 여전히 막혀 있는 것 ──────────────────────────────────────────────────
+ * **급여 계산은 U5가 막고 있다.** 24시간 간병의 휴게·대기 시간을 근로시간으로
+ * 볼지가 정해지지 않았다. 판례는 "사용자의 지휘·감독 아래 있으면 근로시간"으로
+ * 보는데, 자는 동안에도 환자 호출에 응해야 하면 그 시간이 근로시간이 된다.
+ * 이 판정에 따라 연장·야간 수당이 통째로 달라진다.
+ *
+ * 지금 임의로 가정해 구현하면 그 사이 계산된 급여를 전부 다시 정산해야 한다.
+ * 인터페이스와 스키마까지만 두고 대기한다 (CLAUDE.md §6-8 · docs/12 U5).
  */
 export class DirectEmploymentStrategy implements EngagementStrategy {
   readonly model = 'DIRECT_EMPLOYMENT' as const;
@@ -24,13 +35,21 @@ export class DirectEmploymentStrategy implements EngagementStrategy {
       { code: 'WAGE_STATEMENT_CONSENT', labelKey: 'contract.doc.wageStatementConsent', mandatory: true },
       { code: 'SOCIAL_INSURANCE_ENROLMENT', labelKey: 'contract.doc.socialInsurance', mandatory: true },
       { code: 'WORKING_HOURS_AGREEMENT', labelKey: 'contract.doc.workingHours', mandatory: true },
+      // 파견 확정으로 추가된 서류. 파견법 §20의 법정 기재사항이 들어간다.
+      { code: 'DISPATCH_CONTRACT', labelKey: 'contract.doc.dispatchContract', mandatory: true },
     ];
   }
 
   complianceChecks(): ComplianceCheck[] {
     return [
-      // 이 둘이 U1·U2 그 자체다. 사람이 판정한 결과를 기록하는 항목이다.
+      // U1·U2가 확정된 뒤에도 배치 단위 확인은 남는다. 직군·업무 내용이
+      // 실제로 허용 범위 안인지는 배치마다 달라질 수 있다.
       { code: 'DISPATCH_LAW_REVIEW', labelKey: 'compliance.dispatchLawReview', blocking: true },
+      // 2년 한도. 서비스가 생성 시점에 막지만, 기관과 합의한 종료 시점을
+      // 사람이 확인했다는 기록이 별도로 필요하다.
+      { code: 'DISPATCH_PERIOD_LIMIT', labelKey: 'compliance.dispatchPeriodLimit', blocking: true },
+      // 파견법 §21. 사용사업주의 동종 근로자 대비 차별이 없는지.
+      { code: 'EQUAL_TREATMENT', labelKey: 'compliance.equalTreatment', blocking: true },
       { code: 'WORKING_HOURS', labelKey: 'compliance.workingHours', blocking: true },
       { code: 'SOCIAL_INSURANCE', labelKey: 'compliance.socialInsurance', blocking: true },
       { code: 'VISA_ELIGIBILITY', labelKey: 'compliance.visaEligibility', blocking: true },
@@ -41,8 +60,10 @@ export class DirectEmploymentStrategy implements EngagementStrategy {
   calculatePayout(_records: WorkRecord[], _ctx: EngagementContext): PayoutLine[] {
     throw new DomainError('ENGAGEMENT_PAYOUT_UNAVAILABLE', {
       model: this.model,
-      blockedBy: ['U1: 도급/파견 판정', 'U2: 파견 허용 여부·공급사업 허가', 'U5: 근로시간 규정 적용 방식'],
-      reference: 'docs/12 §3 · docs/04 §8 · CLAUDE.md §6-8',
+      // U1·U2는 2026-08-21 해소됐다. U5 하나가 남아 있다.
+      blockedBy: ['U5: 24시간 간병의 근로시간 규정 적용 방식 (휴게·대기 시간 판정)'],
+      resolved: ['U1: 파견으로 확정 (2026-08-21)', 'U2: 파견 허용 업무 · 허가 보유 (2026-08-21)'],
+      reference: 'docs/12 §3 · docs/13 §1 D-13 · CLAUDE.md §6-8',
     });
   }
 
