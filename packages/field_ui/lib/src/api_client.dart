@@ -113,6 +113,12 @@ class ApiClient {
     return decoded;
   }
 
+  /// 토큰을 다시 발급받습니다.
+  ///
+  /// 역할을 새로 받은 직후에 필요합니다 — 권한은 access 토큰에 박혀 있어서,
+  /// 재발급하지 않으면 방금 받은 역할이 15분 동안 붙지 않습니다.
+  Future<bool> refreshSession() => _refresh();
+
   Future<bool> _refresh() async {
     try {
       final res = await _http.post(

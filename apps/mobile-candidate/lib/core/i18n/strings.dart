@@ -72,6 +72,40 @@ const Map<String, Map<AppLocale, String>> _dict = {
     AppLocale.ko: '케어링크', AppLocale.vi: 'CARELINK',
     AppLocale.ru: 'КЕАРЛИНК', AppLocale.en: 'CARELINK',
   },
+  'role.subtitle': {
+    AppLocale.ko: '나중에 언제든 바꿀 수 있습니다.',
+    AppLocale.vi: 'Bạn có thể thay đổi bất cứ lúc nào.',
+    AppLocale.ru: 'Это можно изменить в любой момент.',
+    AppLocale.en: 'You can change this at any time.',
+  },
+  'role.start': {
+    AppLocale.ko: '시작하기', AppLocale.vi: 'Bắt đầu',
+    AppLocale.ru: 'Начать', AppLocale.en: 'Get started',
+  },
+  'role.caregiver': {
+    AppLocale.ko: '간병 일을 해요', AppLocale.vi: 'Tôi làm chăm sóc',
+    AppLocale.ru: 'Работаю по уходу', AppLocale.en: 'I do care work',
+  },
+  'role.caregiver.sub': {
+    AppLocale.ko: '근무 일정 · 근무 기록', AppLocale.vi: 'Lịch ca · Bản ghi ca',
+    AppLocale.ru: 'График · Записи смен', AppLocale.en: 'Shifts and records',
+  },
+  'role.family': {
+    AppLocale.ko: '간병인이 필요해요', AppLocale.vi: 'Tôi cần người chăm sóc',
+    AppLocale.ru: 'Мне нужен сиделка', AppLocale.en: 'I need a caregiver',
+  },
+  'role.family.sub': {
+    AppLocale.ko: '환자 · 보호자', AppLocale.vi: 'Bệnh nhân · Người nhà',
+    AppLocale.ru: 'Пациент · Родственник', AppLocale.en: 'Patient or family',
+  },
+  'role.otherApp': {
+    // 이 앱에서 쓸 수 없는 역할을 골랐을 때. 역할은 부여되지만 화면은
+    // 다른 앱에 있습니다 — 어디로 가야 하는지 말해 줘야 합니다.
+    AppLocale.ko: '이 역할의 화면은 다른 앱에 있습니다. 담당자에게 주소를 문의해 주세요.',
+    AppLocale.vi: 'Màn hình cho vai trò này nằm ở ứng dụng khác. Vui lòng hỏi người phụ trách.',
+    AppLocale.ru: 'Экраны для этой роли — в другом приложении. Уточните адрес у менеджера.',
+    AppLocale.en: 'Screens for this role live in another app. Ask your coordinator for the address.',
+  },
   'common.loading': {
     AppLocale.ko: '불러오는 중', AppLocale.vi: 'Đang tải',
     AppLocale.ru: 'Загрузка', AppLocale.en: 'Loading',

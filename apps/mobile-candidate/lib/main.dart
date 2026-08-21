@@ -8,6 +8,7 @@ import 'screens/home_screen.dart';
 import 'screens/journey_screen.dart';
 import 'screens/jobs_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/role_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/track_screen.dart';
 
@@ -65,7 +66,10 @@ class _CarelinkAppState extends State<CarelinkApp> {
           home: !widget.state.ready
               ? _Splash(state: widget.state)
               : widget.state.signedIn
-                  ? const RootShell()
+                  // 역할이 없으면 SCR-003으로. 홈으로 바로 보내면 모든
+                  // API가 403을 돌려주고, 신규 가입자의 첫인상이 오류
+                  // 화면이 됩니다.
+                  ? (widget.state.needsRole ? const RoleScreen() : const RootShell())
                   : const LoginScreen(),
         ),
       ),

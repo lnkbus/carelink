@@ -4,6 +4,7 @@ import 'core/app_state.dart';
 import 'core/i18n/strings.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/role_screen.dart';
 import 'screens/payout_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/schedule_screen.dart';
@@ -61,7 +62,10 @@ class _CaregiverAppState extends State<CaregiverApp> {
             home: !widget.state.ready
                 ? const _Splash()
                 : widget.state.signedIn
-                    ? const CaregiverShell()
+                    // 역할이 없으면 SCR-003으로. 홈으로 바로 보내면 모든
+                    // API가 403을 돌려주고, 신규 가입자의 첫인상이 오류
+                    // 화면이 됩니다.
+                    ? (widget.state.needsRole ? const RoleScreen() : const CaregiverShell())
                     : const LoginScreen(),
           );
         },
