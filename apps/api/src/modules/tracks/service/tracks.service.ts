@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { AuditService } from '../../ops/service/audit.service';
 import { DomainError } from '../../../core/errors/domain-error';
 import {
   TracksRepository, type IndustryRow, type TrackRequirementRow, type TrackRow, type VisaEligibilityRow,
@@ -26,7 +27,10 @@ export interface VisaCheckResult {
  */
 @Injectable()
 export class TracksService {
-  constructor(private readonly repo: TracksRepository) {}
+  constructor(
+    private readonly repo: TracksRepository,
+    private readonly audit: AuditService,
+  ) {}
 
   listIndustries(activeOnly = true): Promise<IndustryRow[]> {
     return this.repo.listIndustries(activeOnly);
@@ -70,6 +74,32 @@ export class TracksService {
    * 매트릭스에 없는 조합은 ALLOWED로 넘기지 않는다. 명시되지 않은 조합을
    * 허용으로 해석하면 불법 취업 알선이 될 수 있다 — 모르는 것은 사람에게 보낸다.
    */
+  /**
+   * 적격성 판정 기록 (§6-1 · §6-11).
+   *
+   * 시스템은 판정하지 않고 사람이 확인한 결과를 받아 적습니다.
+   * 회색 영역은 `PENDING_CONFIRMATION`으로 두고, 경영 판단으로 여는 경우에는
+   * `isProvisional`을 참으로 둡니다 — 뒤집힐 것을 전제로 운영해야 하기 때문입니다.
+   */
+  async recordEligibilityDecision(input: {
+    trackId: string; visaCode: string; toEligibility: string;
+    isProvisional: boolean; basis: string | null; decidedBy: string;
+  }) {
+    const result = await this.repo.recordEligibilityDecision(input);
+    await this.audit.record({
+      actorUserId: input.decidedBy, action: 'STATUS_CHANGE',
+      targetType: 'track_visa_eligibility', targetId: `${input.trackId}:${input.visaCode}`,
+      before: { eligibility: result.from },
+      after: { eligibility: result.to, isProvisional: input.isProvisional, basis: input.basis },
+    });
+    return result;
+  }
+
+  /** 적격성을 바꾸면 누가 영향받는지. 뒤집기 **전에** 확인해야 합니다. */
+  affectedByEligibilityChange(trackId: string, visaCode: string) {
+    return this.repo.affectedByEligibilityChange(trackId, visaCode);
+  }
+
   async checkVisaEligibility(trackId: string, visaCode: string | null): Promise<VisaCheckResult> {
     if (!visaCode) {
       return {

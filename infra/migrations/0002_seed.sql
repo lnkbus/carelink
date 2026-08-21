@@ -96,7 +96,10 @@ JOIN (VALUES
   ('HOSPITAL_CAREGIVER','F-5', 'ALLOWED',              NULL,    0,  NULL),
   ('HOSPITAL_CAREGIVER','F-6', 'ALLOWED',              NULL,    0,  NULL),
   ('HOSPITAL_CAREGIVER','F-2', 'ALLOWED',              NULL,    0,  'F-2-R은 지역 조건 확인'),
-  ('HOSPITAL_CAREGIVER','F-4', 'PENDING_CONFIRMATION', NULL,    0,  '단순노무 제한 해당 여부 미확정. 자동 배정 차단'),
+  -- 2026-08-21 경영 판단으로 ALLOWED. 1345 문서 회신 전이라 **잠정**입니다.
+  -- 뒤집히면 이미 배치된 F-4 인력이 불법 취업 상태가 되므로,
+  -- 변경 시 영향 대상을 즉시 찾을 수 있어야 합니다 (visa_eligibility_decisions).
+  ('HOSPITAL_CAREGIVER','F-4', 'ALLOWED',              NULL,    0,  '2026-08-21 경영 판단 · 1345 회신 전 잠정'),
   ('HOSPITAL_CAREGIVER','H-2', 'ALLOWED',              NULL,    0,  '기존 체류자 한정. 신규 없음'),
   ('HOSPITAL_CAREGIVER','E-9', 'NOT_ALLOWED',          NULL,    NULL, NULL),
   ('HOSPITAL_CAREGIVER','D-2', 'NOT_ALLOWED',          NULL,    NULL, NULL),
@@ -118,6 +121,17 @@ JOIN (VALUES
   ('HEALTHCARE_ASSISTANT','F-4', 'REQUIRES_QUALIFICATION', NULL, 18, NULL),
   ('HEALTHCARE_ASSISTANT','E-9', 'NOT_ALLOWED',            NULL, NULL, NULL)
 ) AS v(track, visa, elig, target, lead, note) ON v.track = tr.code;
+
+-- 잠정 판정 표시.
+--
+-- F-4 × 병원간병은 2026-08-21 경영 판단으로 열었습니다. 1345 문서 회신 전이라
+-- **뒤집힐 수 있습니다.** 그때 이미 배치된 인력은 불법 취업 상태가 되므로,
+-- 잠정임을 데이터에 남겨 두어야 합니다 — 회신이 오면
+-- PATCH /admin/tracks/{id}/visa-eligibility/F-4 로 확정하거나 닫습니다.
+-- 뒤집기 전에 .../impact 로 영향 대상을 먼저 확인하세요.
+UPDATE track_visa_eligibility SET is_provisional = true
+ WHERE visa_code = 'F-4'
+   AND track_id = (SELECT id FROM tracks WHERE code = 'HOSPITAL_CAREGIVER');
 
 -- 데이터 보존정책 -------------------------------------------------------------
 INSERT INTO data_retention_policies (data_type, retention_days, purge_strategy, legal_basis) VALUES

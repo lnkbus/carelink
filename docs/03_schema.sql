@@ -229,8 +229,36 @@ CREATE TABLE track_visa_eligibility (
   target_visa_code VARCHAR(16) REFERENCES visa_statuses(code), -- 전환 목표 자격
   lead_time_months INT,          -- 취업까지 예상 소요 개월
   note          TEXT,
+  -- 언제 누가 판정했는지. 회색 영역일수록 근거와 시점이 남아야 합니다.
+  -- users FK는 아래에서 ALTER로 붙입니다 — 이 시점에는 users가 아직 없습니다.
+  decided_by    UUID,
+  decided_at    TIMESTAMPTZ,
+  -- 확정 판정인지 잠정인지. 잠정이면 뒤집힐 것을 전제로 운영해야 합니다.
+  is_provisional BOOLEAN NOT NULL DEFAULT false,
   UNIQUE (track_id, visa_code)
 );
+
+-- 적격성 판정 이력.
+--
+-- **되돌릴 때가 진짜 문제입니다.** F-4를 ALLOWED로 열어 배치한 뒤 불가로
+-- 뒤집히면 이미 현장에 있는 인력이 **불법 취업 상태**가 됩니다. 그때 누가
+-- 영향받는지 몇 분 안에 찾지 못하면 대응이 불가능합니다.
+--
+-- track_visa_eligibility는 현재 상태만 들고 있으므로(UPDATE로 덮임), 변경
+-- 이력은 여기에 append-only로 쌓습니다. 정정도 UPDATE가 아니라 새 행입니다.
+CREATE TABLE visa_eligibility_decisions (
+  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  track_id      UUID NOT NULL REFERENCES tracks(id),
+  visa_code     VARCHAR(16) NOT NULL REFERENCES visa_statuses(code),
+  from_eligibility VARCHAR(32),
+  to_eligibility   VARCHAR(32) NOT NULL,
+  is_provisional BOOLEAN NOT NULL DEFAULT false,
+  -- 판정 근거. '1345 문서 회신 2026-09-15' 같은 원문 출처를 남깁니다.
+  basis         TEXT,
+  decided_by    UUID,
+  decided_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_visa_decisions_track ON visa_eligibility_decisions(track_id, visa_code, decided_at DESC);
 
 -- =============================================================================
 -- 1. IAM
@@ -668,6 +696,15 @@ CREATE TABLE partners (
 );
 
 -- training_programs.partner_id 지연 FK (docs/08 §7.2)
+-- 적격성 판정자 FK. 판정 테이블은 tracks 근처에 있어야 읽기 좋지만
+-- users는 그보다 뒤에 만들어지므로 여기서 붙입니다.
+ALTER TABLE track_visa_eligibility
+  ADD CONSTRAINT track_visa_eligibility_decided_by_fkey
+  FOREIGN KEY (decided_by) REFERENCES users(id);
+ALTER TABLE visa_eligibility_decisions
+  ADD CONSTRAINT visa_eligibility_decisions_decided_by_fkey
+  FOREIGN KEY (decided_by) REFERENCES users(id);
+
 ALTER TABLE training_programs
   ADD CONSTRAINT training_programs_partner_id_fkey
   FOREIGN KEY (partner_id) REFERENCES partners(id);
@@ -1304,7 +1341,10 @@ JOIN (VALUES
   ('HOSPITAL_CAREGIVER','F-5', 'ALLOWED',              NULL,    0,  NULL),
   ('HOSPITAL_CAREGIVER','F-6', 'ALLOWED',              NULL,    0,  NULL),
   ('HOSPITAL_CAREGIVER','F-2', 'ALLOWED',              NULL,    0,  'F-2-R은 지역 조건 확인'),
-  ('HOSPITAL_CAREGIVER','F-4', 'PENDING_CONFIRMATION', NULL,    0,  '단순노무 제한 해당 여부 미확정. 자동 배정 차단'),
+  -- 2026-08-21 경영 판단으로 ALLOWED. 1345 문서 회신 전이라 **잠정**입니다.
+  -- 뒤집히면 이미 배치된 F-4 인력이 불법 취업 상태가 되므로,
+  -- 변경 시 영향 대상을 즉시 찾을 수 있어야 합니다 (visa_eligibility_decisions).
+  ('HOSPITAL_CAREGIVER','F-4', 'ALLOWED',              NULL,    0,  '2026-08-21 경영 판단 · 1345 회신 전 잠정'),
   ('HOSPITAL_CAREGIVER','H-2', 'ALLOWED',              NULL,    0,  '기존 체류자 한정. 신규 없음'),
   ('HOSPITAL_CAREGIVER','E-9', 'NOT_ALLOWED',          NULL,    NULL, NULL),
   ('HOSPITAL_CAREGIVER','D-2', 'NOT_ALLOWED',          NULL,    NULL, NULL),
@@ -1326,6 +1366,17 @@ JOIN (VALUES
   ('HEALTHCARE_ASSISTANT','F-4', 'REQUIRES_QUALIFICATION', NULL, 18, NULL),
   ('HEALTHCARE_ASSISTANT','E-9', 'NOT_ALLOWED',            NULL, NULL, NULL)
 ) AS v(track, visa, elig, target, lead, note) ON v.track = tr.code;
+
+-- 잠정 판정 표시.
+--
+-- F-4 × 병원간병은 2026-08-21 경영 판단으로 열었습니다. 1345 문서 회신 전이라
+-- **뒤집힐 수 있습니다.** 그때 이미 배치된 인력은 불법 취업 상태가 되므로,
+-- 잠정임을 데이터에 남겨 두어야 합니다 — 회신이 오면
+-- PATCH /admin/tracks/{id}/visa-eligibility/F-4 로 확정하거나 닫습니다.
+-- 뒤집기 전에 .../impact 로 영향 대상을 먼저 확인하세요.
+UPDATE track_visa_eligibility SET is_provisional = true
+ WHERE visa_code = 'F-4'
+   AND track_id = (SELECT id FROM tracks WHERE code = 'HOSPITAL_CAREGIVER');
 
 -- 데이터 보존정책 -------------------------------------------------------------
 INSERT INTO data_retention_policies (data_type, retention_days, purge_strategy, legal_basis) VALUES

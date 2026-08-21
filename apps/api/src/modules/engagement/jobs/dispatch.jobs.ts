@@ -64,6 +64,9 @@ export class DispatchJobs implements OnModuleInit {
         stage,
         // 이미 넘겼다면 경고가 아니라 사고입니다. 알림에 표시해 우선 처리하게 합니다.
         exceeded: row.days_left <= 0,
+        // 계약서의 교체 절차를 실행할 시점임을 알림에 함께 보냅니다.
+        // 절차가 계약서에 있어도 알려주지 않으면 아무도 시작하지 않습니다.
+        action: row.days_left <= 30 ? 'EXECUTE_REPLACEMENT' : 'NOTIFY_ORGANIZATION',
       });
       acted++;
     }

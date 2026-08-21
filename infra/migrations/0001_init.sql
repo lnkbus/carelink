@@ -233,8 +233,36 @@ CREATE TABLE track_visa_eligibility (
   target_visa_code VARCHAR(16) REFERENCES visa_statuses(code), -- 전환 목표 자격
   lead_time_months INT,          -- 취업까지 예상 소요 개월
   note          TEXT,
+  -- 언제 누가 판정했는지. 회색 영역일수록 근거와 시점이 남아야 합니다.
+  -- users FK는 아래에서 ALTER로 붙입니다 — 이 시점에는 users가 아직 없습니다.
+  decided_by    UUID,
+  decided_at    TIMESTAMPTZ,
+  -- 확정 판정인지 잠정인지. 잠정이면 뒤집힐 것을 전제로 운영해야 합니다.
+  is_provisional BOOLEAN NOT NULL DEFAULT false,
   UNIQUE (track_id, visa_code)
 );
+
+-- 적격성 판정 이력.
+--
+-- **되돌릴 때가 진짜 문제입니다.** F-4를 ALLOWED로 열어 배치한 뒤 불가로
+-- 뒤집히면 이미 현장에 있는 인력이 **불법 취업 상태**가 됩니다. 그때 누가
+-- 영향받는지 몇 분 안에 찾지 못하면 대응이 불가능합니다.
+--
+-- track_visa_eligibility는 현재 상태만 들고 있으므로(UPDATE로 덮임), 변경
+-- 이력은 여기에 append-only로 쌓습니다. 정정도 UPDATE가 아니라 새 행입니다.
+CREATE TABLE visa_eligibility_decisions (
+  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  track_id      UUID NOT NULL REFERENCES tracks(id),
+  visa_code     VARCHAR(16) NOT NULL REFERENCES visa_statuses(code),
+  from_eligibility VARCHAR(32),
+  to_eligibility   VARCHAR(32) NOT NULL,
+  is_provisional BOOLEAN NOT NULL DEFAULT false,
+  -- 판정 근거. '1345 문서 회신 2026-09-15' 같은 원문 출처를 남깁니다.
+  basis         TEXT,
+  decided_by    UUID,
+  decided_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_visa_decisions_track ON visa_eligibility_decisions(track_id, visa_code, decided_at DESC);
 
 -- =============================================================================
 -- 1. IAM
@@ -672,6 +700,15 @@ CREATE TABLE partners (
 );
 
 -- training_programs.partner_id 지연 FK (docs/08 §7.2)
+-- 적격성 판정자 FK. 판정 테이블은 tracks 근처에 있어야 읽기 좋지만
+-- users는 그보다 뒤에 만들어지므로 여기서 붙입니다.
+ALTER TABLE track_visa_eligibility
+  ADD CONSTRAINT track_visa_eligibility_decided_by_fkey
+  FOREIGN KEY (decided_by) REFERENCES users(id);
+ALTER TABLE visa_eligibility_decisions
+  ADD CONSTRAINT visa_eligibility_decisions_decided_by_fkey
+  FOREIGN KEY (decided_by) REFERENCES users(id);
+
 ALTER TABLE training_programs
   ADD CONSTRAINT training_programs_partner_id_fkey
   FOREIGN KEY (partner_id) REFERENCES partners(id);

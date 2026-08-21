@@ -1,6 +1,10 @@
-import { Controller, Get, Param, ParseUUIDPipe, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Query } from '@nestjs/common';
+import type { Viewer } from '../../../core/scope/scope.types';
 import { Roles } from '../../iam/guard/roles.guard';
-import { IndustryDto, TrackDto, TrackRequirementDto, VisaEligibilityDto } from '../dto/tracks.dto';
+import { CurrentViewer } from '../../iam/guard/viewer.decorator';
+import {
+  EligibilityImpactDto, IndustryDto, RecordEligibilityDto, TrackDto, TrackRequirementDto, VisaEligibilityDto,
+} from '../dto/tracks.dto';
 import { TracksService } from '../service/tracks.service';
 import type { TrackRow } from '../repository/tracks.repository';
 
@@ -47,6 +51,58 @@ export class TracksController {
         note: r.note,
       }),
     );
+  }
+
+  /**
+   * GET /api/v1/admin/tracks/{trackId}/visa-eligibility/{visaCode}/impact
+   *
+   * 적격성을 바꾸면 누가 영향받는지. **뒤집기 전에 확인하는 화면입니다.**
+   * 잠정 판정으로 열어 둔 자격을 닫을 때, 이미 배치된 인력이 그 순간
+   * 불법 취업 상태가 되므로 명단이 먼저 나와야 합니다.
+   */
+  @Get('admin/tracks/:trackId/visa-eligibility/:visaCode/impact')
+  @Roles('ADMIN', 'SUPER_ADMIN')
+  async eligibilityImpact(
+    @Param('trackId', ParseUUIDPipe) trackId: string,
+    @Param('visaCode') visaCode: string,
+  ): Promise<EligibilityImpactDto> {
+    const rows = await this.tracks.affectedByEligibilityChange(trackId, visaCode);
+    return Object.assign(new EligibilityImpactDto(), {
+      trackId,
+      visaCode,
+      total: rows.length,
+      placed: rows.filter((r) => r.engagement_id !== null).length,
+      candidates: rows.map((r) => ({
+        displayCode: r.display_code,
+        status: r.candidate_status,
+        engagementId: r.engagement_id,
+        organizationName: r.organization_name,
+      })),
+    });
+  }
+
+  /**
+   * PATCH /api/v1/admin/tracks/{trackId}/visa-eligibility/{visaCode}
+   *
+   * 사람이 확인한 판정을 기록합니다. 시스템은 판정하지 않습니다 (§6-1 · §6-11).
+   * 이력은 append-only로 남으므로 언제 무엇이 왜 바뀌었는지 되짚을 수 있습니다.
+   */
+  @Patch('admin/tracks/:trackId/visa-eligibility/:visaCode')
+  @Roles('ADMIN', 'SUPER_ADMIN')
+  async recordEligibility(
+    @CurrentViewer() viewer: Viewer,
+    @Param('trackId', ParseUUIDPipe) trackId: string,
+    @Param('visaCode') visaCode: string,
+    @Body() dto: RecordEligibilityDto,
+  ): Promise<VisaEligibilityDto[]> {
+    await this.tracks.recordEligibilityDecision({
+      trackId, visaCode,
+      toEligibility: dto.eligibility,
+      isProvisional: dto.isProvisional ?? false,
+      basis: dto.basis ?? null,
+      decidedBy: viewer.userId!,
+    });
+    return this.visaEligibility(trackId);
   }
 
   private async toTrackDto(r: TrackRow, withRequirements: boolean): Promise<TrackDto> {
