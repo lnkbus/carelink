@@ -16,3 +16,8 @@ coverage/
 # Next.js
 .next/
 next-env.d.ts
+
+# Redis 스냅샷 — 런타임 산출물입니다.
+# redis-server를 저장소 루트에서 띄우면 여기에 생깁니다.
+dump.rdb
+*.rdb
