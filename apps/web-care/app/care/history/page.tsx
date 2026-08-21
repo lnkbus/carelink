@@ -46,6 +46,23 @@ export default async function HistoryPage() {
 
   return (
     <Page title="이용 내역" back="/care">
+      {/*
+        시안(SCR-307)의 올해 요약. 금액(`₩3,412,000`)은 넣지 않습니다 —
+        청구 단가가 미확정이라 합계를 만들면 그 숫자가 청구서가 됩니다
+        (§6-8 · §2). 건수와 일수는 기록에서 나오는 사실이라 그대로 씁니다.
+      */}
+      <div className="cf-card">
+        <h2>올해 이용</h2>
+        <div className="cf-row">
+          <span className="cf-label">이용 건수</span>
+          <span className="cf-value cf-mono">{rows.length}건</span>
+        </div>
+        <div className="cf-row">
+          <span className="cf-label">비용</span>
+          <span className="cf-value" style={{ color: 'var(--cl-text-muted)' }}>담당자 안내</span>
+        </div>
+      </div>
+
       {rows.length === 0 && <div className="cf-empty">완료된 간병이 없습니다.</div>}
 
       {rows.map(({ request, assignment, logs }) => {

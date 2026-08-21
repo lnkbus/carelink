@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { CareAssignment, CareRequest } from '@carelink/shared-types';
-import { Page, Notice, Row } from '@/components/Page';
+import { Ask, Page, Notice, Row } from '@/components/Page';
 import { RequestSteps } from '@/components/RequestSteps';
 import { guardedGet } from '@/lib/api';
 import { currentUser } from '@/lib/session';
@@ -34,14 +34,17 @@ export default async function ConfirmPage({ params }: { params: { id: string } }
 
   return (
     <Page
-      title="신청 내용"
+      title="간병 신청"
       back="/care"
+      step={4}
       footer={
         confirmed
           ? <Link className="cf-btn" href={`/care/assignments/${confirmed.id}`}>진행 상황 보기</Link>
           : undefined
       }
     >
+      <Ask>이대로 신청할까요?</Ask>
+
       <div className="cf-card">
         <RequestSteps status={request.status} />
       </div>
@@ -55,6 +58,32 @@ export default async function ConfirmPage({ params }: { params: { id: string } }
         {request.supportItems && request.supportItems.length > 0 && (
           <Row label="필요한 도움">{request.supportItems.length}가지</Row>
         )}
+      </div>
+
+      {/*
+        시안(SCR-305)에는 금액 3행이 있습니다 — 일당 × 일수 · 플랫폼 이용료 ·
+        합계(mono 26px). **숫자를 만들지 않습니다** (§6-8 · §2).
+        막혀 있는 것은 기술이 아니라 사업 결정입니다:
+          · 간병사와의 법적 관계(직접고용/위탁/중개)에 따라 청구 구조가 다르고
+          · 4대보험·퇴직금을 반영한 청구 단가(U6)가 미확정이며
+          · 취소·환불 정책이 미확정입니다 (§10)
+        가짜 금액을 띄우면 그 숫자를 본 보호자가 나중에 다른 금액을
+        청구받습니다. 자리는 두되 무엇을 기다리는지 씁니다 — 자리를 지우면
+        결정이 난 뒤 레이아웃을 다시 짜야 합니다.
+      */}
+      <div className="cf-card">
+        <h2>비용</h2>
+        <div className="cf-row">
+          <span className="cf-label">간병 비용</span>
+          <span className="cf-value" style={{ color: 'var(--cl-text-muted)' }}>담당자 안내</span>
+        </div>
+        <div className="cf-row">
+          <span className="cf-label">플랫폼 이용료</span>
+          <span className="cf-value" style={{ color: 'var(--cl-text-muted)' }}>담당자 안내</span>
+        </div>
+        <p style={{ margin: 0, fontSize: 'var(--cf-caption)', color: 'var(--cl-text-muted)', lineHeight: 1.6 }}>
+          간병사 확인 후 확정됩니다. <b>확정 전에는 결제되지 않습니다.</b>
+        </p>
       </div>
 
       {confirmed && (

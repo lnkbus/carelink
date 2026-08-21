@@ -1,6 +1,5 @@
 import type { CareAssignment, CareMatchResult, CareRequest } from '@carelink/shared-types';
-import { Page, Notice } from '@/components/Page';
-import { RequestSteps } from '@/components/RequestSteps';
+import { Ask, Page, Notice } from '@/components/Page';
 import { guardedGet, apiSend } from '@/lib/api';
 import { currentUser } from '@/lib/session';
 import { label } from '@/lib/labels';
@@ -39,11 +38,10 @@ export default async function MatchPage({ params }: { params: { id: string } }) 
   const pending = assignments.find((a) => ['OFFERED', 'ACCEPTED'].includes(a.status));
 
   return (
-    <Page title="간병사 선택" back="/care">
-      <div className="cf-card">
-        <h2>{request.hospitalName ?? '병원'} {request.ward ?? ''}</h2>
-        <RequestSteps status={request.status} />
-      </div>
+    <Page title="간병 신청" back="/care" step={3}>
+      <Ask sub={`${request.hospitalName ?? '병원'} ${request.ward ?? ''}`}>
+        어느 분께 부탁할까요?
+      </Ask>
 
       {pending ? (
         <div className="cf-card">
