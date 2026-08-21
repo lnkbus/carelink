@@ -4,18 +4,27 @@
  * 운영 콘솔(DESK)과 다른 스케일을 씁니다. 보호자는 병원 복도에서 한 손으로,
  * 대개 급한 상황에 씁니다. 그리고 상당수가 고령입니다.
  *
- *   본문 최소 16px  · 12px 미만은 고령 사용자에게 존재하지 않는 텍스트입니다
- *   터치 타깃 48px  · 실수로 누르면 취소·변경이 되는 화면입니다
+ * **일반 FIELD가 아니라 '상향' 스케일입니다** (design/README §타이포).
+ * 후보자 앱은 26/21/17/16/14를 쓰지만, 간병사·보호자 화면은 한 단계 위인
+ * 28/24/19/18/15를 씁니다. 두 화면의 사용자는 앱 숙련도와 시력 조건이
+ * 다르고, 보는 순간이 병실 앞이기 때문입니다.
+ *
+ *   본문 18px      · 12px 미만은 고령 사용자에게 존재하지 않는 텍스트입니다
+ *   터치 타깃 48px · 실수로 누르면 취소·변경이 되는 화면입니다
+ *   주요 액션 64px · 화면에서 가장 큰 버튼(히어로)은 88px
  *   Micro(10.5px) 없음 — 토큰을 정의하지 않았습니다. 쓸 수 없는 값은
  *   있으면 언젠가 쓰입니다.
  */
 :root {
-  --cf-display: 26px;
-  --cf-title:   21px;
-  --cf-subtitle:17px;
-  --cf-body:    16px;
-  --cf-caption: 14px;
+  --cf-display: 28px;
+  --cf-title:   24px;
+  --cf-subtitle:19px;
+  --cf-body:    18px;
+  --cf-caption: 15px;
   --cf-tap:     48px;
+  /* 주요 액션과 히어로. 디자인의 64~88px 범위입니다. */
+  --cf-action:  64px;
+  --cf-hero:    88px;
   --cf-max:     560px;
 }
 
@@ -42,7 +51,7 @@ html, body { font-size: var(--cf-body); background: var(--cl-bg-sub); }
   gap: var(--cl-s4);
   min-height: var(--cf-tap);
 }
-.cf-appbar h1 { font-size: var(--cf-subtitle); margin: 0; font-weight: 600; }
+.cf-appbar h1 { font-size: var(--cf-subtitle); margin: 0; font-weight: 700; }
 .cf-back {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: var(--cf-tap); min-height: var(--cf-tap);
@@ -60,7 +69,7 @@ html, body { font-size: var(--cf-body); background: var(--cl-bg-sub); }
   flex-direction: column;
   gap: var(--cl-s4);
 }
-.cf-card h2 { font-size: var(--cf-subtitle); margin: 0; font-weight: 600; }
+.cf-card h2 { font-size: var(--cf-subtitle); margin: 0; font-weight: 700; }
 
 .cf-row { display: flex; justify-content: space-between; align-items: center; gap: var(--cl-s4); }
 .cf-label { color: var(--cl-text-muted); font-size: var(--cf-caption); }
@@ -69,15 +78,27 @@ html, body { font-size: var(--cf-body); background: var(--cl-bg-sub); }
 
 .cf-btn {
   display: flex; align-items: center; justify-content: center;
-  min-height: var(--cf-tap);
+  min-height: var(--cf-action);
   padding: 0 var(--cl-s6);
   border-radius: var(--cl-r-field);
-  border: 1px solid var(--cl-action);
-  background: var(--cl-action);
+  border: 1px solid var(--cl-action-strong);
+  background: var(--cl-action-strong);
   color: #fff;
   font-size: var(--cf-body);
-  font-weight: 600;
+  font-weight: 700;
   width: 100%;
+  gap: var(--cl-s4);
+}
+
+/*
+ * 히어로 — 화면에서 **가장 큰 요소**여야 합니다 (SCR-301).
+ * 보호자 홈에 들어와서 할 일은 하나뿐이라, 그 하나가 압도적으로 커야
+ * 다른 것을 읽지 않고도 누를 수 있습니다.
+ */
+.cf-btn-hero {
+  min-height: var(--cf-hero);
+  border-radius: 18px;
+  font-size: var(--cf-title);
 }
 .cf-btn[disabled] { background: var(--cl-bg-sub); border-color: var(--cl-line); color: var(--cl-text-disabled); cursor: not-allowed; }
 .cf-btn-ghost { background: var(--cl-bg); color: var(--cl-action-text); }
@@ -143,3 +164,42 @@ html, body { font-size: var(--cf-body); background: var(--cl-bg-sub); }
 .cf-log { display: flex; gap: var(--cl-s4); align-items: baseline; padding: var(--cl-s4) 0; border-bottom: 1px solid var(--cl-line); }
 .cf-log:last-child { border-bottom: 0; }
 .cf-log-time { font-family: var(--cl-font-mono); font-size: var(--cf-caption); color: var(--cl-text-muted); flex: none; }
+
+/*
+ * 신청 4단계 진행 바 (SCR-302~305).
+ *
+ * 앱바 바로 아래 고정입니다. 보호자는 이 흐름을 처음 지나가고, 몇 단계가
+ * 남았는지 모르면 중간에 그만둡니다 — 그리고 그만둔 신청은 전화로 옵니다.
+ */
+.cf-progress { display: flex; gap: 6px; padding: 0 var(--cl-s6) var(--cl-s5); }
+.cf-progress span { flex: 1; height: 6px; border-radius: 999px; background: var(--cl-line); }
+.cf-progress span[data-on='1'] { background: var(--cl-action); }
+.cf-stepno {
+  font-family: var(--cl-font-mono); font-size: 16px; font-weight: 700;
+  color: var(--cl-action-text); margin-left: auto;
+}
+
+/* 화면 첫 질문. 앱바 제목이 아니라 본문 맨 위의 큰 문장입니다. */
+.cf-ask { font-size: var(--cf-title); font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+.cf-ask-sub { font-size: var(--cf-body); color: var(--cl-text-muted); line-height: 1.5; margin: 0; }
+
+/* 선택 카드 88px — 병원·간병사처럼 '고르는' 대상 (SCR-302 · 304). */
+.cf-pick {
+  display: flex; align-items: center; gap: var(--cl-s5);
+  min-height: var(--cf-hero);
+  padding: var(--cl-s5);
+  border: 1px solid var(--cl-line);
+  border-radius: 16px;
+  background: var(--cl-bg);
+  text-align: left;
+  width: 100%;
+}
+.cf-pick[aria-pressed='true'] { border: 2px solid var(--cl-action); background: var(--cl-action-tint); }
+.cf-pick-tile {
+  flex: none; width: 52px; height: 52px; border-radius: 14px;
+  background: var(--cl-bg-sub); display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.cf-pick[aria-pressed='true'] .cf-pick-tile { background: var(--cl-bg); }
+.cf-pick-name { font-size: var(--cf-subtitle); font-weight: 700; }
+.cf-pick-sub { font-size: var(--cf-body); color: var(--cl-text-sub); }

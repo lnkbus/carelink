@@ -328,6 +328,23 @@ const Map<String, Map<AppLocale, String>> _dict = {
     AppLocale.ko: '로그아웃', AppLocale.vi: 'Đăng xuất',
     AppLocale.ru: 'Выйти', AppLocale.en: 'Sign out',
   },
+  'common.cancel': {
+    AppLocale.ko: '취소', AppLocale.vi: 'Hủy', AppLocale.ru: 'Отмена', AppLocale.en: 'Cancel',
+  },
+  'logout.confirm': {
+    AppLocale.ko: '로그아웃할까요?',
+    AppLocale.vi: 'Bạn có muốn đăng xuất?',
+    AppLocale.ru: 'Выйти из аккаунта?',
+    AppLocale.en: 'Sign out?',
+  },
+  'logout.note': {
+    // 무엇을 잃는지 알려 줍니다. 다시 로그인하면 되지만, 인증번호를
+    // 기다려야 하므로 실수로 누르는 비용이 작지 않습니다.
+    AppLocale.ko: '다시 로그인하려면 인증번호가 필요합니다.',
+    AppLocale.vi: 'Bạn sẽ cần mã xác minh để đăng nhập lại.',
+    AppLocale.ru: 'Для повторного входа понадобится код подтверждения.',
+    AppLocale.en: 'You will need a verification code to sign in again.',
+  },
 
   // ── 만료 (ExpiryCountdown) ──────────────────────────────────────────────
   'expiry.daysLeft': {

@@ -50,6 +50,18 @@ const Map<String, Map<AppLocale, String>> _dict = {
     AppLocale.ru: 'Выйти из аккаунта?',
     AppLocale.en: 'Log out?',
   },
+  'profile.title': {
+    AppLocale.ko: '내 정보', AppLocale.vi: 'Thông tin của tôi',
+    AppLocale.ru: 'Мои данные', AppLocale.en: 'My info',
+  },
+  'profile.phone': {
+    AppLocale.ko: '휴대폰 번호', AppLocale.vi: 'Số điện thoại',
+    AppLocale.ru: 'Номер телефона', AppLocale.en: 'Phone number',
+  },
+  'profile.language': {
+    AppLocale.ko: '언어', AppLocale.vi: 'Ngôn ngữ',
+    AppLocale.ru: 'Язык', AppLocale.en: 'Language',
+  },
   'logout.note': {
     // 근무 중 실수로 눌렀을 때 무엇을 잃는지 알려 줍니다. 다시 로그인하면
     // 되지만, 병실 앞에서 인증번호를 기다리는 상황은 만들지 않는 편이 낫습니다.

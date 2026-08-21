@@ -15,13 +15,16 @@ export function HospitalPicker({ hospitals }: { hospitals: CareHospital[] }) {
 
   return (
     <>
-      <div className="cf-field">
-        <label htmlFor="q">병원 이름 또는 지역</label>
-        <input
-          id="q" className="cf-input" value={q} onChange={(e) => setQ(e.target.value)}
-          placeholder="예: 서울, ○○병원" autoComplete="off"
-        />
-      </div>
+      {/* 검색은 라벨 없이 64px 한 줄입니다 — 위의 질문 문장이 이미 라벨입니다. */}
+      <input
+        aria-label="병원 이름 또는 지역"
+        className="cf-input"
+        style={{ minHeight: 'var(--cf-action)', fontSize: 'var(--cf-subtitle)', fontWeight: 600 }}
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        placeholder="병원 이름 또는 지역"
+        autoComplete="off"
+      />
 
       {shown.length === 0 && (
         <div className="cf-empty">
@@ -34,18 +37,19 @@ export function HospitalPicker({ hospitals }: { hospitals: CareHospital[] }) {
       {shown.map((h) => (
         <button
           key={h.id}
-          className="cf-card"
-          style={{ textAlign: 'left', background: 'var(--cl-bg)', cursor: 'pointer', minHeight: 'var(--cf-tap)' }}
+          type="button"
+          className="cf-pick"
           onClick={() => router.push(`/care/requests/new?hospitalId=${h.id}&name=${encodeURIComponent(h.name)}`)}
         >
-          <div className="cf-row">
-            <b style={{ fontSize: 'var(--cf-subtitle)' }}>{h.name}</b>
-            <span style={{ color: 'var(--cl-text-muted)', fontSize: 'var(--cf-caption)' }}>{h.region ?? ''}</span>
-          </div>
-          {/* 색이 아니라 문장으로 씁니다. 숫자만 있으면 무슨 뜻인지 모릅니다. */}
-          <span style={{ fontSize: 'var(--cf-caption)', color: 'var(--cl-text-sub)' }}>
-            배정 가능한 간병사 {h.activeCaregivers}명
+          <span className="cf-pick-tile" aria-hidden="true">🏥</span>
+          <span style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <span className="cf-pick-name">{h.name}</span>
+            {/* 색이 아니라 문장으로 씁니다. 숫자만 있으면 무슨 뜻인지 모릅니다. */}
+            <span className="cf-pick-sub">
+              {h.region ? `${h.region} · ` : ''}배정 가능한 간병사 {h.activeCaregivers}명
+            </span>
           </span>
+          <span aria-hidden="true" style={{ color: 'var(--cl-text-muted)', fontSize: 22 }}>›</span>
         </button>
       ))}
     </>

@@ -1,5 +1,5 @@
 import type { CareServiceItem } from '@carelink/shared-types';
-import { Page } from '@/components/Page';
+import { Ask, Page } from '@/components/Page';
 import { apiGet } from '@/lib/api';
 import { currentUser } from '@/lib/session';
 import { RequestForm } from './RequestForm';
@@ -29,7 +29,10 @@ export default async function NewRequestPage({
   const catalog = await apiGet<CareServiceItem[]>('/care-services/catalog');
 
   return (
-    <Page title="간병 신청" back="/care/hospitals">
+    <Page title="간병 신청" back="/care/hospitals" step={2}>
+      <Ask sub={searchParams.name ? `${searchParams.name}에 신청합니다.` : undefined}>
+        언제, 어떻게 필요하세요?
+      </Ask>
       <RequestForm
         catalog={catalog}
         hospitalId={searchParams.hospitalId ?? ''}

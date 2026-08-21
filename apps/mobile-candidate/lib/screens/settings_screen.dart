@@ -40,6 +40,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _confirmLogout(AppState app) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(app.t('logout.confirm'), style: const TextStyle(fontSize: CL.subtitle)),
+        content: Text(app.t('logout.note'), style: const TextStyle(fontSize: CL.body)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(app.t('common.cancel'), style: const TextStyle(fontSize: CL.body)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(app.t('settings.logout'), style: const TextStyle(fontSize: CL.body)),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) await app.signOut();
+  }
+
   @override
   Widget build(BuildContext context) {
     final app = AppScope.of(context);
@@ -144,9 +165,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _SettingsRow(label: app.t('settings.support'), onTap: () {}),
 
                 const SizedBox(height: CL.s7),
+                // 확인 한 단계를 둡니다. 다시 들어오려면 인증번호를 기다려야
+                // 해서 오조작 비용이 큽니다 (간병사·보호자 화면과 동일).
                 SecondaryButton(
                   label: app.t('settings.logout'),
-                  onPressed: app.signOut,
+                  onPressed: () => _confirmLogout(app),
                 ),
               ],
             ),

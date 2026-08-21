@@ -1,5 +1,5 @@
 import type { CareHospital } from '@carelink/shared-types';
-import { Page, Notice } from '@/components/Page';
+import { Ask, Page, Notice } from '@/components/Page';
 import { apiGet } from '@/lib/api';
 import { currentUser } from '@/lib/session';
 import { HospitalPicker } from './HospitalPicker';
@@ -21,7 +21,8 @@ export default async function HospitalsPage() {
   const hospitals = await apiGet<CareHospital[]>('/care-hospitals');
 
   return (
-    <Page title="병원 선택" back="/care">
+    <Page title="간병 신청" back="/care" step={1}>
+      <Ask>어느 병원인가요?</Ask>
       {hospitals.length === 0 ? (
         <>
           <div className="cf-empty">지금 신청 가능한 병원이 없습니다.</div>

@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import type { CareRequest } from '@carelink/shared-types';
-import { LogoutButton } from '@/components/LogoutButton';
-import { Page, Row } from '@/components/Page';
+import { Ask, Page, Row } from '@/components/Page';
 import { apiGet } from '@/lib/api';
 import { currentUser } from '@/lib/session';
 import { fmtDateTime, label } from '@/lib/labels';
@@ -23,20 +22,42 @@ export default async function CareHome() {
 
   return (
     <Page
-      title="간병 신청"
-      action={<LogoutButton />}
-      footer={<Link className="cf-btn" href="/care/hospitals">간병 신청하기</Link>}
+      title="케어링크"
+      action={
+        <Link
+          href="/care/me"
+          style={{
+            marginLeft: 'auto', minHeight: 'var(--cf-tap)', display: 'flex',
+            alignItems: 'center', gap: 6, color: 'var(--cl-text-sub)',
+            fontSize: 'var(--cf-subtitle)', fontWeight: 600,
+          }}
+        >
+          내 정보
+        </Link>
+      }
     >
-      {live.length === 0 && past.length === 0 && (
-        <div className="cf-empty">
-          아직 신청하신 간병이 없습니다.
-          <br />
-          아래 버튼으로 시작하세요.
-        </div>
-      )}
+      {/*
+        디자인의 홈은 '빈 화면 + 하단 버튼'이 아니라 **큰 문장 + 히어로 버튼**입니다
+        (design/README §Patient Web 301). 하단 고정 버튼은 스크롤이 있을 때만
+        의미가 있는데, 보호자 홈은 대개 카드 한두 장이라 스크롤이 없습니다.
+        그럴 때 하단 고정은 화면 아래쪽에 붕 뜬 버튼으로 보입니다.
+      */}
+      <Ask sub="병원과 기간만 알려주시면 자격을 확인한 간병사를 연결해 드립니다.">
+        간병인이 필요하신가요?
+      </Ask>
+
+      <Link className="cf-btn cf-btn-hero" href="/care/hospitals">
+        <span aria-hidden="true" style={{ fontSize: 28, lineHeight: 1 }}>＋</span>
+        간병 신청하기
+      </Link>
 
       {live.map((r) => (
-        <Link key={r.id} href={hrefFor(r)} className="cf-card" style={{ color: 'inherit' }}>
+        <Link
+          key={r.id}
+          href={hrefFor(r)}
+          className="cf-card"
+          style={{ color: 'inherit', border: '2px solid var(--cl-action)', borderRadius: 18 }}
+        >
           <div className="cf-row">
             <b style={{ fontSize: 'var(--cf-subtitle)' }}>{r.hospitalName ?? '병원 미지정'}</b>
             <span style={{ color: 'var(--cl-action-text)', fontWeight: 600 }}>{label(r.status)}</span>

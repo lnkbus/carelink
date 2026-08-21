@@ -173,25 +173,33 @@ OT=$(reissue "$OR"); O=(-H "authorization: Bearer $OT" -H 'content-type: applica
 JOB=$(curl -sS -X POST "$B/jobs" "${O[@]}" -d "{\"title\":\"병원 간병사 (3교대)\",\"trackId\":\"$TRK\",\"region\":\"서울\",\"headcount\":3,\"minExperienceYrs\":1,\"employmentType\":\"FULL_TIME\",\"dormProvided\":true,\"salaryMin\":2800000,\"salaryMax\":3200000,\"salaryVisibility\":\"AFTER_MATCH\"}" | J "['id']")
 curl -sS -X PATCH "$B/jobs/$JOB/status" "${O[@]}" -d '{"status":"OPEN"}' >/dev/null
 
-say "4/6 후보자 2명 (트랙·서류·지원까지)"
+say "4/6 후보자 3명 (트랙·서류·지원까지)"
 # 후보자를 만들기만 하면 대시보드가 전부 0으로 보입니다. 트랙·서류·지원까지
 # 넣어야 파이프라인이 실제로 그려집니다.
+#
+# **세 사람의 값이 서로 달라야 합니다.** 지역·희망지역·고용형태·기숙사·근무
+# 가능일이 전부 같으면 필터를 걸어도 결과가 안 바뀌고, 매칭 점수도 셋이
+# 동점으로 나옵니다. 그러면 화면이 도는 것만 확인되고 **로직이 도는지는
+# 확인되지 않습니다.** 데모 데이터의 목적은 후자입니다.
 mkcand() {
   local phone="$1" code="$2" name="$3" nat="$4" visa="$5" st="$6" exp="$7"
-  local t r u cid
+  local birth="$8" gender="$9" loc="${10}" pref="${11}" emp="${12}" dorm="${13}" avail="${14}" track="${15}"
+  local t r u cid tid
   read -r t r u <<<"$(login "$phone")"
   role "$t" '{"role":"CANDIDATE","makePrimary":true}'
   cid=$(psql "$DB" -tAqc \
-    "INSERT INTO candidates (user_id, display_code, name, nationality, visa_status_code,
-                             visa_expires_on, current_location, preferred_regions,
+    "INSERT INTO candidates (user_id, display_code, name, birth_date, gender, nationality,
+                             visa_status_code, visa_expires_on, current_location, preferred_regions,
                              employment_types, dorm_required, available_from, status)
-     VALUES ('$u', '$code', '$name', '$nat', NULLIF('$visa',''), NULLIF('$exp','')::date,
-             '서울', ARRAY['서울','경기'], ARRAY['FULL_TIME'], true, current_date, '$st')
+     VALUES ('$u', '$code', '$name', '$birth'::date, '$gender', '$nat',
+             NULLIF('$visa',''), NULLIF('$exp','')::date, '$loc', $pref,
+             $emp, $dorm, current_date + $avail, '$st')
      ON CONFLICT (user_id) DO UPDATE SET status = EXCLUDED.status
      RETURNING id;" | tr -d '[:space:]')
+  tid=$(psql "$DB" -tAqc "SELECT id FROM tracks WHERE code='$track';" | tr -d '[:space:]')
   psql "$DB" -q -c \
     "INSERT INTO candidate_tracks (candidate_id, track_id, is_primary)
-     VALUES ('$cid', '$TRK', true) ON CONFLICT DO NOTHING;"
+     VALUES ('$cid', '$tid', true) ON CONFLICT DO NOTHING;"
   echo "$cid"
 }
 
@@ -200,19 +208,35 @@ mkcand() {
 #   E-9  × 병원간병 → NOT_ALLOWED  (비전문취업은 지정 업종만)
 #   무비자(내국인)   → PENDING      (아직 확인 전 — 불가가 아님)
 #   H-2  × 병원간병 → ALLOWED      (방문취업. 고려인 세그먼트 · docs/08)
-C1=$(mkcand 01033330001 CD-1001 "응우옌 티 흐엉" 베트남 E-9 READY 2027-06-30)
-C2=$(mkcand 01033330002 CD-1002 "김민서" 대한민국 "" DOC_REVIEW "")
-C3=$(mkcand 01033330003 CD-1003 "박 스베틀라나" 우즈베키스탄 H-2 READY 2028-03-31)
+#
+# 나머지 값도 서로 어긋나게 둡니다. 지역 필터·고용형태 필터·근무 가능일
+# 정렬이 실제로 동작하는지는 값이 갈릴 때만 드러납니다.
+C1=$(mkcand 01033330001 CD-1001 "응우옌 티 흐엉" 베트남 E-9 READY 2027-06-30 \
+     1996-03-14 FEMALE "경기 안산" "ARRAY['경기','인천']" "ARRAY['FULL_TIME']" true 0 HOSPITAL_CAREGIVER)
+C2=$(mkcand 01033330002 CD-1002 "김민서" 대한민국 "" DOC_REVIEW "" \
+     1978-11-02 FEMALE "서울 노원" "ARRAY['서울']" "ARRAY['PART_TIME','FULL_TIME']" false 14 CARE_WORKER)
+C3=$(mkcand 01033330003 CD-1003 "박 스베틀라나" 우즈베키스탄 H-2 READY 2028-03-31 \
+     1985-07-25 FEMALE "충북 청주" "ARRAY['충북','대전']" "ARRAY['FULL_TIME']" true 30 HOSPITAL_CAREGIVER)
 psql "$DB" -q -c "UPDATE users SET locale = 'ru' WHERE phone = '01033330003';"
 
-# 서류 — 하나는 검증 완료, 하나는 만료 임박(D-20)이라 카운트다운이 보입니다.
+# 부트랙 하나 — 한 사람이 트랙을 겹쳐 갖는 경우가 실제로 흔합니다
+# (요양보호사가 병원 간병도 하는 경우 · SCR-003 notes).
+psql "$DB" -q -c \
+  "INSERT INTO candidate_tracks (candidate_id, track_id, is_primary)
+   SELECT '$C3', id, false FROM tracks WHERE code = 'CARE_WORKER'
+   ON CONFLICT DO NOTHING;"
+
+# 서류 — 사람마다 상태가 다릅니다. 전부 VERIFIED면 만료 카운트다운도
+# 반려 안내도 화면에 나타나지 않습니다.
 psql "$DB" -q -c \
   "INSERT INTO documents (candidate_id, doc_type, file_key, file_name, status,
                           reviewed_at, expires_at, verdict)
    VALUES ('$C1','IDENTITY','demo/id1','외국인등록증.pdf','VERIFIED', now(), current_date + 400, NULL),
           ('$C1','HEALTH',  'demo/h1', '건강진단서.pdf',  'VERIFIED', now(), current_date + 20, 'FIT'),
           ('$C2','IDENTITY','demo/id2','주민등록증.pdf',  'UNDER_REVIEW', NULL, NULL, NULL),
-          ('$C3','IDENTITY','demo/id3','외국인등록증.pdf','VERIFIED', now(), current_date + 500, NULL);"
+          ('$C2','CERTIFICATE','demo/c2','요양보호사자격증.pdf','VERIFIED', now(), NULL, NULL),
+          ('$C3','IDENTITY','demo/id3','외국인등록증.pdf','VERIFIED', now(), current_date + 500, NULL),
+          ('$C3','HEALTH',  'demo/h3', '건강진단서.pdf',  'REJECTED', now(), NULL, NULL);"
 
 # 지원 1건 — 기관 웹에서 후보자 검색·매칭 근거가 보입니다.
 psql "$DB" -q -c \
