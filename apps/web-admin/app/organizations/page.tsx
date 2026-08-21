@@ -4,6 +4,7 @@ import { DataTable, KpiChip, KpiRow, PageHeader, Restricted, Section, StatusPill
 import { Shell } from '@/components/Shell';
 import { ApiError, apiGet } from '@/lib/api';
 import { label } from '@/lib/labels';
+import { redirectToLogin } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +31,7 @@ export default async function OrganizationsPage() {
   try {
     data = await apiGet<Paged<Organization>>('/organizations', { size: 50 });
   } catch (e) {
-    if (e instanceof ApiError && (e.status === 401 || e.status === 403)) redirect('/login');
+    if (e instanceof ApiError && (e.status === 401 || e.status === 403)) redirectToLogin(e);
     throw e;
   }
 

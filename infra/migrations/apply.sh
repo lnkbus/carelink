@@ -3,31 +3,45 @@
 #
 # 이유: `docker compose run --rm tools ...`는 의존 서비스를 다시 띄웁니다.
 # tools → api → migrate 체인이라 tools를 부를 때마다 migrate가 재실행됩니다.
-# 0001_init.sql은 CREATE TABLE이라 두 번째 실행에서 그대로 죽고(exit 3),
+# 적용된 파일을 다시 실행하면 CREATE TABLE에서 그대로 죽고(exit 3),
 # 그러면 tools도 함께 죽습니다 — 스택은 멀쩡한데 데모가 안 뜹니다.
 #
-# 그래서 '이미 적용됐는지'를 먼저 확인하고 건너뜁니다. 마이그레이션 버전
-# 테이블을 두지 않은 것은 지금 마이그레이션이 init 하나뿐이기 때문입니다.
-# 파일이 늘어나면 그때 schema_migrations 테이블로 바꾸세요.
+# 그래서 `schema_migrations`에 적용 이력을 남기고 안 돌린 파일만 돌립니다.
 set -e
 
-# 마이그레이션 파일은 이 스크립트 옆에 있습니다. 절대경로를 박으면
-# 컨테이너 밖(로컬 검증)에서 돌려볼 수 없습니다.
 DIR="$(dirname "$0")"
 PSQL="psql -h ${PGHOST:-db} -U ${PGUSER:-carelink} -d ${PGDATABASE:-carelink}"
 
-applied() {
-  # to_regclass는 없는 테이블에 대해 예외 대신 NULL을 돌려줍니다.
-  # information_schema 조회보다 짧고, 검색 경로를 그대로 따릅니다.
-  [ -n "$($PSQL -tAc "SELECT to_regclass('public.users')" 2>/dev/null | tr -d '[:space:]')" ]
-}
+$PSQL -v ON_ERROR_STOP=1 -q -c "
+  CREATE TABLE IF NOT EXISTS schema_migrations (
+    filename   text PRIMARY KEY,
+    applied_at timestamptz NOT NULL DEFAULT now()
+  );"
 
-if applied; then
-  echo "스키마가 이미 적용돼 있습니다 — 건너뜁니다."
-  echo "처음부터 다시 만들려면: docker compose down -v"
-  exit 0
+# 이력 테이블 없이 만들어진 기존 DB를 이어받습니다. users가 이미 있으면
+# 0001·0002는 적용된 것으로 표시합니다 — 다시 돌리면 죽기 때문입니다.
+if [ -n "$($PSQL -tAc "SELECT to_regclass('public.users')" | tr -d '[:space:]')" ]; then
+  $PSQL -v ON_ERROR_STOP=1 -q -c "
+    INSERT INTO schema_migrations (filename)
+    VALUES ('0001_init.sql'), ('0002_seed.sql')
+    ON CONFLICT DO NOTHING;"
 fi
 
-$PSQL -v ON_ERROR_STOP=1 -f "$DIR/0001_init.sql"
-$PSQL -v ON_ERROR_STOP=1 -f "$DIR/0002_seed.sql"
-echo "스키마·시드 적용 완료"
+applied=0
+for f in "$DIR"/[0-9]*.sql; do
+  name="$(basename "$f")"
+  done_already="$($PSQL -tAc "SELECT 1 FROM schema_migrations WHERE filename = '$name'" | tr -d '[:space:]')"
+  [ -n "$done_already" ] && continue
+
+  echo "적용: $name"
+  $PSQL -v ON_ERROR_STOP=1 -f "$f"
+  $PSQL -v ON_ERROR_STOP=1 -q -c "INSERT INTO schema_migrations (filename) VALUES ('$name');"
+  applied=$((applied + 1))
+done
+
+if [ "$applied" -eq 0 ]; then
+  echo "적용할 마이그레이션이 없습니다 — 최신 상태입니다."
+  echo "처음부터 다시 만들려면: docker compose down -v"
+else
+  echo "마이그레이션 ${applied}건 적용 완료"
+fi

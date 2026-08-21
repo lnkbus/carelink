@@ -4,6 +4,7 @@ import { DataTable, KpiChip, KpiRow, PageHeader, Section, StatusPill, Td, Tr } f
 import { Shell } from '@/components/Shell';
 import { ApiError, apiGet } from '@/lib/api';
 import { label } from '@/lib/labels';
+import { redirectToLogin } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +20,7 @@ export default async function DashboardPage() {
   try {
     data = await apiGet<OpsDashboard>('/admin/metrics');
   } catch (e) {
-    if (e instanceof ApiError && (e.status === 401 || e.status === 403)) redirect('/login');
+    if (e instanceof ApiError && (e.status === 401 || e.status === 403)) redirectToLogin(e);
     throw e;
   }
 

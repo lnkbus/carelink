@@ -17,7 +17,11 @@ export async function currentUser(): Promise<Me> {
   try {
     return await apiGet<Me>('/auth/me');
   } catch (e) {
-    if (e instanceof ApiError && (e.status === 401 || e.status === 403)) redirect('/login');
+    if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
+      // 이유를 들려 보냅니다. 아무 말 없이 로그인 화면으로 되돌리면
+      // 방금 로그인한 사람이 무엇이 잘못됐는지 알 수 없습니다.
+      redirect(`/login?reason=${e.status === 403 ? 'forbidden' : 'expired'}`);
+    }
     throw e;
   }
 }

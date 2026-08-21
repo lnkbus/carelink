@@ -7,6 +7,7 @@ import { Shell } from '@/components/Shell';
 import { ApiError, apiGet } from '@/lib/api';
 import { label } from '@/lib/labels';
 import { StatusFilter } from './StatusFilter';
+import { redirectToLogin } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,7 +40,7 @@ export default async function CandidatesPage({
       size: 20,
     });
   } catch (e) {
-    if (e instanceof ApiError && (e.status === 401 || e.status === 403)) redirect('/login');
+    if (e instanceof ApiError && (e.status === 401 || e.status === 403)) redirectToLogin(e);
     throw e;
   }
 

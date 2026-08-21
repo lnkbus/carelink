@@ -13,7 +13,7 @@ export async function currentOrg(): Promise<Organization> {
     return await apiGet<Organization>('/organizations/me');
   } catch (e) {
     if (e instanceof ApiError) {
-      if (e.status === 401) redirect('/login');
+      if (e.status === 401) redirect('/login?reason=expired');
       if (e.status === 403 || e.body.code === 'ORG_NOT_FOUND') redirect('/no-access');
     }
     throw e;
@@ -30,4 +30,14 @@ export async function currentUser(): Promise<Me | null> {
   } catch {
     return null;
   }
+}
+
+/**
+ * 권한이 없을 때 로그인 화면으로 보낸다 — **이유를 들려서.**
+ * 아무 말 없이 되돌려 보내면 로그인에 성공한 사람이 무엇이 잘못됐는지
+ * 알 방법이 없다.
+ */
+export function redirectToLogin(e: unknown): never {
+  const reason = e instanceof ApiError && e.status === 403 ? 'forbidden' : 'expired';
+  redirect(`/login?reason=${reason}`);
 }

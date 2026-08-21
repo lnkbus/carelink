@@ -4,6 +4,7 @@ import { PageHeader, Section, StatusPill } from '@carelink/ui';
 import { Shell } from '@/components/Shell';
 import { ApiError, apiGet } from '@/lib/api';
 import { RequirementEditor, WeightEditor, ActiveToggle } from './Editors';
+import { redirectToLogin } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +32,7 @@ export default async function TrackDetailPage({ params }: { params: { id: string
       apiGet<TrackWeights>(`/admin/tracks/${params.id}/weights`),
     ]);
   } catch (e) {
-    if (e instanceof ApiError && (e.status === 401 || e.status === 403)) redirect('/login');
+    if (e instanceof ApiError && (e.status === 401 || e.status === 403)) redirectToLogin(e);
     throw e;
   }
 
