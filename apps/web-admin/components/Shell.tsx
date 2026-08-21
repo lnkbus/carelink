@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { LocaleSwitcher } from '@carelink/ui';
+import { currentUser } from '@/lib/session';
 import { NavItem } from './NavItem';
+import { SessionBox } from './SessionBox';
 
 /**
  * Admin Console 사이드바 — 3그룹(운영 / 자원 / 공급), 그룹 라벨은 Micro 10.5px.
@@ -43,7 +45,9 @@ const NAV = [
   },
 ];
 
-export function Shell({ children }: { children: React.ReactNode }) {
+export async function Shell({ children }: { children: React.ReactNode }) {
+  const me = await currentUser();
+
   return (
     <div className="cl-shell">
       <nav className="cl-sidebar">
@@ -67,6 +71,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         ))}
         <div style={{ padding: 'var(--cl-s6)' }}>
           <LocaleSwitcher locale="ko" variant="desk" />
+          <SessionBox phone={me?.phone ?? undefined} />
           <p
             style={{
               margin: 'var(--cl-s4) 0 0', fontSize: 'var(--cl-micro)',

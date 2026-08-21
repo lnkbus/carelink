@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { ACCESS_COOKIE, REFRESH_COOKIE, apiBase } from '@/lib/api';
 
@@ -30,7 +31,27 @@ export async function POST(req: Request) {
   return out;
 }
 
+/**
+ * 로그아웃.
+ *
+ * 쿠키만 지우면 **로그아웃한 척**입니다. refresh 토큰은 14일짜리라, 그 사이에
+ * 어디선가 새어 나간 값이 그대로 로그인에 쓰입니다. 서버에서 먼저 폐기하고
+ * 그 다음에 쿠키를 지웁니다.
+ *
+ * 폐기가 실패해도 쿠키는 지웁니다 — 여기서 멈추면 사용자는 로그아웃 버튼이
+ * 아무 반응도 없는 화면에 갇힙니다. 계정을 바꿔 가며 테스트할 때 이게 막히면
+ * 브라우저 저장소를 손으로 뒤지게 됩니다.
+ */
 export async function DELETE() {
+  const refresh = cookies().get(REFRESH_COOKIE)?.value;
+  if (refresh) {
+    await fetch(`${apiBase()}/auth/logout`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ refreshToken: refresh }),
+    }).catch(() => undefined);
+  }
+
   const out = NextResponse.json({ ok: true });
   out.cookies.delete(ACCESS_COOKIE);
   out.cookies.delete(REFRESH_COOKIE);

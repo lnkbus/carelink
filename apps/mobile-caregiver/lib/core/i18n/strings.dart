@@ -41,6 +41,23 @@ const Map<String, Map<AppLocale, String>> _dict = {
   'common.save': {
     AppLocale.ko: '저장', AppLocale.vi: 'Lưu', AppLocale.ru: 'Сохранить', AppLocale.en: 'Save',
   },
+  'common.logout': {
+    AppLocale.ko: '로그아웃', AppLocale.vi: 'Đăng xuất', AppLocale.ru: 'Выйти', AppLocale.en: 'Log out',
+  },
+  'logout.confirm': {
+    AppLocale.ko: '로그아웃할까요?',
+    AppLocale.vi: 'Bạn có muốn đăng xuất?',
+    AppLocale.ru: 'Выйти из аккаунта?',
+    AppLocale.en: 'Log out?',
+  },
+  'logout.note': {
+    // 근무 중 실수로 눌렀을 때 무엇을 잃는지 알려 줍니다. 다시 로그인하면
+    // 되지만, 병실 앞에서 인증번호를 기다리는 상황은 만들지 않는 편이 낫습니다.
+    AppLocale.ko: '다시 로그인하려면 인증번호가 필요합니다.',
+    AppLocale.vi: 'Bạn sẽ cần mã xác minh để đăng nhập lại.',
+    AppLocale.ru: 'Для повторного входа понадобится код подтверждения.',
+    AppLocale.en: 'You will need a verification code to sign in again.',
+  },
   'expiry.expired': {
     AppLocale.ko: '만료됨', AppLocale.vi: 'Đã hết hạn', AppLocale.ru: 'Истёк', AppLocale.en: 'Expired',
   },

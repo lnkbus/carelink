@@ -73,6 +73,9 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> signOut() async {
+    // 기기에서 지우기 **전에** 서버 토큰을 폐기합니다. 순서를 바꾸면
+    // 폐기에 쓸 토큰이 이미 없습니다.
+    await api.revokeSession();
     api.clear();
     _candidateId = null;
     await _storage.delete(key: _kAccess);

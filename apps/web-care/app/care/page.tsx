@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { CareRequest } from '@carelink/shared-types';
+import { LogoutButton } from '@/components/LogoutButton';
 import { Page, Row } from '@/components/Page';
 import { apiGet } from '@/lib/api';
 import { currentUser } from '@/lib/session';
@@ -23,6 +24,7 @@ export default async function CareHome() {
   return (
     <Page
       title="간병 신청"
+      action={<LogoutButton />}
       footer={<Link className="cf-btn" href="/care/hospitals">간병 신청하기</Link>}
     >
       {live.length === 0 && past.length === 0 && (

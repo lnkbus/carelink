@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { LocaleSwitcher, StatusPill } from '@carelink/ui';
+import { currentUser } from '@/lib/session';
 import { NavItem } from './NavItem';
+import { SessionBox } from './SessionBox';
 
 /**
  * 기관 웹 사이드바 — 232px, 헤더 56px, 표가 기본 단위 (design/README §Organization Web).
@@ -16,7 +18,7 @@ const NAV = [
   { href: '/interviews', label: '면접 관리', screen: 'SCR-205' },
 ];
 
-export function Shell({
+export async function Shell({
   children, orgName, verificationStatus,
 }: {
   children: React.ReactNode;
@@ -24,6 +26,7 @@ export function Shell({
   verificationStatus?: string;
 }) {
   const verified = verificationStatus === 'VERIFIED';
+  const me = await currentUser();
   return (
     <div className="cl-shell">
       <nav className="cl-sidebar">
@@ -66,6 +69,7 @@ export function Shell({
 
         <div style={{ padding: 'var(--cl-s6)' }}>
           <LocaleSwitcher locale="ko" variant="desk" />
+          <SessionBox phone={me?.phone ?? undefined} />
         </div>
       </nav>
       <main className="cl-main">{children}</main>

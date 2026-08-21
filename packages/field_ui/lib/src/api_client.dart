@@ -37,6 +37,27 @@ class ApiClient {
     _refreshToken = null;
   }
 
+  /// 서버에서 refresh 토큰을 폐기합니다.
+  ///
+  /// 기기에서 지우는 것만으로는 **로그아웃한 척**입니다. refresh는 14일짜리라,
+  /// 그 사이 어디선가 새어 나간 값이 그대로 로그인에 쓰입니다.
+  ///
+  /// 실패해도 삼킵니다 — 비행기 모드에서 로그아웃을 눌렀다고 기기에 세션이
+  /// 남으면 그게 더 나쁩니다. 서버 토큰은 어차피 만료로 죽습니다.
+  Future<void> revokeSession() async {
+    final token = _refreshToken;
+    if (token == null) return;
+    try {
+      await http.post(
+        Uri.parse('$baseUrl/auth/logout'),
+        headers: {'content-type': 'application/json'},
+        body: jsonEncode({'refreshToken': token}),
+      );
+    } catch (_) {
+      // 무시. 아래에서 기기 토큰은 반드시 지웁니다.
+    }
+  }
+
   bool get hasSession => _refreshToken != null;
   String? get accessToken => _accessToken;
   String? get refreshToken => _refreshToken;

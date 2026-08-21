@@ -63,6 +63,29 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  /// 확인 한 단계를 둡니다. 되돌릴 수 없는 동작은 아니지만, 다시 들어오려면
+  /// 인증번호를 기다려야 해서 오조작 비용이 큽니다.
+  Future<void> _confirmLogout(AppState app) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(app.t('logout.confirm'), style: const TextStyle(fontSize: CL.subtitle)),
+        content: Text(app.t('logout.note'), style: const TextStyle(fontSize: CL.body)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(app.t('common.cancel'), style: const TextStyle(fontSize: CL.body)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(app.t('common.logout'), style: const TextStyle(fontSize: CL.body)),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) await app.signOut();
+  }
+
   @override
   Widget build(BuildContext context) {
     final app = AppScope.of(context);
@@ -100,6 +123,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(builder: (_) => const ScheduleScreen()),
                   ),
+                ),
+                // 로그아웃은 화면 맨 아래입니다. 앱바에 두면 근무 중에
+                // 뒤로가기 대신 눌립니다 — 그러면 병실 앞에서 인증번호를
+                // 기다리게 됩니다.
+                const SizedBox(height: CL.s5),
+                SecondaryButton(
+                  label: app.t('common.logout'),
+                  onPressed: _busy ? null : () => _confirmLogout(app),
                 ),
               ],
             ],

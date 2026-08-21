@@ -3,8 +3,20 @@ import type { DomainErrorBody } from '@carelink/shared-types';
 
 const BASE = process.env.CARELINK_API_URL ?? 'http://127.0.0.1:3000/api/v1';
 
-export const ACCESS_COOKIE = 'cl_at';
-export const REFRESH_COOKIE = 'cl_rt';
+/**
+ * 쿠키 이름을 앱마다 다르게 둡니다.
+ *
+ * **쿠키는 포트를 구분하지 않습니다.** localhost:3100·3200·3400이 같은 이름을
+ * 쓰면 세 앱이 세션 한 벌을 공유하고, 기관 웹에 로그인하는 순간 운영 콘솔이
+ * 로그아웃됩니다. 역할별 화면을 나란히 놓고 비교할 수 없게 되는데,
+ * 그 비교가 이 플랫폼에서 가장 자주 하는 확인입니다 —
+ * 같은 후보자가 기관에는 익명으로, 운영자에게는 실명으로 보여야 하니까요.
+ *
+ * 운영에서는 도메인이 갈리므로 문제가 없지만, 이름을 나눠 두면 그때도
+ * 한 브라우저에서 두 콘솔을 열 수 있습니다.
+ */
+export const ACCESS_COOKIE = 'cl_at_care';
+export const REFRESH_COOKIE = 'cl_rt_care';
 
 export class ApiError extends Error {
   constructor(

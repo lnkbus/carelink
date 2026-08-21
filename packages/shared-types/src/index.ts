@@ -41,6 +41,17 @@ export interface Session {
   me: { id: string; roles: UserRole[]; primaryRole: UserRole | null; locale: Locale };
 }
 
+/** GET /auth/me — 지금 로그인한 사용자. phone은 본인·운영자에게만 나갑니다. */
+export interface Me {
+  id: string;
+  phone?: string | null;
+  locale: Locale;
+  status: string;
+  roles: { role: UserRole; organizationId: string | null; isPrimary: boolean; approved: boolean }[];
+  showRoleSwitcher: boolean;
+  roleAssignmentState: string;
+}
+
 // ── talent ──────────────────────────────────────────────────────────────────
 
 export type CandidateStatus =

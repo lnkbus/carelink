@@ -7,18 +7,21 @@ import Link from 'next/link';
  * 확인하거나. 메뉴를 두면 급한 상황에서 길을 잃습니다.
  */
 export function Page({
-  title, back, children, footer,
+  title, back, children, footer, action,
 }: {
   title: string;
   back?: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
+  /** 앱바 오른쪽 슬롯. 홈의 로그아웃처럼 화면당 하나만 둡니다. */
+  action?: React.ReactNode;
 }) {
   return (
     <div className="cf-page">
       <header className="cf-appbar">
         {back && <Link className="cf-back" href={back} aria-label="뒤로">‹</Link>}
         <h1>{title}</h1>
+        {action}
       </header>
       <div className="cf-body">{children}</div>
       {footer && (
