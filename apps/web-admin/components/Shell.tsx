@@ -17,6 +17,10 @@ const NAV = [
     items: [
       { href: '/', label: '운영 대시보드', screen: 'SCR-501' },
       { href: '/matching', label: '매칭 센터', screen: 'SCR-504' },
+      // 이 둘이 메뉴에 없어서 SLA 잡 두 개가 허공에 돌고 있었습니다 —
+      // care-assignment-sla와 ticket-sla가 만든 결과를 볼 화면이 없었습니다.
+      { href: '/care', label: '간병 운영', screen: 'SCR-505' },
+      { href: '/tickets', label: '사건 · 문의', screen: 'SCR-506' },
     ],
   },
   {

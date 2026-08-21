@@ -506,3 +506,31 @@ export interface TrackWeights {
   /** rule_code → 배점. 코드가 아니라 이 표가 점수의 출처입니다 (§5.5). */
   weights: Record<string, number>;
 }
+
+/** SCR-506 사건 · 문의. 유형을 구조화하는 것이 이 화면의 요점입니다. */
+export interface SupportTicket {
+  id: string;
+  ticketType: string;
+  severity: string;
+  status: string;
+  relatedType?: string | null;
+  relatedId?: string | null;
+  createdAt: string;
+  slaDueAt?: string | null;
+  /** 음수면 이미 넘겼습니다. 화면은 `-2h`로 씁니다. */
+  slaLeftHours?: number | null;
+  urgent: boolean;
+  resolution?: string | null;
+  route?: string;
+  assigneeId?: string | null;
+  reporterRole?: string | null;
+}
+
+export interface TicketSummary {
+  ticketType: string;
+  urgent: boolean;
+  route: string;
+  total: number;
+  open: number;
+  escalated: number;
+}

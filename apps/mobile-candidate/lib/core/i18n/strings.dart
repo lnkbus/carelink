@@ -126,6 +126,10 @@ const Map<String, Map<AppLocale, String>> _dict = {
   },
 
   // ── 여정 (SCR-102) ──────────────────────────────────────────────────────
+  'journey.entries': {
+    AppLocale.ko: '자세히 보기', AppLocale.vi: 'Xem chi tiết',
+    AppLocale.ru: 'Подробнее', AppLocale.en: 'Details',
+  },
   'journey.title': {
     AppLocale.ko: '커리어 여정', AppLocale.vi: 'Hành trình nghề nghiệp',
     AppLocale.ru: 'Профессиональный путь', AppLocale.en: 'Career journey',

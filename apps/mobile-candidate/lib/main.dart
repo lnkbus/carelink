@@ -111,7 +111,7 @@ class _RootShellState extends State<RootShell> {
     // next_action이 가리키는 화면으로 이동합니다.
     switch (screenId) {
       case 'SCR-102':
-        Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const JourneyScreen()));
+        setState(() => _index = 1);
       case 'SCR-103':
         Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const TrackScreen()));
       case 'SCR-105':
@@ -119,19 +119,29 @@ class _RootShellState extends State<RootShell> {
       case 'SCR-104':
         setState(() => _index = 3);
       case 'SCR-107' || 'SCR-108':
-        setState(() => _index = 1);
+        setState(() => _index = 2);
+      case 'SCR-109':
+        Navigator.of(context)
+            .push(MaterialPageRoute<void>(builder: (_) => const ApplicationsScreen()));
       default:
-        setState(() => _index = 1);
+        setState(() => _index = 2);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final app = AppScope.of(context);
+    // 시안(design/CareLink Candidate App)의 하단 탭은 **홈 · 여정 · 일자리 ·
+    // 내 정보**입니다. 지원 현황(SCR-109)이 여정 자리를 차지하고 있었고,
+    // 여정은 홈에서 눌러 들어가는 하위 화면이었습니다.
+    //
+    // 여정이 탭이어야 하는 이유: 이 앱의 사용자는 '지금 내가 어디까지 왔나'를
+    // 가장 자주 확인합니다 (SCR-102). 지원 현황은 여정의 첫 단계일 뿐이라
+    // 여정 화면 안에서 열립니다.
     final pages = [
       HomeScreen(onNavigate: _goToScreen),
+      const JourneyScreen(),
       const JobsScreen(),
-      const ApplicationsScreen(),
       const SettingsScreen(),
     ];
 
@@ -149,14 +159,14 @@ class _RootShellState extends State<RootShell> {
             label: app.t('home.title'),
           ),
           NavigationDestination(
+            icon: const Icon(Icons.timeline_outlined, size: 26),
+            selectedIcon: const Icon(Icons.timeline, size: 26),
+            label: app.t('journey.title'),
+          ),
+          NavigationDestination(
             icon: const Icon(Icons.work_outline, size: 26),
             selectedIcon: const Icon(Icons.work, size: 26),
             label: app.t('jobs.title'),
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.assignment_outlined, size: 26),
-            selectedIcon: const Icon(Icons.assignment, size: 26),
-            label: app.t('applications.title'),
           ),
           NavigationDestination(
             icon: const Icon(Icons.person_outline, size: 26),

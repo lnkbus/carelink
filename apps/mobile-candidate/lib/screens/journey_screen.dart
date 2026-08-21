@@ -3,6 +3,10 @@ import '../core/app_state.dart';
 import '../core/i18n/strings.dart';
 import 'package:carelink_field_ui/carelink_field_ui.dart';
 import '../models/models.dart';
+import 'applications_screen.dart';
+import 'documents_screen.dart';
+import 'track_screen.dart';
+import 'training_screen.dart';
 /// SCR-102 커리어 여정.
 ///
 /// **이 화면이 CARELINK의 차별점입니다.** 일반 구인구직은 "지원 상태"만
@@ -110,8 +114,76 @@ class _JourneyScreenState extends State<JourneyScreen> {
                     ),
                     const SizedBox(height: CL.s4),
                     _VisaAxis(visa: j?.visaProcess, locale: app.locale),
+
+                    // ── 하위 진입 ─────────────────────────────────────────
+                    //
+                    // 시안(SCR-102)의 하단 3카드입니다: 서류 · 교육 · 커리어 트랙.
+                    // 여정은 '어디까지 왔나'를 보는 화면이고, 무언가를 하려면
+                    // 여기서 갈라집니다.
+                    //
+                    // 지원 현황(SCR-109)을 여기 넣었습니다 — 하단 탭이 시안대로
+                    // 홈·여정·일자리·내 정보 넷이 되면서 탭 자리를 잃었는데,
+                    // 지원은 여정의 첫 단계이므로 여정 안이 제자리입니다.
+                    const SizedBox(height: CL.s7),
+                    Text(
+                      app.t('journey.entries'),
+                      style: const TextStyle(fontSize: CL.subtitle, fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: CL.s4),
+                    _EntryTile(
+                      icon: Icons.folder_outlined,
+                      label: app.t('documents.title'),
+                      onTap: () => Navigator.of(context)
+                          .push(MaterialPageRoute<void>(builder: (_) => const DocumentsScreen())),
+                    ),
+                    _EntryTile(
+                      icon: Icons.school_outlined,
+                      label: app.t('training.title'),
+                      onTap: () => Navigator.of(context)
+                          .push(MaterialPageRoute<void>(builder: (_) => const TrainingScreen())),
+                    ),
+                    _EntryTile(
+                      icon: Icons.trending_up,
+                      label: app.t('track.title'),
+                      onTap: () => Navigator.of(context)
+                          .push(MaterialPageRoute<void>(builder: (_) => const TrackScreen())),
+                    ),
+                    _EntryTile(
+                      icon: Icons.assignment_outlined,
+                      label: app.t('applications.title'),
+                      onTap: () => Navigator.of(context)
+                          .push(MaterialPageRoute<void>(builder: (_) => const ApplicationsScreen())),
+                    ),
                   ],
                 ),
+    );
+  }
+}
+
+/// 하위 진입 행. 64px — 고령 사용자 기준 터치 타깃 (design/README §Candidate App).
+class _EntryTile extends StatelessWidget {
+  const _EntryTile({required this.icon, required this.label, required this.onTap});
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        height: 64,
+        decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: CL.line))),
+        child: Row(
+          children: [
+            Icon(icon, size: 24, color: CL.textSub),
+            const SizedBox(width: CL.s4),
+            Expanded(child: Text(label, style: const TextStyle(fontSize: CL.body))),
+            const Icon(Icons.chevron_right, color: CL.textMuted, size: 24),
+          ],
+        ),
+      ),
     );
   }
 }
