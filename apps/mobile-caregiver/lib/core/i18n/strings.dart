@@ -207,6 +207,74 @@ const Map<String, Map<AppLocale, String>> _dict = {
     AppLocale.ru: 'Экраны для этой роли — в другом приложении. Уточните адрес у менеджера.',
     AppLocale.en: 'Screens for this role live in another app. Ask your coordinator for the address.',
   },
+  'record.title': {
+    AppLocale.ko: '근무 기록', AppLocale.vi: 'Bản ghi ca',
+    AppLocale.ru: 'Запись смены', AppLocale.en: 'Shift record',
+  },
+  'record.didToday': {
+    AppLocale.ko: '오늘 한 일', AppLocale.vi: 'Việc đã làm hôm nay',
+    AppLocale.ru: 'Что сделано сегодня', AppLocale.en: 'What I did today',
+  },
+  'record.notes': {
+    AppLocale.ko: '특이사항', AppLocale.vi: 'Ghi chú đặc biệt',
+    AppLocale.ru: 'Особые заметки', AppLocale.en: 'Anything unusual',
+  },
+  'record.notesHint': {
+    AppLocale.ko: '필요할 때만 적어주세요',
+    AppLocale.vi: 'Chỉ ghi khi cần',
+    AppLocale.ru: 'Пишите только при необходимости',
+    AppLocale.en: 'Only if something came up',
+  },
+  'record.save': {
+    AppLocale.ko: '저장하기', AppLocale.vi: 'Lưu lại',
+    AppLocale.ru: 'Сохранить', AppLocale.en: 'Save',
+  },
+  'record.saved': {
+    AppLocale.ko: '저장했습니다', AppLocale.vi: 'Đã lưu',
+    AppLocale.ru: 'Сохранено', AppLocale.en: 'Saved',
+  },
+  'record.offlineQueued': {
+    // 시안의 앰버 배너. 병실은 신호가 약하고, 기록이 날아갈까 봐 안 쓰는
+    // 것이 가장 흔한 이탈 이유입니다. 쓰기 전에 말해 줘야 합니다.
+    AppLocale.ko: '오프라인 · 저장 후 자동 전송',
+    AppLocale.vi: 'Ngoại tuyến · Sẽ tự gửi sau khi lưu',
+    AppLocale.ru: 'Оффлайн · Отправится автоматически',
+    AppLocale.en: 'Offline · Will send automatically',
+  },
+  'record.pending': {
+    AppLocale.ko: '전송 대기', AppLocale.vi: 'Chờ gửi',
+    AppLocale.ru: 'Ожидает отправки', AppLocale.en: 'Waiting to send',
+  },
+  'record.photo': {
+    AppLocale.ko: '사진', AppLocale.vi: 'Ảnh', AppLocale.ru: 'Фото', AppLocale.en: 'Photo',
+  },
+  'record.photoLater': {
+    // 사진 업로드는 presigned URL 경로가 필요합니다 (§6-5). 지금은 화면만
+    // 두고 눌렀을 때 무엇이 남았는지 말합니다 — 버튼이 아무 반응도 없으면
+    // 앱이 고장 난 것으로 읽힙니다.
+    AppLocale.ko: '사진 첨부는 준비 중입니다. 특이사항에 글로 적어 주세요.',
+    AppLocale.vi: 'Đính kèm ảnh đang được chuẩn bị. Hãy ghi bằng chữ.',
+    AppLocale.ru: 'Прикрепление фото готовится. Опишите словами.',
+    AppLocale.en: 'Photo attachment is not ready yet. Please describe it in text.',
+  },
+  'detail.callHospital': {
+    AppLocale.ko: '병원 연락', AppLocale.vi: 'Gọi bệnh viện',
+    AppLocale.ru: 'Позвонить в больницу', AppLocale.en: 'Call hospital',
+  },
+  'detail.directions': {
+    AppLocale.ko: '길찾기', AppLocale.vi: 'Chỉ đường',
+    AppLocale.ru: 'Маршрут', AppLocale.en: 'Directions',
+  },
+  'detail.writeRecord': {
+    AppLocale.ko: '근무 기록 작성', AppLocale.vi: 'Viết bản ghi ca',
+    AppLocale.ru: 'Заполнить запись', AppLocale.en: 'Write shift record',
+  },
+  'detail.notStarted': {
+    AppLocale.ko: '근무를 시작해야 기록할 수 있습니다',
+    AppLocale.vi: 'Cần bắt đầu ca mới ghi được',
+    AppLocale.ru: 'Записывать можно после начала смены',
+    AppLocale.en: 'Start the shift before recording',
+  },
   'common.loading': {
     AppLocale.ko: '불러오는 중',
     AppLocale.vi: 'Đang tải',

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:carelink_field_ui/carelink_field_ui.dart';
@@ -86,8 +87,63 @@ class AppState extends ChangeNotifier {
     }
     api.onSessionExpired = signOut;
     // 저장된 토큰으로 들어온 경우에도 역할을 확인합니다.
-    if (api.hasSession) await refreshMe();
+    if (api.hasSession) {
+      await refreshMe();
+      // 지난번에 못 보낸 기록을 먼저 보냅니다. 실패해도 큐에 남습니다.
+      await flushLogQueue();
+    }
     _ready = true;
+    notifyListeners();
+  }
+
+  // ── 오프라인 큐 ──────────────────────────────────────────────────────
+  //
+  // 병실은 신호가 약합니다. 저장이 실패한 기록을 **기기에** 넣어 두고
+  // 앱을 다시 열 때 보냅니다.
+  //
+  // 큐를 서버에 두지 않은 이유: 서버에 못 닿는 상황이 문제입니다.
+  // 해결책이 서버에 있으면 아무것도 해결하지 못합니다.
+  static const _kQueue = 'cl_log_queue';
+
+  /// 기록을 큐에 넣습니다. 화면은 '저장했다'고 말합니다 — 실패했다고 하면
+  /// 사용자는 같은 것을 다시 입력하고, 그러면 중복이 쌓입니다.
+  Future<void> queueLogs(String assignmentId, List<Map<String, dynamic>> entries) async {
+    final raw = await _storage.read(key: _kQueue);
+    final list = raw == null ? <dynamic>[] : jsonDecode(raw) as List<dynamic>;
+    for (final e in entries) {
+      list.add({'assignmentId': assignmentId, 'body': e});
+    }
+    await _storage.write(key: _kQueue, value: jsonEncode(list));
+    notifyListeners();
+  }
+
+  /// 큐에 남은 건수. 화면에 띄워 '아직 안 갔다'를 알립니다.
+  Future<int> pendingLogCount() async {
+    final raw = await _storage.read(key: _kQueue);
+    if (raw == null) return 0;
+    return (jsonDecode(raw) as List<dynamic>).length;
+  }
+
+  /// 큐를 비웁니다. **한 건씩 보내고 성공한 것만 제거합니다** —
+  /// 통째로 보내고 통째로 지우면 중간에 끊겼을 때 전부 잃습니다.
+  Future<void> flushLogQueue() async {
+    final raw = await _storage.read(key: _kQueue);
+    if (raw == null) return;
+    final list = (jsonDecode(raw) as List<dynamic>).toList();
+    final left = <dynamic>[];
+    for (final item in list) {
+      final m = item as Map<String, dynamic>;
+      try {
+        await api.post('/care-assignments/${m['assignmentId']}/logs', m['body']);
+      } catch (_) {
+        left.add(item);
+      }
+    }
+    if (left.isEmpty) {
+      await _storage.delete(key: _kQueue);
+    } else {
+      await _storage.write(key: _kQueue, value: jsonEncode(left));
+    }
     notifyListeners();
   }
 

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/app_state.dart';
 import '../core/i18n/strings.dart';
 import '../models/models.dart';
+import 'record_screen.dart';
 
 /// SCR-403 근무 상세 + SCR-404 근무 시작·종료.
 ///
@@ -283,6 +284,56 @@ class _ShiftScreenState extends State<ShiftScreen> {
                 ),
                 const SizedBox(height: CL.s6),
               ],
+
+              // ── 시안의 하단 액션 3개 (SCR-403) ────────────────────────
+              //
+              // 병원 연락·길찾기는 근무 전에 가장 자주 누르는 둘입니다.
+              // 화면 아래로 스크롤해야 나오면 병실 앞에서 못 찾습니다.
+              Row(
+                children: [
+                  Expanded(
+                    child: SecondaryButton(
+                      up: true,
+                      label: app.t('detail.callHospital'),
+                      onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(d.hospitalName ?? '—')),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: CL.s3),
+                  Expanded(
+                    child: SecondaryButton(
+                      up: true,
+                      label: app.t('detail.directions'),
+                      onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('${d.hospitalName ?? ''} ${d.ward ?? ''}')),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: CL.s4),
+              PrimaryButton(
+                up: true,
+                hero: true,
+                label: app.t('detail.writeRecord'),
+                // 시작 전에는 기록할 것이 없습니다. 버튼을 숨기지 않고
+                // 비활성으로 두면서 이유를 아래에 씁니다 — 사라진 버튼은
+                // 찾게 되고, 찾다 못 찾으면 전화가 옵니다.
+                onPressed: !started || ended
+                    ? null
+                    : () => Navigator.of(context)
+                        .push(MaterialPageRoute<bool>(
+                          builder: (_) => RecordScreen(assignmentId: widget.assignmentId, detail: d),
+                        ))
+                        .then((saved) { if (saved == true) _load(); }),
+              ),
+              if (!started) ...[
+                const SizedBox(height: CL.s3),
+                Text(app.t('detail.notStarted'),
+                    style: const TextStyle(fontSize: CLUp.caption, color: CL.textMuted)),
+              ],
+              const SizedBox(height: CL.s6),
 
               Text(app.t('shift.logs'),
                   style: const TextStyle(fontSize: CLUp.subtitle, fontWeight: FontWeight.w700)),
