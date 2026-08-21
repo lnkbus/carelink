@@ -23,6 +23,6 @@ RUN flutter build web --release --web-renderer html --pwa-strategy=none \
       --dart-define=CARELINK_API_URL=$CARELINK_API_URL
 
 FROM nginx:1.27-alpine
-COPY --from=build /app/build/web /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/apps/mobile-caregiver/build/web /usr/share/nginx/html
+COPY apps/mobile-caregiver/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80

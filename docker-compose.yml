@@ -4,9 +4,11 @@
 #
 # 뜨는 것:
 #   :3000  API            (/api/v1)
-#   :3100  운영 콘솔       SCR-501·502·503·504·508·509·510·511
+#   :3100  운영 콘솔       SCR-501·502·503·504·507·508·509·510·511
 #   :3200  기관 웹         SCR-201·202·203·204·205
 #   :3300  후보자 앱(웹)    SCR-101~110 — 검증용. 실배포는 스토어입니다.
+#   :3400  보호자 웹        SCR-301~307
+#   :3500  간병사 앱(웹)    SCR-401~404 — 검증용. 실배포는 스토어입니다.
 #   :5432  PostgreSQL 16
 #   :6379  Redis 7
 #
@@ -77,7 +79,7 @@ services:
       PORT: 3000
       # 브라우저에서 API를 직접 부르는 출처. 와일드카드를 쓰지 않습니다 —
       # 이 API는 후보자의 실명·연락처·체류자격을 다룹니다.
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3100,http://localhost:3200,http://localhost:3300}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3100,http://localhost:3200,http://localhost:3300,http://localhost:3400,http://localhost:3500}
     ports: ['3000:3000']
 
   web-admin:
@@ -122,26 +124,15 @@ services:
   # 터치 타깃과 글꼴 크기는 실기기에서 최종 확인하세요 (docs/14 §3).
   mobile-web:
     build:
-      context: ./apps/mobile-candidate
-      dockerfile: Dockerfile
+      # 공용 FIELD 패키지(packages/field_ui)가 path 의존이라 컨텍스트가
+      # 리포 루트여야 합니다. 앱 디렉터리만 주면 pub get이 실패합니다.
+      context: .
+      dockerfile: apps/mobile-candidate/Dockerfile
       args:
         CARELINK_API_URL: http://localhost:3000/api/v1
     depends_on:
       api: { condition: service_healthy }
     ports: ['3300:80']
-
-  # 보호자 반응형 웹 (SCR-301~306). 별도 앱을 만들지 않습니다 — 보호자는
-  # 설치 의사가 낮고 대개 병원에서 링크로 들어옵니다 (SCR-301 notes).
-  web-care:
-    build:
-      context: .
-      dockerfile: apps/web-care/Dockerfile
-    depends_on:
-      api: { condition: service_healthy }
-    environment:
-      CARELINK_API_URL: http://api:3000/api/v1
-      NEXT_PUBLIC_API_URL: http://localhost:3000/api/v1
-    ports: ['3400:3400']
 
   # 간병사 앱 — 웹 빌드 (SCR-401~404). 검증용입니다.
   # 터치 타깃과 글꼴 크기는 실기기에서 최종 확인하세요 (docs/14 §3).

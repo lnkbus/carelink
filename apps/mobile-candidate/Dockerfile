@@ -6,10 +6,15 @@
 FROM ghcr.io/cirruslabs/flutter:3.24.5 AS build
 WORKDIR /app
 
-COPY pubspec.yaml pubspec.lock ./
+# 공용 FIELD 패키지(토큰·API 클라이언트·위젯)가 path 의존이라 빌드 컨텍스트가
+# 리포 루트입니다. 앱 디렉터리만 주면 pub get이 `../../packages/field_ui`를
+# 찾지 못합니다.
+COPY packages/field_ui packages/field_ui
+COPY apps/mobile-candidate/pubspec.yaml apps/mobile-candidate/pubspec.lock apps/mobile-candidate/
+WORKDIR /app/apps/mobile-candidate
 RUN flutter pub get
 
-COPY . .
+COPY apps/mobile-candidate .
 
 # API 주소는 빌드 시점에 박힙니다 (Dart의 const 환경변수).
 # 그래서 주소가 바뀌면 다시 빌드해야 합니다 — 런타임 주입이 아닙니다.
@@ -20,6 +25,6 @@ RUN flutter build web --release --web-renderer html --pwa-strategy=none \
       --dart-define=CARELINK_API_URL=$CARELINK_API_URL
 
 FROM nginx:1.27-alpine
-COPY --from=build /app/build/web /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/apps/mobile-candidate/build/web /usr/share/nginx/html
+COPY apps/mobile-candidate/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
