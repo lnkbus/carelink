@@ -25,12 +25,20 @@ export class CareController {
     return (await this.care.listServiceItems()).map((i) => ({ code: i.code, labelKo: i.label_ko }));
   }
 
-  /** 파트너 병원만 노출합니다 — 공급이 없는 병원을 열면 취소율이 오릅니다. */
+  /**
+   * 신청 가능한 병원 (SCR-302).
+   *
+   * 제휴 병원이면서 **배정 가능한 간병사가 있는** 곳만 내려갑니다.
+   * 커버리지를 넓히려고 공급 없는 병원을 열면 신청은 들어오고 배정은 안 되며,
+   * 그 신청은 전부 취소로 끝납니다. 취소를 겪은 보호자는 돌아오지 않습니다.
+   */
   @Get('care-hospitals')
   async hospitals(): Promise<{ id: string; name: string; region: string | null; activeCaregivers: number }[]> {
-    return (await this.care.listHospitals()).map((h) => ({
-      id: h.id, name: h.name, region: h.region, activeCaregivers: h.active_caregivers,
-    }));
+    return (await this.care.listHospitals())
+      .map((h) => ({
+        id: h.id, name: h.name, region: h.region, activeCaregivers: Number(h.active_caregivers),
+      }))
+      .filter((h) => h.activeCaregivers > 0);
   }
 
   /** POST /api/v1/care-requests — SCR-303 */
@@ -139,6 +147,20 @@ export class CareController {
     const request = await this.care.getRequest(id);
     const rows = await this.care.listAssignments(id);
     return rows.map((r) => toAssignmentDto(r, request.requester_id));
+  }
+
+  /**
+   * SCR-306 — 배정 한 건.
+   *
+   * 보호자가 진행 상황 화면에서 씁니다. `self`는 역할이 아니라 관계라
+   * (요청의 신청자 === 나) 소유자 판정은 직렬화 단계가 합니다 — 여기서
+   * if 문으로 거르지 않습니다 (§5.2).
+   */
+  @Get('care-assignments/:id')
+  async assignment(@Param('id', ParseUUIDPipe) id: string): Promise<CareAssignmentDto> {
+    const row = await this.care.getAssignment(id);
+    const request = await this.care.getRequest(row.care_request_id);
+    return toAssignmentDto(row, request.requester_id);
   }
 
   /**

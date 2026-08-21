@@ -105,6 +105,19 @@ services:
       NEXT_PUBLIC_API_URL: http://localhost:3000/api/v1
     ports: ['3200:3200']
 
+  # 보호자 반응형 웹 (SCR-301~306). 별도 앱을 만들지 않습니다 — 보호자는
+  # 설치 의사가 낮고 대개 병원에서 링크로 들어옵니다 (SCR-301 notes).
+  web-care:
+    build:
+      context: .
+      dockerfile: apps/web-care/Dockerfile
+    depends_on:
+      api: { condition: service_healthy }
+    environment:
+      CARELINK_API_URL: http://api:3000/api/v1
+      NEXT_PUBLIC_API_URL: http://localhost:3000/api/v1
+    ports: ['3400:3400']
+
   # 후보자 앱 — 웹 빌드. 화면 흐름·번역·API 연동 확인용입니다.
   # 터치 타깃과 글꼴 크기는 실기기에서 최종 확인하세요 (docs/14 §3).
   mobile-web:

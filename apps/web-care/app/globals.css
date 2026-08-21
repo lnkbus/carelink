@@ -1,0 +1,145 @@
+/*
+ * FIELD 트랙 — 보호자 반응형 웹.
+ *
+ * 운영 콘솔(DESK)과 다른 스케일을 씁니다. 보호자는 병원 복도에서 한 손으로,
+ * 대개 급한 상황에 씁니다. 그리고 상당수가 고령입니다.
+ *
+ *   본문 최소 16px  · 12px 미만은 고령 사용자에게 존재하지 않는 텍스트입니다
+ *   터치 타깃 48px  · 실수로 누르면 취소·변경이 되는 화면입니다
+ *   Micro(10.5px) 없음 — 토큰을 정의하지 않았습니다. 쓸 수 없는 값은
+ *   있으면 언젠가 쓰입니다.
+ */
+:root {
+  --cf-display: 26px;
+  --cf-title:   21px;
+  --cf-subtitle:17px;
+  --cf-body:    16px;
+  --cf-caption: 14px;
+  --cf-tap:     48px;
+  --cf-max:     560px;
+}
+
+html, body { font-size: var(--cf-body); background: var(--cl-bg-sub); }
+
+.cf-page {
+  max-width: var(--cf-max);
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--cl-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+.cf-appbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--cl-bg);
+  border-bottom: 1px solid var(--cl-line);
+  padding: var(--cl-s5) var(--cl-s6);
+  display: flex;
+  align-items: center;
+  gap: var(--cl-s4);
+  min-height: var(--cf-tap);
+}
+.cf-appbar h1 { font-size: var(--cf-subtitle); margin: 0; font-weight: 600; }
+.cf-back {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: var(--cf-tap); min-height: var(--cf-tap);
+  margin-left: calc(var(--cl-s5) * -1);
+  font-size: var(--cf-title); color: var(--cl-text-sub);
+}
+
+.cf-body { padding: var(--cl-s6); display: flex; flex-direction: column; gap: var(--cl-s5); flex: 1; }
+
+.cf-card {
+  border: 1px solid var(--cl-line);
+  border-radius: var(--cl-r-field);
+  padding: var(--cl-s6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--cl-s4);
+}
+.cf-card h2 { font-size: var(--cf-subtitle); margin: 0; font-weight: 600; }
+
+.cf-row { display: flex; justify-content: space-between; align-items: center; gap: var(--cl-s4); }
+.cf-label { color: var(--cl-text-muted); font-size: var(--cf-caption); }
+.cf-value { font-size: var(--cf-body); }
+.cf-mono { font-family: var(--cl-font-mono); }
+
+.cf-btn {
+  display: flex; align-items: center; justify-content: center;
+  min-height: var(--cf-tap);
+  padding: 0 var(--cl-s6);
+  border-radius: var(--cl-r-field);
+  border: 1px solid var(--cl-action);
+  background: var(--cl-action);
+  color: #fff;
+  font-size: var(--cf-body);
+  font-weight: 600;
+  width: 100%;
+}
+.cf-btn[disabled] { background: var(--cl-bg-sub); border-color: var(--cl-line); color: var(--cl-text-disabled); cursor: not-allowed; }
+.cf-btn-ghost { background: var(--cl-bg); color: var(--cl-action-text); }
+
+.cf-field { display: flex; flex-direction: column; gap: var(--cl-s2); }
+.cf-field > label { font-size: var(--cf-caption); color: var(--cl-text-sub); font-weight: 600; }
+.cf-input, .cf-select, .cf-textarea {
+  min-height: var(--cf-tap);
+  padding: var(--cl-s4) var(--cl-s5);
+  border: 1px solid var(--cl-line-strong);
+  border-radius: var(--cl-r-desk);
+  font-size: var(--cf-body);
+  font-family: inherit;
+  width: 100%;
+  background: var(--cl-bg);
+}
+.cf-textarea { min-height: 96px; resize: vertical; }
+
+/* 선택 항목은 체크박스가 아니라 48px 타일입니다 — 복도에서 한 손으로 누릅니다. */
+.cf-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: var(--cl-s3); }
+.cf-tile {
+  display: flex; align-items: center; gap: var(--cl-s3);
+  min-height: var(--cf-tap);
+  padding: var(--cl-s3) var(--cl-s5);
+  border: 1px solid var(--cl-line-strong);
+  border-radius: var(--cl-r-desk);
+  font-size: var(--cf-body);
+  background: var(--cl-bg);
+  text-align: left;
+}
+.cf-tile[aria-pressed='true'] {
+  border-color: var(--cl-action);
+  background: var(--cl-action-tint);
+  color: var(--cl-action-text);
+  font-weight: 600;
+}
+
+.cf-empty { padding: var(--cl-s8) var(--cl-s6); text-align: center; color: var(--cl-text-muted); font-size: var(--cf-body); }
+
+.cf-note {
+  border: 1px solid var(--cl-flag-line);
+  background: var(--cl-flag-tint);
+  color: var(--cl-flag);
+  border-radius: var(--cl-r-desk);
+  padding: var(--cl-s5);
+  font-size: var(--cf-caption);
+  line-height: 1.5;
+}
+.cf-note-alert { border-color: var(--cl-alert-line); background: var(--cl-alert-tint); color: var(--cl-alert); }
+
+.cf-steps { display: flex; flex-direction: column; gap: var(--cl-s4); }
+.cf-step { display: flex; gap: var(--cl-s4); align-items: flex-start; }
+.cf-step-dot {
+  flex: none; width: 24px; height: 24px; border-radius: var(--cl-r-pill);
+  border: 1px solid var(--cl-line-strong); display: flex; align-items: center; justify-content: center;
+  font-size: var(--cf-caption); color: var(--cl-text-muted); background: var(--cl-bg);
+}
+.cf-step-done .cf-step-dot { background: var(--cl-signal); border-color: var(--cl-signal); color: #fff; }
+.cf-step-now .cf-step-dot { border-color: var(--cl-action); color: var(--cl-action-text); font-weight: 700; }
+.cf-step-text { font-size: var(--cf-body); padding-top: 2px; }
+.cf-step-sub { font-size: var(--cf-caption); color: var(--cl-text-muted); }
+
+.cf-log { display: flex; gap: var(--cl-s4); align-items: baseline; padding: var(--cl-s4) 0; border-bottom: 1px solid var(--cl-line); }
+.cf-log:last-child { border-bottom: 0; }
+.cf-log-time { font-family: var(--cl-font-mono); font-size: var(--cf-caption); color: var(--cl-text-muted); flex: none; }

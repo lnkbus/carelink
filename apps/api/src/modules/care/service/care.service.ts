@@ -359,6 +359,16 @@ export class CareService {
   listServiceLogs(assignmentId: string) { return this.repo.listServiceLogs(assignmentId); }
   requesterOfAssignment(assignmentId: string) { return this.repo.requesterOfAssignment(assignmentId); }
 
+  async getAssignment(assignmentId: string) {
+    const row = await this.repo.findAssignment(assignmentId);
+    if (!row) {
+      throw new DomainError('COMMON_NOT_FOUND', {
+        targetType: 'care_assignment', targetId: assignmentId,
+      });
+    }
+    return row;
+  }
+
   /**
    * 근무 시작·종료 (SCR-404).
    *

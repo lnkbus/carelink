@@ -356,3 +356,97 @@ export interface Job {
   salaryMax: number | null;
   salaryVisibility: string;
 }
+
+// ── care (V2) ──────────────────────────────────────────────────────────────
+//
+// 손으로 씁니다. OpenAPI 생성 타입을 쓰지 않는 이유는 파일 앞머리에 있습니다 —
+// scope로 잘린 필드는 **키 자체가 사라지므로**, 생성 타입에서는 보호자 화면에서
+// `caregiver.name`이 타입 검사를 통과해 버립니다.
+
+export interface CareHospital {
+  id: string;
+  name: string;
+  region: string | null;
+  /** 이 병원에 배정 가능한 간병사 수. 0인 병원은 노출하지 않습니다 (SCR-302 notes). */
+  activeCaregivers: number;
+}
+
+export interface CareServiceItem {
+  code: string;
+  labelKo: string;
+}
+
+export interface CareRequest {
+  id: string;
+  hospitalName: string | null;
+  ward: string | null;
+  serviceType: string;
+  shiftPatternCode: string | null;
+  startAt: string;
+  endAt: string | null;
+  supportItems: string[] | null;
+  mobilityLevel: string | null;
+  status: string;
+  slaDueAt: string | null;
+  /** 본인·운영자만. 간병사에게는 별도 요약이 갑니다 (docs/11 §3.2). */
+  cautions?: string | null;
+  restrictedFlags?: string[] | null;
+}
+
+/**
+ * 간병사 카드 (SCR-304).
+ *
+ * **국적도 실명도 없습니다** (§6-21 · §5.10). 여기에 필드를 추가할 때는
+ * "보호자가 이걸 보고 무엇을 결정하는가"를 먼저 물어보세요. 국적으로
+ * 고르기 시작하면 그것이 배정 관행이 되고, 검증을 통과한 인력이 국적 때문에
+ * 선택받지 못합니다.
+ */
+export interface CaregiverCard {
+  caregiverId: string;
+  displayCode: string;
+  experienceYrs: number;
+  ratingAvg: number | null;
+  completedCount: number;
+  available: boolean;
+}
+
+export interface CareMatchResult {
+  candidates: CaregiverCard[];
+  /**
+   * 몇 명이 빠졌는가. 보호자도 봅니다 — '간병사가 2명뿐'과 '12명 중 10명이
+   * 빠졌다'는 전혀 다른 정보이고, 감추면 플랫폼에 사람이 없다고 판단합니다.
+   */
+  excludedCount: number;
+  /**
+   * 사유별 내역. **운영자에게만 갑니다** (`@Scope('admin')`).
+   *
+   * 그래서 optional입니다 — 보호자 응답에는 키 자체가 없습니다. 이 필드를
+   * 필수로 두면 화면이 있다고 가정하고 그리다가 런타임에 터집니다.
+   * 사유는 개인정보가 아니지만 "우리 인력의 검증이 만료돼 있다"는 운영
+   * 약점이라, 고객에게 내보낼 판단은 따로 필요합니다.
+   */
+  excludedReasons?: Record<string, number>;
+}
+
+export interface CareAssignment {
+  id: string;
+  careRequestId: string;
+  caregiverDisplayCode: string;
+  status: string;
+  offeredAt: string;
+  respondedAt: string | null;
+  shiftStartTime: string | null;
+  shiftEndTime: string | null;
+}
+
+export interface ServiceLog {
+  id: string;
+  logType: string;
+  itemCode: string | null;
+  occurredAt: string;
+  checkMethod: string | null;
+  corrected: boolean;
+  correctionOf: string | null;
+  /** 서술형 메모. 보호자 scope에서는 잘려 나갑니다 (SCR-306 notes). */
+  memo?: string | null;
+}

@@ -430,10 +430,55 @@ export class CareRepository {
     );
   }
 
-  listHospitals(): Promise<{ id: string; name: string; region: string | null; active_caregivers: number }[]> {
-    // 공급이 없는 병원을 노출하면 신청은 들어오고 배정은 안 되어 취소율이 오릅니다.
+  /**
+   * 신청 가능한 병원.
+   *
+   * **공급이 없는 병원은 내려보내지 않습니다** (SCR-302 notes). 신청은
+   * 들어오고 배정은 안 되면 전부 취소로 끝나고, 취소를 겪은 보호자는
+   * 돌아오지 않습니다.
+   *
+   * `hospitals.active_caregivers` 컬럼을 읽지 않습니다. 그 값을 갱신하는
+   * 코드가 어디에도 없어 항상 0이고, 0을 그대로 믿으면 모든 병원이
+   * 걸러지거나(엄격하게 보면) 아무것도 안 걸러집니다(느슨하게 보면).
+   * 어느 쪽이든 화면이 거짓말을 합니다. 그래서 **매칭과 같은 기준으로
+   * 그 자리에서 셉니다** — 클리어런스 6종 PASS + 지금 일정이 열려 있음.
+   *
+   * 지역은 후보자의 희망 근무지역(`candidates.preferred_regions`)으로
+   * 봅니다. 간병사 테이블에는 지역이 없고, 없는 것을 지어내는 것보다
+   * 있는 데이터를 쓰는 편이 낫습니다. 연결된 후보자가 없거나 희망지역을
+   * 적지 않은 간병사는 어느 병원에나 셉니다 — 배제하면 신규 인력이
+   * 영원히 공급으로 잡히지 않습니다.
+   */
+  listHospitals(): Promise<{ id: string; name: string; region: string | null; active_caregivers: string }[]> {
     return this.db.query(
-      `SELECT id, name, region, active_caregivers FROM hospitals WHERE is_partner ORDER BY name`,
+      `WITH ready AS (
+         SELECT cg.id, c.preferred_regions
+           FROM caregivers cg
+           LEFT JOIN candidates c ON c.id = cg.candidate_id
+          WHERE cg.is_active
+            AND EXISTS (
+              SELECT 1 FROM caregiver_availability a
+               WHERE a.caregiver_id = cg.id AND a.kind = 'AVAILABLE'
+                 AND a.starts_at <= now() AND a.ends_at >= now()
+            )
+            -- 클리어런스 6종이 전부 PASS여야 합니다 (§5.11). 매칭이 쓰는
+            -- 기준과 같아야 화면의 숫자와 실제 후보 수가 어긋나지 않습니다.
+            AND (
+              SELECT count(*) FROM worker_clearances w
+               WHERE w.worker_user_id = cg.user_id
+                 AND w.result = 'PASS'
+                 AND (w.expires_on IS NULL OR w.expires_on >= current_date)
+            ) >= 6
+       )
+       SELECT h.id, h.name, h.region,
+              (SELECT count(*) FROM ready r
+                WHERE r.preferred_regions IS NULL
+                   OR cardinality(r.preferred_regions) = 0
+                   OR h.region IS NULL
+                   OR h.region = ANY(r.preferred_regions))::text AS active_caregivers
+         FROM hospitals h
+        WHERE h.is_partner
+        ORDER BY h.name`,
     );
   }
 }

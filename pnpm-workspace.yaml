@@ -2,4 +2,5 @@ packages:
   - 'apps/api'
   - 'apps/web-org'
   - 'apps/web-admin'
+  - 'apps/web-care'
   - 'packages/*'
