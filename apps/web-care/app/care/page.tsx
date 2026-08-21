@@ -46,15 +46,18 @@ export default async function CareHome() {
       ))}
 
       {past.length > 0 && (
-        <div className="cf-card">
-          <h2>지난 신청 {past.length}건</h2>
-          {past.slice(0, 5).map((r) => (
+        <Link href="/care/history" className="cf-card" style={{ color: 'inherit' }}>
+          <div className="cf-row">
+            <h2>지난 이용 내역</h2>
+            <span className="cf-label">{past.length}건 ›</span>
+          </div>
+          {past.slice(0, 3).map((r) => (
             <div key={r.id} className="cf-row">
               <span>{r.hospitalName ?? '—'} · {fmtDateTime(r.startAt)}</span>
               <span className="cf-label">{label(r.status)}</span>
             </div>
           ))}
-        </div>
+        </Link>
       )}
     </Page>
   );
