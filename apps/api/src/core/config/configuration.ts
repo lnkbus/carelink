@@ -8,6 +8,19 @@ export interface AppConfig {
   OTP_TTL_SECONDS: number;
   OTP_MAX_ATTEMPTS: number;
   OTP_RESEND_COOLDOWN_SECONDS: number;
+  /**
+   * 발급된 인증번호를 응답에 그대로 실어 보낼지.
+   *
+   * **인증 우회 스위치입니다.** 켜면 전화번호만 아는 사람이 남의 계정으로
+   * 로그인할 수 있습니다. 데모·로컬 스택 전용입니다.
+   *
+   * NODE_ENV로 판단하지 않는 이유: 도커 이미지는 프로덕션 빌드라
+   * NODE_ENV=production이고, 그러면 데모 스택에서 아무도 로그인할 수
+   * 없습니다. 반대로 이걸 열려고 NODE_ENV를 development로 낮추면
+   * 에러 상세·로깅 같은 무관한 동작까지 함께 바뀝니다.
+   * 의도가 하나면 스위치도 하나여야 합니다.
+   */
+  AUTH_EXPOSE_OTP_CODE: boolean;
 }
 
 export default (): AppConfig => ({
@@ -19,4 +32,9 @@ export default (): AppConfig => ({
   OTP_TTL_SECONDS: Number(process.env.OTP_TTL_SECONDS ?? 180),
   OTP_MAX_ATTEMPTS: Number(process.env.OTP_MAX_ATTEMPTS ?? 5),
   OTP_RESEND_COOLDOWN_SECONDS: Number(process.env.OTP_RESEND_COOLDOWN_SECONDS ?? 30),
+  // 기본값은 '켜짐'이 아닙니다. 명시적으로 'true'라고 써야 열립니다 —
+  // 빈 문자열·1·yes 전부 닫힌 것으로 봅니다.
+  AUTH_EXPOSE_OTP_CODE:
+    process.env.AUTH_EXPOSE_OTP_CODE === 'true' ||
+    (process.env.AUTH_EXPOSE_OTP_CODE === undefined && process.env.NODE_ENV !== 'production'),
 });

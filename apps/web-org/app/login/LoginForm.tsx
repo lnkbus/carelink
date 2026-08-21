@@ -84,12 +84,25 @@ export function LoginForm() {
             style={field}
             inputMode="numeric"
             placeholder="000000"
+            maxLength={6}
             value={code}
-            onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, ''))}
+            // 6자리를 넘겨 받으면 서버가 형식 오류를 돌려주는데, 화면에는
+            // '입력값을 다시 확인하세요'만 뜹니다. 무엇이 틀렸는지 알 수 없으므로
+            // 애초에 7자리가 들어가지 않게 막습니다.
+            onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
           />
-          {devCode && (
+          {devCode ? (
             <p style={{ margin: 'var(--cl-s2) 0 0', fontSize: 'var(--cl-caption)', color: 'var(--cl-flag)' }}>
-              개발 환경 인증번호: <span style={{ fontFamily: 'var(--cl-font-mono)' }}>{devCode}</span>
+              데모 인증번호: <span style={{ fontFamily: 'var(--cl-font-mono)' }}>{devCode}</span>
+            </p>
+          ) : (
+            // 번호를 못 받는 상황에서 화면이 아무 말도 하지 않으면 사용자는
+            // 000000을 찍어 보다 포기합니다. 왜 안 보이는지를 씁니다.
+            <p style={{ margin: 'var(--cl-s2) 0 0', fontSize: 'var(--cl-caption)', color: 'var(--cl-text-muted)', lineHeight: 1.7 }}>
+              인증번호가 표시되지 않습니다. 이 스택에는 SMS 발송이 붙어 있지 않아
+              데모에서는 화면 표시가 유일한 전달 경로입니다 —
+              API를 <span style={{ fontFamily: 'var(--cl-font-mono)' }}>AUTH_EXPOSE_OTP_CODE=true</span>로
+              띄웠는지 확인하세요.
             </p>
           )}
         </>

@@ -69,12 +69,20 @@ export function LoginForm() {
           <label htmlFor="code">인증번호</label>
           <input
             id="code" className="cf-input cf-mono" inputMode="numeric" autoComplete="one-time-code"
-            placeholder="6자리" value={code}
-            onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+            placeholder="6자리" value={code} maxLength={6}
+            // 7자리가 들어가면 서버는 형식 오류를 돌려주는데 화면에는
+            // '입력값을 다시 확인하세요'만 뜹니다. 애초에 막습니다.
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
           />
-          {devCode && (
+          {devCode ? (
             <span style={{ fontSize: 'var(--cf-caption)', color: 'var(--cl-text-muted)' }}>
-              개발 환경 인증번호: <b className="cf-mono">{devCode}</b>
+              데모 인증번호: <b className="cf-mono">{devCode}</b>
+            </span>
+          ) : (
+            <span style={{ fontSize: 'var(--cf-caption)', color: 'var(--cl-text-muted)', lineHeight: 1.7 }}>
+              인증번호가 표시되지 않습니다. 이 스택에는 SMS 발송이 없어 화면 표시가
+              유일한 전달 경로입니다 — API를 <b className="cf-mono">AUTH_EXPOSE_OTP_CODE=true</b>로
+              띄웠는지 확인하세요.
             </span>
           )}
         </div>

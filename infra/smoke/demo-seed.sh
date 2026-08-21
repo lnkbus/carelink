@@ -61,14 +61,31 @@ clear_otp_cooldown() {
 # OTP 쿨다운은 번호당 30초입니다. 시드가 로그인을 여러 번 하므로 미리 지웁니다.
 clear_otp_cooldown
 
+# 인증번호를 못 받으면 **여기서 멈춥니다.**
+#
+# 종전에는 빈 문자열을 그대로 들고 진행했습니다. 그러면 user_id가 ''가 되어
+# psql이 줄줄이 uuid 오류를 뱉는데, 스크립트는 마지막에 태연히 '완료'와
+# 계정표를 찍습니다. 실패를 성공처럼 보고하는 것이 실패 자체보다 나쁩니다.
+die() { printf '\033[31m%s\033[0m\n' "$1" >&2; exit 1; }
+
 login() {
   local p="$1" c
   c=$(curl -sS -X POST "$B/auth/otp/send" -H 'content-type: application/json' -d "{\"phone\":\"$p\"}" | J "['devCode']")
   [ -z "$c" ] && { redis-cli DEL "otp:cooldown:$p" >/dev/null 2>&1
                    c=$(curl -sS -X POST "$B/auth/otp/send" -H 'content-type: application/json' -d "{\"phone\":\"$p\"}" | J "['devCode']"); }
-  curl -sS -X POST "$B/auth/otp/verify" -H 'content-type: application/json' \
+  if [ -z "$c" ]; then
+    die "인증번호를 받지 못했습니다 ($p).
+  API가 AUTH_EXPOSE_OTP_CODE 없이 떠 있으면 devCode가 응답에 실리지 않습니다.
+  이 스택에는 SMS 발송이 붙어 있지 않아 시드도 브라우저 로그인도 막힙니다.
+    확인:  docker compose exec api printenv AUTH_EXPOSE_OTP_CODE
+    해결:  git pull && docker compose up -d --build api"
+  fi
+  local out
+  out=$(curl -sS -X POST "$B/auth/otp/verify" -H 'content-type: application/json' \
     -d "{\"phone\":\"$p\",\"code\":\"$c\",\"consents\":[{\"code\":\"TOS\",\"version\":\"v1\",\"agreed\":true},{\"code\":\"PRIVACY\",\"version\":\"v1\",\"agreed\":true}]}" \
-    | python3 -c "import sys,json;d=json.load(sys.stdin);print(d['accessToken'],d['refreshToken'],d['me']['id'])" 2>/dev/null
+    | python3 -c "import sys,json;d=json.load(sys.stdin);print(d['accessToken'],d['refreshToken'],d['me']['id'])" 2>/dev/null)
+  [ -z "$out" ] && die "로그인에 실패했습니다 ($p). docker compose logs api --tail 50"
+  echo "$out"
 }
 reissue() { curl -sS -X POST "$B/auth/refresh" -H 'content-type: application/json' -d "{\"refreshToken\":\"$1\"}" | J "['accessToken']"; }
 role() { curl -sS -X POST "$B/auth/roles" -H "authorization: Bearer $1" -H 'content-type: application/json' -d "$2" >/dev/null; }
@@ -87,6 +104,13 @@ role() { curl -sS -X POST "$B/auth/roles" -H "authorization: Bearer $1" -H 'cont
 # 처음부터 다시 만들려면 볼륨을 지우세요: docker compose down -v
 demo_exists() {
   [ -n "$(psql "$DB" -tAqc "SELECT 1 FROM candidates WHERE display_code = 'CD-1001' LIMIT 1;" 2>/dev/null | tr -d '[:space:]')" ]
+}
+
+# 시드가 도중에 죽으면 기관·병원·채용요청만 남습니다. 이 상태에서 다시 돌리면
+# 후보자는 없으니 가드를 통과하고, 기관·병원은 유니크가 없으니 한 벌 더
+# 쌓입니다. 반쯤 남은 데이터가 깨끗한 실패보다 나쁘므로 여기서 멈춥니다.
+demo_partial() {
+  [ -n "$(psql "$DB" -tAqc "SELECT 1 FROM organizations WHERE name = '서울중앙요양병원' LIMIT 1;" 2>/dev/null | tr -d '[:space:]')" ]
 }
 
 summary() {
@@ -110,6 +134,12 @@ summary() {
 
 TXT
 }
+
+if ! demo_exists && demo_partial; then
+  die "이전 시드가 도중에 실패해 데이터가 반쯤 남아 있습니다.
+  그대로 다시 넣으면 기관·병원이 두 벌이 됩니다. 초기화하고 다시 시작하세요:
+    docker compose down -v && bash infra/local/start.sh"
+fi
 
 if demo_exists; then
   say "데모 데이터가 이미 있습니다 — 새로 만들지 않습니다."

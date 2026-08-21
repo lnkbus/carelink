@@ -122,15 +122,29 @@ class _LoginScreenState extends State<LoginScreen> {
                 _field(
                   controller: _code,
                   hint: '000000',
+                  // 6자리를 넘기면 서버가 형식 오류를 돌려주는데, 화면에는
+                  // '입력값을 다시 확인하세요'만 뜹니다. 무엇이 틀렸는지 알 수
+                  // 없으므로 애초에 7자리가 들어가지 않게 막습니다.
+                  maxLength: 6,
                   onChanged: (_) => setState(() {}),
                 ),
                 if (_devCode != null) ...[
                   const SizedBox(height: CL.s3),
                   Text(
-                    'DEV $_devCode',
+                    'DEMO $_devCode',
                     style: const TextStyle(
                       fontFamily: CL.monoFamily, fontSize: CL.caption, color: CL.flag,
                     ),
+                  ),
+                ] else ...[
+                  // 번호를 못 받는 상황에서 화면이 아무 말도 하지 않으면
+                  // 사용자는 000000을 찍어 보다 포기합니다.
+                  const SizedBox(height: CL.s3),
+                  const Text(
+                    '인증번호가 표시되지 않습니다. 데모 스택에는 SMS 발송이 없어\n'
+                    '화면 표시가 유일한 전달 경로입니다 —\n'
+                    'API를 AUTH_EXPOSE_OTP_CODE=true 로 띄웠는지 확인하세요.',
+                    style: TextStyle(fontSize: CL.caption, color: CL.textMuted, height: 1.6),
                   ),
                 ],
               ],
@@ -180,6 +194,7 @@ class _LoginScreenState extends State<LoginScreen> {
     required TextEditingController controller,
     required String hint,
     bool enabled = true,
+    int? maxLength,
     ValueChanged<String>? onChanged,
   }) {
     return SizedBox(
@@ -189,6 +204,10 @@ class _LoginScreenState extends State<LoginScreen> {
         enabled: enabled,
         onChanged: onChanged,
         keyboardType: TextInputType.number,
+        // 카운터('0/6')를 띄우지 않습니다. FIELD 화면은 높이가 고정이라
+        // 카운터가 붙으면 입력칸이 밀립니다.
+        maxLength: maxLength,
+        buildCounter: (_, {required currentLength, required isFocused, maxLength}) => null,
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         style: const TextStyle(fontSize: CL.body, fontFamily: CL.monoFamily),
         decoration: InputDecoration(

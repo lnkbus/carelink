@@ -21,3 +21,7 @@ next-env.d.ts
 # redis-server를 저장소 루트에서 띄우면 여기에 생깁니다.
 dump.rdb
 *.rdb
+
+# 빌드 산출물. 커밋에 섞이면 diff가 매번 300KB씩 늘어납니다.
+tsconfig.tsbuildinfo
+.flutter-plugins-dependencies

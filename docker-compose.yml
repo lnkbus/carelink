@@ -81,6 +81,13 @@ services:
       JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me}
       NODE_ENV: production
       PORT: 3000
+      # 인증번호를 로그인 화면에 그대로 띄웁니다. **이 스택은 데모입니다** —
+      # SMS 발송이 붙어 있지 않아 이게 없으면 아무도 로그인할 수 없습니다.
+      #
+      # NODE_ENV로 갈랐더니 이미지가 프로덕션 빌드라 항상 닫혀 있었습니다.
+      # 운영에 올릴 때는 이 줄을 지우세요 — 켜져 있으면 전화번호만 아는
+      # 사람이 남의 계정으로 로그인합니다. API가 부팅 로그에 경고를 찍습니다.
+      AUTH_EXPOSE_OTP_CODE: ${AUTH_EXPOSE_OTP_CODE:-true}
       # 브라우저에서 API를 직접 부르는 출처. 와일드카드를 쓰지 않습니다 —
       # 이 API는 후보자의 실명·연락처·체류자격을 다룹니다.
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3100,http://localhost:3200,http://localhost:3300,http://localhost:3400,http://localhost:3500}

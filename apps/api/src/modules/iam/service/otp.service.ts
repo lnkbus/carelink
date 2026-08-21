@@ -14,10 +14,33 @@ import { DomainError } from '../../../core/errors/domain-error';
 export class OtpService {
   private readonly log = new Logger(OtpService.name);
 
+  /**
+   * 인증번호를 응답에 실을지. **한 번만 계산해 둔다.**
+   *
+   * ConfigService.get은 팩토리 값보다 process.env를 먼저 본다. 그래서 이 키로
+   * 돌아오는 값은 팩토리의 boolean일 수도, 환경변수의 **문자열**일 수도 있다.
+   * 문자열 'false'는 truthy라, 그대로 if에 넣으면 끈 것이 켜진다 —
+   * 실제로 AUTH_EXPOSE_OTP_CODE=false로 띄운 API가 코드를 그대로 내보냈다.
+   * 그래서 타입을 믿지 않고 명시적으로 판정한다.
+   */
+  private readonly exposeCode: boolean;
+
   constructor(
     private readonly redis: RedisService,
     @Inject(ConfigService) private readonly config: ConfigService,
-  ) {}
+  ) {
+    const raw = this.config.get('AUTH_EXPOSE_OTP_CODE');
+    this.exposeCode = raw === true || raw === 'true';
+
+    // 켜져 있으면 조용히 두지 않는다. 전화번호만 알면 남의 계정으로 로그인이
+    // 되는 상태이므로, 실수로 켠 채 배포했을 때 로그에서 눈에 띄어야 한다.
+    if (this.exposeCode) {
+      this.log.warn(
+        'AUTH_EXPOSE_OTP_CODE=true — 인증번호가 API 응답에 그대로 실려 나갑니다. ' +
+        '데모·로컬 전용입니다. 운영이라면 지금 끄세요.',
+      );
+    }
+  }
 
   private codeKey(phone: string): string { return `otp:code:${phone}`; }
   private attemptKey(phone: string): string { return `otp:attempt:${phone}`; }
@@ -25,7 +48,8 @@ export class OtpService {
 
   /**
    * 코드 발급. 재발송 쿨다운이 걸려 있으면 IAM_OTP_RATE_LIMITED.
-   * 반환값은 개발 환경에서만 코드를 포함한다 — 운영에서는 SMS/알림톡으로만 나간다.
+   * 반환값은 AUTH_EXPOSE_OTP_CODE가 켜졌을 때만 코드를 포함한다 —
+   * 운영에서는 SMS/알림톡으로만 나간다.
    */
   async issue(phone: string): Promise<{ expiresInSeconds: number; devCode?: string }> {
     const cooldown = this.config.get<number>('OTP_RESEND_COOLDOWN_SECONDS')!;
@@ -45,7 +69,7 @@ export class OtpService {
 
     return {
       expiresInSeconds: ttl,
-      ...(process.env.NODE_ENV !== 'production' ? { devCode: code } : {}),
+      ...(this.exposeCode ? { devCode: code } : {}),
     };
   }
 
