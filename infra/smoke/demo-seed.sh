@@ -13,6 +13,7 @@
 #   01033330001  후보자
 #   01044440001~3  간병사 3명
 #   01055550001  보호자
+#   01066660001  후보자 + 간병사 (역할 전환 확인용)
 #
 # **운영 DB에 돌리지 마세요.** 이 스크립트는 계정을 만듭니다.
 set -uo pipefail
@@ -153,6 +154,8 @@ summary() {
   간병사         01044440001   앱          ← 오늘 근무 1건 배정됨
                  01044440002               비어 있음
                  01044440003               클리어런스 5/6 (매칭에서 빠짐)
+  역할 2개       01066660001   앱          ← 후보자 + 간병사.
+                                             내 정보에 '역할 바꾸기'가 뜹니다
 
   병실 QR 토큰   $H1:703호
 
@@ -304,6 +307,28 @@ for i in 1 2 3; do
     curl -sS -X POST "$B/admin/clearances/workers/$U/$t" "${A[@]}" -d '{"result":"PASS"}' >/dev/null
   done
   CGS+=("$CG")
+done
+
+# 역할을 둘 가진 계정.
+#
+# **이 계정이 없으면 역할 전환을 테스트할 수 없습니다.** 나머지 계정은 전부
+# 역할이 하나라 앱이 전환 UI를 띄우지 않습니다 (의미 없는 선택지를 띄우지
+# 않는 것이 규칙입니다).
+#
+# 실제로 흔한 경로입니다 — 요양보호사 자격을 딴 후보자가 간병사로 일을
+# 시작하고, 그러면서도 자기 서류 만료일은 계속 봐야 합니다 (docs/08).
+say "5.5/6 역할 2개 계정 (후보자 + 간병사)"
+CDUAL=$(mkcand 01066660001 CD-1005 "이정은" 대한민국 "" READY "" \
+     1982-04-19 FEMALE "서울 강서" "ARRAY['서울']" "ARRAY['FULL_TIME']" false 0 CARE_WORKER)
+DU=$(psql "$DB" -tAqc "SELECT id FROM users WHERE phone='+821066660001';" | tr -d '[:space:]')
+q "INSERT INTO user_roles (user_id, role, is_primary, approved_at)
+   VALUES ('$DU','CAREGIVER',false,now()) ON CONFLICT DO NOTHING;"
+DCG=$(psql "$DB" -tAqc "INSERT INTO caregivers (user_id, display_code, experience_yrs, rating_avg, completed_count)
+   VALUES ('$DU','CG-1005', 2, 4.7, 8)
+   ON CONFLICT (user_id) DO UPDATE SET experience_yrs = EXCLUDED.experience_yrs RETURNING id;" | tr -d '[:space:]')
+q "INSERT INTO caregiver_availability (caregiver_id, starts_at, ends_at) VALUES ('$DCG','2020-01-01','2030-12-31');"
+for t in IDENTITY_VERIFIED CRIMINAL_RECORD_CLEAR HEALTH_CHECK VISA_ELIGIBLE MANDATORY_TRAINING SCOPE_TRAINING; do
+  curl -sS -X POST "$B/admin/clearances/workers/$DU/$t" "${A[@]}" -d '{"result":"PASS"}' >/dev/null
 done
 
 say "6/6 병원 · 보호자 · 간병 요청"
