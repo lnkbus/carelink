@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Job, Organization, Paged } from '@carelink/shared-types';
-import { DataTable, KpiChip, KpiRow, PageHeader, Section, StatusPill, Td, Tr } from '@carelink/ui';
+import { DataTable, FunnelTable, KpiChip, KpiRow, PageHeader, Section, StatusPill, Td, Tr, type FunnelRowData } from '@carelink/ui';
 import { Shell } from '@/components/Shell';
 import { apiGet } from '@/lib/api';
 import { label } from '@/lib/labels';
@@ -52,6 +52,29 @@ export default async function OrgDashboard() {
   const byTrack = new Map<string, number>();
   for (const f of funnel) byTrack.set(f.trackCode, (byTrack.get(f.trackCode) ?? 0) + f.count);
 
+  // 단계 순서는 고정입니다. 데이터에 없는 단계도 0으로 남겨 둡니다 —
+  // 빠진 단계를 지우면 '거기서 다 빠졌다'는 사실이 표에서 사라집니다.
+  const STAGES: { code: string; label: string }[] = [
+    { code: 'APPLIED', label: '지원 접수' },
+    { code: 'DOC_REVIEW', label: '서류 심사' },
+    { code: 'INTERVIEW', label: '면접' },
+    { code: 'OFFER', label: '합격 · 계약' },
+    { code: 'PLACED', label: '배치 완료' },
+  ];
+  const stageCount = new Map<string, number>();
+  for (const f of funnel) stageCount.set(f.stage, (stageCount.get(f.stage) ?? 0) + f.count);
+  const first = stageCount.get(STAGES[0].code) ?? 0;
+  const funnelRows: FunnelRowData[] = first === 0 ? [] : STAGES.map((st) => {
+    const count = stageCount.get(st.code) ?? 0;
+    return {
+      stage: st.code,
+      label: st.label,
+      count,
+      // 첫 단계를 100%로 한 상대 전환입니다 (design/README §4-4).
+      conversionPct: Math.round((count / first) * 100),
+    };
+  });
+
   return (
     <Shell orgName={org.name} verificationStatus={org.verificationStatus}>
       <PageHeader
@@ -93,6 +116,29 @@ export default async function OrgDashboard() {
             <KpiChip label="운영 트랙" value={byTrack.size} unit="종" />
           </KpiRow>
         </div>
+
+        <Section
+          title="채용 퍼널"
+          note="어느 단계에서 사람이 빠지는지가 이 표의 전부입니다. 합계만 보면 '지원이 적다'로 읽히고, 실제 원인이 서류 심사 지체여도 모릅니다."
+        >
+          {/*
+            시안(SCR-201)의 FunnelTable입니다. 표가 없어서 KPI 숫자만 있었고,
+            그러면 '전환이 어디서 끊기는가'를 볼 수 없습니다 — 그게 기관이
+            이 화면에서 알고 싶은 유일한 것입니다 (design/README §4-4).
+
+            트랙별로 나눠 집계합니다. 합산만 만들면 어느 트랙이 통했는지
+            판별할 수 없습니다 (§5.8).
+          */}
+          {funnelRows.length === 0 ? (
+            <div style={{ padding: 'var(--cl-s6)', color: 'var(--cl-text-muted)', fontSize: 'var(--cl-caption)' }}>
+              아직 집계할 지원이 없습니다. 채용 요청을 열고 지원이 들어오면 단계별 전환이 여기 쌓입니다.
+            </div>
+          ) : (
+            <div style={{ padding: '0 var(--cl-s4) var(--cl-s4)' }}>
+              <FunnelTable rows={funnelRows} />
+            </div>
+          )}
+        </Section>
 
         <Section
           title="채용 요청"

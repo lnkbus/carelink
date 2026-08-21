@@ -85,10 +85,21 @@ export class OrganizationDto {
   @Scope('admin') contractType: string | null;
 }
 
+/**
+ * 채용 퍼널 한 줄.
+ *
+ * **`org_masked`도 봅니다.** 여기엔 후보자 개인정보가 한 톨도 없습니다 —
+ * 트랙 코드와 단계와 인원수뿐이고, 전부 그 기관 자신의 집계입니다.
+ *
+ * 종전에는 `org`만 두었습니다. 그런데 `org`는 역할이 아니라 **관계**라서
+ * (검증 완료 + 후보자의 면접 수락 이후) 기관 담당자는 평소에 `org_masked`만
+ * 갖습니다. 그래서 이 응답이 계속 `[{},{},{}]`로 나갔고, 대시보드의 퍼널이
+ * 조용히 비어 있었습니다 — 오류도 없이.
+ */
 export class OrgFunnelRowDto {
-  @Scope('admin', 'org') trackCode: string;
-  @Scope('admin', 'org') stage: string;
-  @Scope('admin', 'org') count: number;
+  @Scope('admin', 'org', 'org_masked') trackCode: string;
+  @Scope('admin', 'org', 'org_masked') stage: string;
+  @Scope('admin', 'org', 'org_masked') count: number;
 }
 
 export class PagedOrganizationsDto {

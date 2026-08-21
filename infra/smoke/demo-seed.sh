@@ -264,9 +264,15 @@ q "INSERT INTO documents (candidate_id, doc_type, file_key, file_name, status,
           ('$C3','IDENTITY','demo/id3','외국인등록증.pdf','VERIFIED', now(), current_date + 500, NULL),
           ('$C3','HEALTH',  'demo/h3', '건강진단서.pdf',  'REJECTED', now(), NULL, NULL);"
 
-# 지원 1건 — 기관 웹에서 후보자 검색·매칭 근거가 보입니다.
+# 지원 — **단계를 흩어 놓습니다.**
+#
+# 전부 APPLIED면 채용 퍼널(SCR-201)이 첫 줄만 차고 나머지가 0이 됩니다.
+# 그러면 '어디서 빠지는가'를 보는 표인데 볼 것이 없습니다.
 q "INSERT INTO applications (job_id, candidate_id, status)
-   VALUES ('$JOB', '$C1', 'APPLIED') ON CONFLICT DO NOTHING;"
+   VALUES ('$JOB', '$C1', 'INTERVIEW_REQUESTED'),
+          ('$JOB', '$C2', 'UNDER_REVIEW'),
+          ('$JOB', '$C3', 'OFFERED')
+   ON CONFLICT DO NOTHING;"
 
 say "5/6 간병사 3명 (클리어런스 통과)"
 CGS=()

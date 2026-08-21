@@ -82,13 +82,41 @@ export class OrganizationRepository {
   }
 
   /** SCR-201 대시보드의 KPI. 트랙별로 분리 집계한다 (§5.8). */
+  /**
+   * 채용 퍼널 — **지원자가 어느 단계에서 빠지는가**.
+   *
+   * 종전에는 `jobs.status`(OPEN/DRAFT/CLOSED)를 세고 있었습니다. 그건 요청의
+   * 상태지 사람의 진행 단계가 아니라, 화면의 퍼널 표에 넣으면 아무 의미가
+   * 없는 숫자가 됩니다. `applications.status`로 바꿉니다.
+   *
+   * 단계는 누적입니다 — 면접까지 간 사람은 서류 심사도 지났습니다. 각
+   * 상태를 그대로 세면 뒤 단계로 넘어간 사람이 앞 단계에서 사라져,
+   * 전환율이 실제보다 나쁘게 보입니다.
+   *
+   * 트랙별로 나눕니다. 합산만 만들면 어느 트랙이 통했는지 알 수 없습니다 (§5.8).
+   */
   async funnelByTrack(organizationId: string): Promise<{ track_code: string; stage: string; count: string }[]> {
     return this.db.query(
-      `SELECT t.code AS track_code, j.status::text AS stage, count(*)::text AS count
-         FROM jobs j JOIN tracks t ON t.id = j.track_id
-        WHERE j.organization_id = $1
-        GROUP BY t.code, j.status
-        ORDER BY t.code, j.status`,
+      `WITH app AS (
+         SELECT t.code AS track_code, a.status::text AS status
+           FROM applications a
+           JOIN jobs j   ON j.id = a.job_id
+           JOIN tracks t ON t.id = j.track_id
+          WHERE j.organization_id = $1
+       )
+       SELECT track_code, stage, count(*)::text AS count
+         FROM app
+        CROSS JOIN LATERAL (
+          VALUES
+            ('APPLIED',   true),
+            ('DOC_REVIEW', app.status <> 'APPLIED' AND app.status NOT IN ('WITHDRAWN')),
+            ('INTERVIEW',  app.status IN ('INTERVIEW_REQUESTED','INTERVIEW_DONE','OFFERED','ACCEPTED')),
+            ('OFFER',      app.status IN ('OFFERED','ACCEPTED')),
+            ('PLACED',     app.status = 'ACCEPTED')
+        ) AS s(stage, reached)
+        WHERE s.reached
+        GROUP BY track_code, stage
+        ORDER BY track_code, stage`,
       [organizationId],
     );
   }
