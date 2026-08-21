@@ -18,7 +18,8 @@
     "typecheck": "pnpm -r --filter \"./apps/**\" --filter \"./packages/**\" exec tsc --noEmit",
     "org:dev": "pnpm --filter @carelink/web-org dev",
     "org:build": "pnpm --filter @carelink/web-org build",
-    "org:start": "pnpm --filter @carelink/web-org start"
+    "org:start": "pnpm --filter @carelink/web-org start",
+    "smoke": "bash infra/smoke/smoke.sh"
   },
   "devDependencies": {
     "typescript": "5.6.3"
