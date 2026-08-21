@@ -1,3 +1,4 @@
+import { makeLabeler } from '@carelink/ui';
 /**
  * 도메인 코드 → 한국어 문구. 백엔드는 코드만 반환합니다 (§5.15).
  *
@@ -76,20 +77,16 @@ const ERRORS: Record<string, string> = {
   QUALITY_SHIFT_NOT_ALLOWED_FOR_WORKER:
     '이 간병사는 24시간 상주를 맡을 수 없습니다. 다른 간병사를 선택해 주세요.',
   CARE_SLA_BREACHED: '배정이 지연되고 있습니다. 담당자가 확인 중입니다.',
-  COMMON_INVALID_TRANSITION: '지금은 할 수 없는 동작입니다. 화면을 새로고침해 주세요.',
-  COMMON_NOT_FOUND: '요청을 찾을 수 없습니다.',
-  IAM_ROLE_FORBIDDEN: '이 요청을 볼 권한이 없습니다.',
-  IAM_TOKEN_INVALID: '로그인이 만료됐습니다. 다시 로그인해 주세요.',
-  IAM_PHONE_INVALID: '번호를 다시 확인해 주세요. 해외 번호는 국가번호를 붙여 주세요 (예: +84).',
-  IAM_OTP_TOO_MANY_ATTEMPTS: '인증번호를 여러 번 틀렸습니다. 잠시 후 다시 시도해 주세요.',
-  COMMON_VALIDATION_FAILED: '입력한 내용을 다시 확인해 주세요.',
-  NETWORK: '연결에 실패했습니다. 잠시 후 다시 시도해 주세요.',
 };
 
-export function errorLabel(code: string | null | undefined): string {
-  if (!code) return ERRORS.NETWORK;
-  return ERRORS[code] ?? '문제가 발생했습니다. 잠시 후 다시 시도해 주세요.';
-}
+/**
+ * 오류 문구 — FIELD 레지스터.
+ *
+ * 공통 코드는 `@carelink/ui` 사전에서 옵니다. **보호자에게는 코드를 띄우지
+ * 않고 다음에 무엇을 하면 되는지까지 말합니다** — 운영 콘솔과 다른 점이고,
+ * 그 차이는 레지스터로 관리합니다.
+ */
+export const errorLabel = makeLabeler('field', ERRORS);
 
 /** 날짜·시각. 보호자 화면은 항상 현지(KST) 벽시계로 보여줍니다. */
 export function fmtDateTime(iso: string | null | undefined): string {

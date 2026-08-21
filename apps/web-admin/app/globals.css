@@ -1,54 +1,7 @@
-/* DESK 프레임: 1440×900, 사이드바 216px 고정, 본문만 스크롤 (design/README §Fidelity). */
-.cl-shell {
-  display: grid;
-  grid-template-columns: 216px 1fr;
-  min-height: 100vh;
-}
-
-.cl-sidebar {
-  border-right: 1px solid var(--cl-line);
-  padding: var(--cl-s6) 0;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  overflow-y: auto;
-}
-
-.cl-main {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.cl-body {
-  padding: 0 var(--cl-s7) var(--cl-s8);
-  overflow-x: auto;
-}
-
-.cl-nav-group {
-  padding: var(--cl-s5) var(--cl-s6) var(--cl-s2);
-  font-size: var(--cl-micro);
-  font-weight: 600;
-  letter-spacing: .06em;
-  color: var(--cl-text-disabled);
-}
-
-.cl-nav-item {
-  display: block;
-  padding: var(--cl-s3) var(--cl-s6);
-  font-size: var(--cl-body);
-  color: var(--cl-text-sub);
-  border-left: 3px solid transparent;
-}
-
-.cl-nav-item:hover { background: var(--cl-row-hover); }
-
-.cl-nav-item[aria-current='page'] {
-  color: var(--cl-action-text);
-  background: var(--cl-action-tint);
-  border-left-color: var(--cl-action);
-  font-weight: 600;
-}
-
-/* DESK 행 hover */
-tbody tr:hover { background: var(--cl-row-hover); }
+/*
+ * 이 앱의 고유 스타일만 둡니다.
+ *
+ * DESK 레이아웃(셸·사이드바·표)은 `@carelink/ui/src/tokens/desk.css`에
+ * 한 벌만 있습니다. 여기 복사하지 마세요 — 복사본은 반드시 갈라집니다.
+ * 실제로 사이드바가 216px와 232px로 어긋나 있었습니다.
+ */

@@ -1,3 +1,4 @@
+import { makeLabeler } from '@carelink/ui';
 /**
  * 도메인 코드 → 한국어 문구. 백엔드는 코드만 반환합니다 (§5.15).
  *
@@ -63,10 +64,6 @@ const ERROR_DICT: Record<string, string> = {
   ORG_NOT_FOUND: '승인된 기관 소속이 아닙니다. 관리자에게 소속 승인을 요청하세요.',
   ORG_E7_SPONSOR_INELIGIBLE: 'E-7-2 스폰서 자격이 확인되지 않아 외국인력을 배치할 수 없습니다.',
   MATCHING_JOB_NOT_OPEN: '모집 중인 채용 요청이 아닙니다.',
-  IAM_ROLE_FORBIDDEN: '권한이 없습니다.',
-  IAM_PHONE_INVALID: '번호를 다시 확인해 주세요. 해외 번호는 국가번호를 붙여 주세요 (예: +84).',
-  IAM_TOKEN_INVALID: '세션이 만료되었습니다. 다시 로그인하세요.',
-  COMMON_INVALID_TRANSITION: '허용되지 않는 상태 변경입니다.',
 };
 
 export function errorLabel(code: string): string {

@@ -1,0 +1,68 @@
+/*
+ * DESK 트랙 레이아웃 — 운영 콘솔 · 기관 웹 공통.
+ *
+ * **앱마다 두지 않습니다.** 이 파일이 생기기 전에는 각 앱의 globals.css에
+ * 같은 규칙이 복사돼 있었고, 이미 갈라져 있었습니다 — 사이드바가 한쪽은
+ * 216px, 다른 쪽은 232px였습니다. 두 화면을 나란히 놓으면 본문이 어긋납니다.
+ *
+ * 사이드바 232px · 헤더 56px는 시안 규격입니다
+ * (design/README §Fidelity · §Organization Web).
+ */
+.cl-shell {
+  display: grid;
+  grid-template-columns: 232px 1fr;
+  min-height: 100vh;
+}
+
+.cl-sidebar {
+  border-right: 1px solid var(--cl-line);
+  padding: var(--cl-s5) var(--cl-s4);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cl-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.cl-body {
+  padding: 0 var(--cl-s7) var(--cl-s8);
+  overflow-x: auto;
+}
+
+/* 그룹 라벨은 Micro 10.5px — DESK에만 있는 크기입니다. */
+.cl-nav-group {
+  padding: var(--cl-s5) var(--cl-s4) var(--cl-s2);
+  font-family: var(--cl-font-mono);
+  font-size: var(--cl-micro);
+  font-weight: 500;
+  color: var(--cl-text-disabled);
+}
+
+/* 시안: 높이 34 · radius 8 · 13.5px. 활성은 tint 배경 + 700. */
+.cl-nav-item {
+  display: block;
+  min-height: 34px;
+  padding: 0 var(--cl-s4);
+  border-radius: var(--cl-r-desk);
+  font-size: 13.5px;
+  line-height: 34px;
+  color: var(--cl-text-sub);
+}
+
+.cl-nav-item:hover { background: var(--cl-row-hover); }
+
+.cl-nav-item[aria-current='page'] {
+  color: var(--cl-action-text);
+  background: var(--cl-action-tint);
+  font-weight: 700;
+}
+
+tbody tr:hover { background: var(--cl-row-hover); }

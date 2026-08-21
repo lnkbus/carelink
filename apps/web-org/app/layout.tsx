@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import '@carelink/ui/src/tokens/tokens.css';
+import '@carelink/ui/src/tokens/desk.css';
 import './globals.css';
 
 export const metadata: Metadata = {

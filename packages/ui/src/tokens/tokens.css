@@ -56,7 +56,26 @@
              system-ui, 'Malgun Gothic', sans-serif;
   --cl-font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
 
-  /* DESK 스케일 */
+  /*
+   * 타이포 스케일 **3단** — design/README §타이포가 유일한 기준입니다.
+   *
+   *            DESK   FIELD   FIELD 상향(간병사·보호자)
+   *   Display   24      26      28
+   *   Title     19      21      24
+   *   Subtitle  15      17      19
+   *   Body      14      16      18
+   *   Caption   12      14      15
+   *   Micro    10.5     없음    없음
+   *
+   * **상향 스케일이 따로 있는 이유**: 같은 FIELD여도 후보자는 조용한 곳에서
+   * 시간을 들여 보고, 간병사·보호자는 병실 앞에서 한 손으로 급하게 봅니다.
+   * 한 벌만 두면 어느 한쪽은 반드시 시안과 어긋납니다.
+   *
+   * **FIELD에 Micro가 없습니다.** 12px 미만은 고령 사용자에게 존재하지 않는
+   * 텍스트라, 토큰 자체를 정의하지 않았습니다 — 쓸 수 있게 두면 언젠가 쓰입니다.
+   */
+
+  /* DESK */
   --cl-display: 24px;
   --cl-title:   19px;
   --cl-subtitle:15px;
@@ -64,8 +83,28 @@
   --cl-caption: 12px;
   --cl-micro:   10.5px; /* 라벨 전용. FIELD에는 존재하지 않습니다. */
 
-  /* 터치 타깃 — DESK 32px+ */
-  --cl-tap-desk: 32px;
+  /* FIELD (후보자 앱 기준) */
+  --cf-display: 26px;
+  --cf-title:   21px;
+  --cf-subtitle:17px;
+  --cf-body:    16px;
+  --cf-caption: 14px;
+
+  /* FIELD 상향 (간병사·보호자) */
+  --cu-display: 28px;
+  --cu-title:   24px;
+  --cu-subtitle:19px;
+  --cu-body:    18px;
+  --cu-caption: 16px; /* 시안은 15~16. 16을 고른 이유는 §9의 16px 하한 */
+
+  /*
+   * 터치 타깃 — DESK 32px+ / FIELD 48px+.
+   * 간병사·보호자의 **주요 액션은 64px**, 화면에서 가장 큰 하나(히어로)는 88px.
+   */
+  --cl-tap-desk:   32px;
+  --cl-tap-field:  48px;
+  --cl-tap-action: 64px;
+  --cl-tap-hero:   88px;
 }
 
 *, *::before, *::after { box-sizing: border-box; }

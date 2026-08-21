@@ -8,3 +8,4 @@ export {
   PageHeader, KpiChip, KpiRow, Section, DataTable, Td, Tr, Button, Restricted,
 } from './components/desk';
 export { PhoneInput } from './components/PhoneInput';
+export { makeLabeler, COMMON_CODES, type Register } from './labels';

@@ -1,3 +1,4 @@
+import { makeLabeler } from '@carelink/ui';
 /**
  * 도메인 코드 → 한국어 문구.
  *
@@ -95,19 +96,18 @@ const ERROR_DICT: Record<string, string> = {
   ENGAGEMENT_COMPLIANCE_INCOMPLETE: '컴플라이언스 체크가 전부 통과되어야 진행할 수 있습니다.',
   ENGAGEMENT_PAYOUT_UNAVAILABLE: '급여 계산은 도급/파견 판정과 근로시간 규정 검토 이후에 열립니다.',
   ORG_NOT_VERIFIED: '검증되지 않은 기관입니다. 후보자 개인정보는 검증 이후에 열립니다.',
-  COMMON_INVALID_TRANSITION: '허용되지 않는 상태 변경입니다.',
   RECRUITING_ATTRIBUTION_LOCKED: '유입 출처가 이미 기록되어 있습니다. 첫 접점이 우선합니다.',
-  IAM_PHONE_INVALID: '번호를 다시 확인해 주세요. 해외 번호는 국가번호를 붙여 주세요 (예: +84).',
-  IAM_TOKEN_INVALID: '세션이 만료되었습니다. 다시 로그인하세요.',
   QUALITY_SHIFT_NOT_AVAILABLE: '지금은 선택할 수 없는 교대 방식입니다. 3교대로 진행하세요.',
   CARE_REST_PERIOD_TOO_SHORT: '직전 근무와의 간격이 11시간 미만입니다. 연속 교대는 사실상 24시간 근무가 됩니다.',
   CARE_SHIFT_OVERLAP: '이 간병사에게 겹치는 근무가 이미 있습니다.',
   TRACK_NO_REQUIREMENTS: '요건이 하나도 없는 트랙은 열 수 없습니다. 무엇을 확인할지 먼저 정의하세요.',
-  COMMON_VALIDATION_FAILED: '입력값을 다시 확인하세요.',
-  NETWORK: '서버에 연결하지 못했습니다. 잠시 후 다시 시도하세요.',
 };
 
-export function errorLabel(code: string | null): string {
-  if (!code) return ERROR_DICT.NETWORK;
-  return ERROR_DICT[code] ?? code;
-}
+/**
+ * 오류 문구.
+ *
+ * 공통 코드(COMMON_*·IAM_*·NETWORK)는 `@carelink/ui`의 사전에서 옵니다 —
+ * 앱마다 따로 적으면 하나를 고칠 때 나머지를 잊습니다. 여기 ERROR_DICT에는
+ * **이 앱에만 있는 도메인 코드**만 둡니다.
+ */
+export const errorLabel = makeLabeler('desk', ERROR_DICT);
