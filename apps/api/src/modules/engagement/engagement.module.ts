@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { EngagementController } from './controller/engagement.controller';
 import { DispatchJobs } from './jobs/dispatch.jobs';
+import { WorkRecordJobs } from './jobs/work-record.jobs';
+import { WorkRecordRepository } from './repository/work-record.repository';
+import { WorkRecordService } from './service/work-record.service';
 import { EngagementRepository } from './repository/engagement.repository';
 import { EngagementService } from './service/engagement.service';
 import { EngagementStrategyFactory } from './strategy/engagement-strategy.factory';
@@ -13,7 +16,7 @@ import { EngagementStrategyFactory } from './strategy/engagement-strategy.factor
  */
 @Module({
   controllers: [EngagementController],
-  providers: [EngagementRepository, EngagementStrategyFactory, EngagementService, DispatchJobs],
-  exports: [EngagementService, EngagementStrategyFactory],
+  providers: [EngagementRepository, EngagementStrategyFactory, EngagementService, DispatchJobs, WorkRecordRepository, WorkRecordService, WorkRecordJobs],
+  exports: [EngagementService, EngagementStrategyFactory, WorkRecordService],
 })
 export class EngagementModule {}

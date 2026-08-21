@@ -40,6 +40,15 @@ export const JOBS = {
    * 대체 인력 확보에 시간이 걸려 90일/30일 2단계로 돌립니다.
    */
   DISPATCH_LIMIT_WARNING: { name: 'dispatch-limit-warning', cron: '50 9 * * *', warnDays: [90, 30] },
+
+  /**
+   * service_logs → work_records 집계 (docs/02 §12-12.5).
+   *
+   * 완료된 배정을 매시 집계합니다. 24시간 상주는 U5가 막고 있어 건너뛰고,
+   * 건너뛴 건수를 로그에 남깁니다 — 조용히 빠지면 정산에서 빠진 것을
+   * 아무도 모릅니다.
+   */
+  WORK_RECORD_AGGREGATE: { name: 'work-record-aggregate', cron: '15 * * * *', batchSize: 200 },
 } as const;
 
 export type JobName = (typeof JOBS)[keyof typeof JOBS]['name'];

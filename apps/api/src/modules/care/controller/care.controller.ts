@@ -250,6 +250,7 @@ export class CareController {
       assignmentId: id, logType: dto.logType,
       itemCode: dto.itemCode ?? null, memo: dto.memo ?? null,
       correctionOf: dto.correctionOf ?? null,
+      occurredAt: dto.occurredAt ?? null,
       actorUserId: viewer.userId!, isOperator: viewer.scopes.includes('admin'),
     });
     return toLogDto(log, viewer.userId!);

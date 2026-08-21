@@ -58,6 +58,8 @@ export const DOMAIN_ERRORS = {
   ENGAGEMENT_MODEL_IMMUTABLE: { status: HttpStatus.CONFLICT,     message: 'Employment model cannot be updated; end this engagement and create a new one' },
   ENGAGEMENT_DISPATCH_LIMIT: { status: HttpStatus.FORBIDDEN, message: 'Dispatch to this organization would exceed the 2-year statutory limit' },
   ENGAGEMENT_DISPATCH_PERMIT_MISSING: { status: HttpStatus.FORBIDDEN, message: 'A dispatch permit number is required for dispatch engagements' },
+  ENGAGEMENT_WORK_RECORD_INCOMPLETE: { status: HttpStatus.CONFLICT, message: 'The assignment has no start/end pair yet' },
+  ENGAGEMENT_WORK_RECORD_NO_ENGAGEMENT: { status: HttpStatus.CONFLICT, message: 'No active engagement to attribute this work to' },
   ENGAGEMENT_PAYOUT_UNAVAILABLE:{ status: HttpStatus.NOT_IMPLEMENTED, message: 'Payout calculation is blocked pending labour-law review (docs/12 U1/U2)' },
 
   // ── care ───────────────────────────────────────────────────────────────
@@ -66,6 +68,8 @@ export const DOMAIN_ERRORS = {
   CARE_QR_TOKEN_REQUIRED:   { status: HttpStatus.BAD_REQUEST,  message: 'QR check-in requires the room token' },
   CARE_QR_TOKEN_MISMATCH:   { status: HttpStatus.FORBIDDEN,    message: 'This QR code belongs to a different room' },
   CARE_LOG_IMMUTABLE:       { status: HttpStatus.FORBIDDEN,    message: 'Service logs are append-only; corrections must be new rows' },
+  CARE_LOG_TIME_FORBIDDEN:  { status: HttpStatus.FORBIDDEN,    message: 'Only an operator may restate the time of a logged event, and only as a correction' },
+  CARE_LOG_TIME_INVALID:    { status: HttpStatus.BAD_REQUEST,  message: 'A logged event cannot have occurred in the future' },
 
   // ── 공통 ───────────────────────────────────────────────────────────────
   COMMON_INVALID_TRANSITION:  { status: HttpStatus.CONFLICT,     message: 'State transition is not allowed' },

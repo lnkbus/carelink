@@ -28,6 +28,9 @@ export interface CaregiverCard {
  * 올리지 마세요 — 농업을 붙일 때 전면 재작업이 됩니다 (§5.14).
  * 반대로 engagement·work_records·billing_lines는 코어에 있어야 합니다.
  */
+/** QR 체크인에서만 생기는 로그 유형. 정정은 되지만 생성은 안 됩니다. */
+const SHIFT_LOG_TYPES = new Set(['SHIFT_START', 'SHIFT_END']);
+
 @Injectable()
 export class CareService {
   private readonly log = new Logger(CareService.name);
@@ -421,7 +424,7 @@ export class CareService {
    */
   async appendLog(input: {
     assignmentId: string; logType: string; itemCode: string | null;
-    memo: string | null; correctionOf: string | null;
+    memo: string | null; correctionOf: string | null; occurredAt: string | null;
     actorUserId: string; isOperator: boolean;
   }) {
     if (!input.isOperator && !(await this.repo.isAssignedCaregiver(input.assignmentId, input.actorUserId))) {
@@ -441,12 +444,46 @@ export class CareService {
     }
 
     // 정정 대상이 있으면 같은 배정의 기록인지 확인합니다.
+    let original: Awaited<ReturnType<typeof this.repo.findServiceLog>> = null;
     if (input.correctionOf) {
-      const original = await this.repo.findServiceLog(input.correctionOf);
+      original = await this.repo.findServiceLog(input.correctionOf);
       if (!original || original.assignment_id !== input.assignmentId) {
         throw new DomainError('COMMON_NOT_FOUND', {
           targetType: 'service_log', targetId: input.correctionOf,
           reason: 'correction target must belong to the same assignment',
+        });
+      }
+      // 정정은 원본과 같은 유형이어야 합니다. 유형을 바꿀 수 있으면
+      // 메모 한 줄이 출퇴근 기록으로 둔갑합니다.
+      if (original.log_type !== input.logType) {
+        throw new DomainError('CARE_LOG_IMMUTABLE', {
+          logType: input.logType, originalLogType: original.log_type,
+          reason: 'a correction must restate the same kind of event as the original',
+        });
+      }
+    }
+
+    // 출퇴근은 QR 체크인에서만 생깁니다 (§6-3). 여기서는 정정만 됩니다 —
+    // 새로 만들 수 있으면 QR을 찍지 않고 근무를 주장할 수 있습니다.
+    if (SHIFT_LOG_TYPES.has(input.logType) && !input.correctionOf) {
+      throw new DomainError('CARE_LOG_IMMUTABLE', {
+        logType: input.logType,
+        reason: 'shift boundaries are created by QR check-in only; this endpoint can correct one but not create it',
+      });
+    }
+
+    // 시각을 다시 적는 것은 정정이고, 정정은 운영자가 확인한 결과입니다.
+    // 이 게이트가 없으면 QR 체크인 시각이 아무 의미도 갖지 못합니다.
+    if (input.occurredAt) {
+      if (!input.isOperator || !input.correctionOf) {
+        throw new DomainError('CARE_LOG_TIME_FORBIDDEN', {
+          reason: 'restating the time of an event is a correction, and corrections are confirmed by an operator',
+        });
+      }
+      if (new Date(input.occurredAt).getTime() > Date.now()) {
+        throw new DomainError('CARE_LOG_TIME_INVALID', {
+          occurredAt: input.occurredAt,
+          reason: 'a shift cannot be logged before it happens',
         });
       }
     }
@@ -455,7 +492,7 @@ export class CareService {
       assignmentId: input.assignmentId,
       logType: input.logType,
       itemCode: input.itemCode,
-      occurredAt: new Date().toISOString(),
+      occurredAt: input.occurredAt ?? new Date().toISOString(),
       checkMethod: null,
       geoPoint: null,
       memo: input.memo,
@@ -466,7 +503,10 @@ export class CareService {
     await this.audit.record({
       actorUserId: input.actorUserId, action: 'STATUS_CHANGE',
       targetType: 'service_log', targetId: log.id,
-      after: { logType: log.log_type, itemCode: log.item_code, correctionOf: log.correction_of },
+      after: {
+        logType: log.log_type, itemCode: log.item_code,
+        correctionOf: log.correction_of, occurredAt: log.occurred_at,
+      },
     });
     return log;
   }

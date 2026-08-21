@@ -31,8 +31,11 @@
 | — | `mobile-candidate` | SCR-001·002·101~110 | ✅ Flutter 3.24 · ko/vi/ru/en · 브라우저에서 로그인→홈 실동작 확인 |
 | — | Docker | — | ✅ `docker compose up -d --build` 한 번에 전체 스택 |
 | 11 | `care` (V2) | SCR-303 · 304 · 505 | ✅ 요청·3단계 배정·업무범위 게이트·SLA 잡 |
+| 12 | `care` (V2) | SCR-401~404 · 306 | ✅ 병실 QR 체크인 · append-only 근무 기록(DB 트리거) |
+| 13 | `ops` (V2) | SCR-506 | ✅ 사건 상태머신 · 유형별 에스컬레이션 경로 · 4시간 SLA 잡 |
+| 12.5 | `engagement` (V2) | — | ✅ `service_logs` → `work_records` 집계 (24시간 상주는 U5로 차단) |
 
-단위 테스트 **181건** 통과 (API 158 · 후보자 앱 23). 상태머신 전이는 전부 테스트가 있습니다.
+단위 테스트 **205건** 통과 (API 182 · 후보자 앱 23). 상태머신 전이는 전부 테스트가 있습니다.
 
 **개인정보 게이트 실측** (`GET /candidates/{id}`, 같은 후보자·다른 뷰어):
 
@@ -42,9 +45,10 @@
 | 검증 완료 기관 + 면접 없음 | ❌ 키 자체가 없음 | ❌ |
 | 검증 대기 기관 + 면접 수락함 | ❌ 키 자체가 없음 | ❌ |
 
-**남은 것**: `care`(V2, 11~13단계) · `payroll`(V3, U1·U2·U5 선행) · 백그라운드 잡 5종
-(`scope-keyword-scan` · `data-retention-purge` · `care-assignment-sla` ·
-`ticket-sla` · `shift-24h-review` — 전부 care/V2에 붙는 잡).
+**V2 완료.** 남은 것은 `payroll`(V3, U1·U2·U5 선행)과 백그라운드 잡 2종
+(`data-retention-purge` · `shift-24h-review`)입니다. `scope-keyword-scan`은
+잡이 아니라 요청 생성 시점의 동기 게이트로 들어갔습니다 — 잡으로 돌리면
+스캔 결과가 나오기 전에 간병사에게 요청이 전달됩니다.
 
 사람이 판정해야 할 것은 §4의 **C5 · C6** 둘입니다 (C3은 2026-08-21 확정).
 §4-2의 S1~S3는 확정됐습니다.

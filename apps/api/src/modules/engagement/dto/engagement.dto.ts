@@ -1,4 +1,4 @@
-import { IsBoolean, IsDateString, IsIn, IsOptional, IsString, IsUUID, Length } from 'class-validator';
+import { IsBoolean, IsDateString, IsIn, IsInt, IsOptional, IsString, IsUUID, Length, Min } from 'class-validator';
 import { Scope } from '../../../core/scope/scope.decorator';
 
 const MODELS = ['DIRECT_EMPLOYMENT', 'DELEGATION', 'BROKERAGE'] as const;
@@ -94,4 +94,34 @@ export class DispatchStatusDto {
   @Scope('admin', 'org') limitDays: number;
   /** 참이면 이미 넘겼습니다. 경고가 아니라 사고입니다. */
   @Scope('admin', 'org') exceeded: boolean;
+}
+
+// ── 근무 기록 (docs/02 §12-12.5) ────────────────────────────────────────────
+
+export class WorkRecordDto {
+  @Scope('admin', 'org') id: string;
+  @Scope('admin', 'org') engagementId: string;
+  @Scope('admin', 'org') sourceType: string;
+  @Scope('admin', 'org') workDate: string;
+  @Scope('admin', 'org') startedAt: Date | null;
+  @Scope('admin', 'org') endedAt: Date | null;
+  @Scope('admin', 'org') breakMinutes: number;
+  @Scope('admin', 'org') normalMinutes: number;
+  @Scope('admin', 'org') nightMinutes: number;
+  @Scope('admin', 'org') overtimeMinutes: number;
+  @Scope('admin', 'org') holidayMinutes: number;
+  /** 승인 전에는 정산에 들어가지 않습니다. 집계는 자동, 확정은 사람이 합니다. */
+  @Scope('admin', 'org') approvedAt: Date | null;
+  /** 정정본이면 원본을 가리킵니다. 원본은 지워지지 않습니다 (§5.4). */
+  @Scope('admin', 'org') correctionOf: string | null;
+  @Scope('admin') approvedBy: string | null;
+  @Scope('admin') sourceId: string | null;
+}
+
+export class CorrectWorkRecordDto {
+  @IsInt() @Min(0) breakMinutes: number;
+  @IsInt() @Min(0) normalMinutes: number;
+  @IsInt() @Min(0) nightMinutes: number;
+  @IsInt() @Min(0) overtimeMinutes: number;
+  @IsInt() @Min(0) holidayMinutes: number;
 }

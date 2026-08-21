@@ -152,10 +152,24 @@ export class ShiftBoundaryDto {
   @IsOptional() @IsString() @Length(1, 500) memo?: string;
 }
 
+/**
+ * 자유 기록으로 만들 수 있는 유형.
+ *
+ * SHIFT_START/SHIFT_END는 여기 없습니다 — 출퇴근은 QR 체크인 엔드포인트에서만
+ * 생깁니다. 이 엔드포인트로 새로 만들 수 있으면 QR을 찍지 않고 근무를
+ * 주장할 수 있게 됩니다.
+ *
+ * 다만 **이미 찍힌 출퇴근을 정정하는 것은 별개**입니다. 분쟁의 대부분이
+ * "09:00에 시작했는데 QR을 09:14에 찍었다" 형태라, 정정이 막히면 append-only가
+ * 근거가 아니라 오기록의 고착이 됩니다. 정정은 원본과 같은 유형이어야 하고
+ * 운영자만 할 수 있습니다 — 서비스 레이어에서 확인합니다.
+ */
 const LOG_TYPES = ['SUPPORT', 'NOTE', 'ISSUE'] as const;
+const CORRECTABLE_LOG_TYPES = ['SHIFT_START', 'SHIFT_END'] as const;
+const APPENDABLE_LOG_TYPES = [...LOG_TYPES, ...CORRECTABLE_LOG_TYPES] as const;
 
 export class AppendLogDto {
-  @IsIn(LOG_TYPES) logType: (typeof LOG_TYPES)[number];
+  @IsIn(APPENDABLE_LOG_TYPES) logType: (typeof APPENDABLE_LOG_TYPES)[number];
   /** 카탈로그 코드. 의료행위는 카탈로그에 없으므로 여기로 들어올 수 없습니다. */
   @IsOptional() @IsString() @Length(1, 64) itemCode?: string;
   @IsOptional() @IsString() @Length(1, 1000) memo?: string;
@@ -166,6 +180,16 @@ export class AppendLogDto {
    * 근무시간 분쟁에서 유일한 근거가 되는 데이터라, 고칠 수 있으면 근거가 아닙니다.
    */
   @IsOptional() @IsUUID() correctionOf?: string;
+  /**
+   * 사건이 실제로 일어난 시각.
+   *
+   * 생략하면 지금입니다. **정정에서만, 운영자만** 다른 값을 넣을 수 있습니다 —
+   * 근무시간 분쟁의 대부분이 "09:00에 시작했는데 QR을 09:14에 찍었다" 형태라
+   * 시각을 다시 적을 수 없으면 정정 자체가 쓸모없습니다. 반대로 간병사가
+   * 자기 시각을 자유롭게 적을 수 있으면 QR 체크인이 장식이 됩니다.
+   * 간병사는 메모로 주장을 남기고, 시각은 운영자가 확인해서 적습니다 (§6-4).
+   */
+  @IsOptional() @IsISO8601() occurredAt?: string;
 }
 
 /**
