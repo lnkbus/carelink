@@ -20,7 +20,7 @@
     "demo": "bash infra/smoke/demo-seed.sh",
     "start:local": "bash infra/local/start.sh",
     "start:local:mobile": "bash infra/local/start.sh --mobile",
-    "stop:local": "docker compose --profile mobile --profile tools down",
+    "stop:local": "docker compose --profile mobile --profile tools down --remove-orphans",
     "smoke:docker": "docker compose run --rm tools smoke",
     "demo:docker": "docker compose run --rm tools demo"
   },
