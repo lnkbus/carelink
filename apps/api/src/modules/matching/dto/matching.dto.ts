@@ -76,6 +76,14 @@ export class JobDto {
   @Scope('public', 'admin', 'org', 'org_masked') dormProvided: boolean;
   @Scope('public', 'admin', 'org', 'org_masked') headcount: number;
   @Scope('public', 'admin', 'org', 'org_masked') status: string;
+  /**
+   * 충원 인원. 화면은 `2/4`로 씁니다 (SCR-202 시안).
+   *
+   * **기관 담당자는 평소 `org_masked`만 갖습니다** — `org`는 역할이 아니라
+   * 관계라서(검증 완료 + 후보자의 면접 수락 이후) `org`만 두면 조용히
+   * 빠집니다. 여기엔 개인정보가 없고 자기 요청의 집계입니다.
+   */
+  @Scope('public', 'admin', 'org', 'org_masked') filledCount: number;
   @Scope('public', 'admin', 'org', 'org_masked') minExperienceYrs: number;
   @Scope('public', 'admin', 'org', 'org_masked') languageLevel: string | null;
   @Scope('public', 'admin', 'org', 'org_masked') extraConditions: string | null;

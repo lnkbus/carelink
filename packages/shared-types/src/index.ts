@@ -372,6 +372,8 @@ export interface Job {
   salaryMin: number | null;
   salaryMax: number | null;
   salaryVisibility: string;
+  /** 충원 인원. 화면은 `2/4`로 씁니다 — 상태만으로는 얼마나 찼는지 모릅니다. */
+  filledCount?: number;
 }
 
 // ── care (V2) ──────────────────────────────────────────────────────────────

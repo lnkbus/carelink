@@ -11,13 +11,20 @@ export interface JobRow {
   extra_conditions: string | null; status: JobStatus;
   opened_at: Date | null; filled_at: Date | null; created_by: string | null; created_at: Date;
   organization_name?: string; track_code?: string;
+  /** 충원 인원 (ACCEPTED 지원 건수). SCR-202의 `2/4`. */
+  filled_count?: number;
 }
 
 const COLS = `j.id, j.organization_id, j.track_id, j.title, j.headcount, j.region, j.employment_type,
               j.start_date, j.dorm_provided, j.salary_min, j.salary_max, j.salary_visibility,
               j.min_experience_yrs, j.language_level, j.extra_conditions, j.status,
               j.opened_at, j.filled_at, j.created_by, j.created_at,
-              o.name AS organization_name, t.code AS track_code`;
+              o.name AS organization_name, t.code AS track_code,
+              -- 충원 진행 (SCR-202 시안의 2/4 열).
+              -- 기관이 이 화면에서 가장 알고 싶은 것은 '얼마나 찼나'입니다.
+              -- 요청 상태(OPEN/CLOSED)만으로는 3명 중 0명인지 3명인지 모릅니다.
+              (SELECT count(*) FROM applications a
+                WHERE a.job_id = j.id AND a.status = 'ACCEPTED')::int AS filled_count`;
 const FROM = `FROM jobs j JOIN organizations o ON o.id = j.organization_id JOIN tracks t ON t.id = j.track_id`;
 
 @Injectable()

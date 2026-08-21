@@ -129,6 +129,7 @@ export class JobController {
       region: j.region, employmentType: j.employment_type,
       startDate: j.start_date ? j.start_date.toISOString().slice(0, 10) : null,
       dormProvided: j.dorm_provided, headcount: j.headcount, status: j.status,
+      filledCount: j.filled_count ?? 0,
       minExperienceYrs: Number(j.min_experience_yrs ?? 0), languageLevel: j.language_level,
       extraConditions: j.extra_conditions, salaryVisibility: j.salary_visibility,
       salaryMin: salary.min, salaryMax: salary.max,

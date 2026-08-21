@@ -271,8 +271,11 @@ q "INSERT INTO documents (candidate_id, doc_type, file_key, file_name, status,
 q "INSERT INTO applications (job_id, candidate_id, status)
    VALUES ('$JOB', '$C1', 'INTERVIEW_REQUESTED'),
           ('$JOB', '$C2', 'UNDER_REVIEW'),
-          ('$JOB', '$C3', 'OFFERED')
+          ('$JOB', '$C3', 'ACCEPTED')
    ON CONFLICT DO NOTHING;"
+
+# ACCEPTED 한 건은 SCR-202의 '충원 진행' 열이 1/3으로 보이게 합니다.
+# 전부 0/n이면 그 열이 동작하는지 확인할 수 없습니다.
 
 say "5/6 간병사 3명 (클리어런스 통과)"
 CGS=()

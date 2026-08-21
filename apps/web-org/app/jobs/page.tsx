@@ -56,6 +56,7 @@ export default async function JobsPage() {
               { key: 'title', label: '요청' },
               { key: 'track', label: '트랙', width: 130 },
               { key: 'region', label: '지역', width: 110 },
+              { key: 'fill', label: '충원 진행', width: 110 },
               { key: 'head', label: '인원', align: 'right', width: 70 },
               { key: 'salary', label: '급여', width: 190 },
               { key: 'start', label: '시작', width: 110 },
@@ -70,6 +71,35 @@ export default async function JobsPage() {
                   <Td><Link href={`/jobs/${j.id}`}>{j.title ?? '(제목 없음)'}</Link></Td>
                   <Td tone="muted">{label(j.trackCode)}</Td>
                   <Td>{j.region}</Td>
+                  {/*
+                    시안(SCR-202)의 `2/4` 열. 기관이 이 화면에서 가장 알고 싶은
+                    것은 '얼마나 찼나'입니다 — 상태(모집 중/마감)만으로는
+                    4명 중 0명인지 3명인지 알 수 없습니다.
+                    채워진 만큼 막대로도 보여 줍니다. 숫자만 있으면 표를
+                    훑을 때 비교가 안 됩니다.
+                  */}
+                  <Td>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--cl-s3)' }}>
+                      <span style={{ fontFamily: 'var(--cl-font-mono)', minWidth: 34 }}>
+                        {j.filledCount ?? 0}/{j.headcount}
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        style={{
+                          flex: 1, height: 6, borderRadius: 999,
+                          background: 'var(--cl-line)', overflow: 'hidden',
+                        }}
+                      >
+                        <span
+                          style={{
+                            display: 'block', height: '100%',
+                            width: `${Math.min(100, Math.round(((j.filledCount ?? 0) / Math.max(1, j.headcount)) * 100))}%`,
+                            background: (j.filledCount ?? 0) >= j.headcount ? 'var(--cl-signal)' : 'var(--cl-action)',
+                          }}
+                        />
+                      </span>
+                    </span>
+                  </Td>
                   <Td mono align="right">{j.headcount}</Td>
                   <Td>
                     {j.salaryMin === null && j.salaryMax === null
