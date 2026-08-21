@@ -50,6 +50,20 @@ export class StorageService {
     return a.length === b.length && timingSafeEqual(a, b);
   }
 
+  /**
+   * 원본 파기 (docs/11 §1.2 · CLAUDE.md §6-18).
+   *
+   * 개발용 서명자에는 오브젝트 저장소가 없어 지울 대상이 없습니다. 그래서
+   * `'DELETED'`를 돌려주지 않고 `'NO_STORE'`를 돌려줍니다 — 지우지 않았는데
+   * 지웠다고 보고하면 파기 대장이 거짓이 되고, 그 대장은 유출 사고 때
+   * 유일한 방어 근거입니다.
+   *
+   * 운영 드라이버는 같은 시그니처로 실제 삭제 후 `'DELETED'`를 돌려줍니다.
+   */
+  async deleteObject(_fileKey: string): Promise<'DELETED' | 'NO_STORE'> {
+    return 'NO_STORE';
+  }
+
   private sign(fileKey: string, action: string, exp: number): string {
     return createHmac('sha256', this.secret).update(`${action}:${fileKey}:${exp}`).digest('base64url');
   }

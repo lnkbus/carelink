@@ -3,7 +3,10 @@ import { TalentModule } from '../talent/talent.module';
 import { JobsController } from './controller/jobs.controller';
 import { OpsController } from './controller/ops.controller';
 import { TicketController } from './controller/ticket.controller';
+import { RetentionRepository } from './repository/retention.repository';
 import { TicketRepository } from './repository/ticket.repository';
+import { RetentionJobs } from './jobs/retention.jobs';
+import { RetentionService } from './service/retention.service';
 import { TicketJobs } from './jobs/ticket.jobs';
 import { TicketService } from './service/ticket.service';
 import { MetricsRepository } from './repository/metrics.repository';
@@ -26,6 +29,7 @@ import { NotificationService } from './service/notification.service';
   providers: [
     AuditService, NotificationService, ExpiryJobs, MatchingJobs, MetricsRepository, OpsService,
     TicketRepository, TicketService, TicketJobs,
+    RetentionRepository, RetentionService, RetentionJobs,
   ],
   exports: [AuditService, NotificationService, TicketService],
 })

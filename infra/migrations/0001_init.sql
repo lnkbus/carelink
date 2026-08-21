@@ -274,6 +274,13 @@ CREATE TABLE users (
   password_hash   VARCHAR(255),                         -- OTP 로그인만 쓰면 NULL 허용
   locale          VARCHAR(8)  NOT NULL DEFAULT 'ko',    -- ko | vi | ru | en (docs/09 §6 · docs/12 D8)
   status          VARCHAR(24) NOT NULL DEFAULT 'ACTIVE',-- ACTIVE|SUSPENDED|WITHDRAWAL_REQUESTED
+  -- 탈퇴 요청 시점. 파기 기준일(30일)이 여기서부터 센다 (docs/11 §4).
+  -- status만 두면 "언제부터 30일인가"를 알 수 없어 파기 잡이 성립하지 않는다.
+  -- 철회하면(ACTIVE 복귀) NULL로 되돌린다.
+  withdrawal_requested_at TIMESTAMPTZ,
+  -- 익명화 완료 시점. 재실행 방지이자 파기 대장이다 — 이 값이 없으면
+  -- 잡이 매일 같은 행을 다시 익명화하려 하고, 무엇이 언제 파기됐는지 남지 않는다.
+  anonymized_at   TIMESTAMPTZ,
   last_login_at   TIMESTAMPTZ,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()

@@ -24,7 +24,7 @@ export const JOBS = {
   /** 요청 생성 시 — 자유 입력 스캔. 감지 시 OPS_REVIEW (자동 거절이 아니다). */
   SCOPE_KEYWORD_SCAN: { name: 'scope-keyword-scan', cron: null },
   /** 매일 — data_retention_policies 기준 자동 파기. 수동 파기 정책은 지켜지지 않는다. */
-  DATA_RETENTION_PURGE: { name: 'data-retention-purge', cron: '0 3 * * *' },
+  DATA_RETENTION_PURGE: { name: 'data-retention-purge', cron: '0 3 * * *', batchSize: 200 },
   /** 매 10분 — 간병 요청 후 4시간 미배정 → ISSUE. */
   CARE_ASSIGNMENT_SLA: { name: 'care-assignment-sla', cron: '*/10 * * * *', slaHours: 4 },
   /** 매 10분 — 안전사고·부당대우·업무범위 초과 4시간 초과. */

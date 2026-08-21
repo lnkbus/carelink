@@ -63,8 +63,29 @@ export class UserRepository {
     await this.db.query(`UPDATE users SET locale = $2, updated_at = now() WHERE id = $1`, [userId, locale]);
   }
 
+  /**
+   * 상태 전이.
+   *
+   * 탈퇴 요청 시각을 함께 찍습니다 — 파기 기준일(30일)이 여기서부터 세고,
+   * 시각이 없으면 `data-retention-purge`가 대상을 고르지 못합니다.
+   * 철회하면(ACTIVE 복귀) 시각을 지웁니다. 남겨 두면 다시 탈퇴했을 때
+   * 이전 요청 시점부터 세어 30일을 건너뜁니다.
+   */
   async updateStatus(userId: string, status: UserStatus): Promise<void> {
-    await this.db.query(`UPDATE users SET status = $2, updated_at = now() WHERE id = $1`, [userId, status]);
+    await this.db.query(
+      `UPDATE users
+          SET status = $2::text,
+              -- 같은 파라미터를 대입과 비교에 함께 쓰면 PG가 타입을 하나로
+              -- 좁히지 못합니다. 명시 캐스트가 필요합니다 (F-04와 같은 부류).
+              withdrawal_requested_at = CASE
+                WHEN $2::text = 'WITHDRAWAL_REQUESTED' THEN now()
+                WHEN $2::text = 'ACTIVE' THEN NULL
+                ELSE withdrawal_requested_at
+              END,
+              updated_at = now()
+        WHERE id = $1`,
+      [userId, status],
+    );
   }
 
   listRoles(userId: string): Promise<UserRoleRow[]> {
