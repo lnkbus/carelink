@@ -275,13 +275,17 @@ q "INSERT INTO documents (candidate_id, doc_type, file_key, file_name, status,
 # 전부 APPLIED면 채용 퍼널(SCR-201)이 첫 줄만 차고 나머지가 0이 됩니다.
 # 그러면 '어디서 빠지는가'를 보는 표인데 볼 것이 없습니다.
 q "INSERT INTO applications (job_id, candidate_id, status)
-   VALUES ('$JOB', '$C1', 'INTERVIEW_REQUESTED'),
+   VALUES ('$JOB', '$C1', 'UNDER_REVIEW'),
           ('$JOB', '$C2', 'UNDER_REVIEW'),
           ('$JOB', '$C3', 'ACCEPTED')
    ON CONFLICT DO NOTHING;"
 
 # ACCEPTED 한 건은 SCR-202의 '충원 진행' 열이 1/3으로 보이게 합니다.
 # 전부 0/n이면 그 열이 동작하는지 확인할 수 없습니다.
+#
+# C1을 INTERVIEW_REQUESTED로 **직접 넣지 않습니다.** 그러면 지원은 면접
+# 요청 상태인데 interviews 행이 없는 상태가 되고, 기관의 '면접 관리'가
+# 빈 채로 뜹니다. 7/7에서 API로 면접을 걸어 상태가 따라 올라가게 합니다.
 
 say "5/6 간병사 3명 (클리어런스 통과)"
 CGS=()
@@ -347,9 +351,132 @@ curl -sS -X POST "$B/care-requests" "${G[@]}" -d "{\"hospitalId\":\"$H1\",\"ward
 
 # (c) 간병사 1번에게 제안 → 수락 → 운영자 확인까지
 A1=$(curl -sS -X POST "$B/care-requests/$R1/assign" "${G[@]}" -d "{\"caregiverId\":\"${CGS[0]}\",\"shiftStartTime\":\"09:00\",\"shiftEndTime\":\"17:00\"}" | J "['id']")
-read -r c1t c1r _ <<<"$(login 01044440001)"
+read -r c1t c1r CG1U <<<"$(login 01044440001)"
 curl -sS -X PATCH "$B/care-assignments/$A1/status" -H "authorization: Bearer $c1t" -H 'content-type: application/json' -d '{"status":"ACCEPTED"}' >/dev/null
 curl -sS -X PATCH "$B/care-assignments/$A1/status" "${A[@]}" -d '{"status":"ASSIGNED"}' >/dev/null
+
+
+# ── 7/7 빈 화면 채우기 ────────────────────────────────────────────────────
+#
+# 여기까지만 하면 화면 다섯 개가 **빈 채로 뜹니다** — 면접 관리 · 고용/계약 ·
+# 파트너 · 코호트 · 사건/문의, 그리고 보호자의 '오늘 기록'.
+#
+# 빈 화면은 '데이터가 없다'와 '화면이 고장 났다'를 구분해 주지 않습니다.
+# 처음 보는 사람은 후자로 읽고, 그 상태로는 무엇도 검증할 수 없습니다.
+say "7/7 면접 · 고용 · 파트너 · 코호트 · 사건 · 근무 기록"
+
+# (1) 면접 (SCR-205 · SCR-109)
+#     C1은 INTERVIEW_REQUESTED 상태입니다. 실제 면접 행이 없으면 기관의
+#     '면접 관리'가 비고, 후보자 앱의 지원 현황도 다음 단계를 못 보여줍니다.
+#     UNDER_REVIEW → INTERVIEW_REQUESTED 전이를 실제로 태웁니다. 상태를
+#     직접 써 넣으면 전이 규칙이 도는지 확인할 수 없습니다 (§5.3).
+APP1=$(psql "$DB" -tAqc "SELECT id FROM applications WHERE candidate_id='$C1' LIMIT 1;" | tr -d '[:space:]')
+if [ -n "$APP1" ]; then
+  curl -sS -X POST "$B/applications/$APP1/interview" "${O[@]}" \
+    -d "{\"mode\":\"ONSITE\",\"scheduledAt\":\"$TOMORROW_09\",\"interviewer\":\"인사팀 김수현\"}" >/dev/null
+fi
+
+# (2) 고용 · 계약 (SCR-508)
+#     역할 2개 계정(01066660001)을 씁니다 — 클리어런스 6개가 전부 PASS라
+#     서비스가 배치 생성을 허용합니다. 여기서 막히면 시드가 아니라
+#     클리어런스 게이트가 동작한다는 뜻입니다 (§5.11).
+#
+#     **금액은 만들지 않습니다** (§6-8 · U6 미확정). engagement는 고용 형태와
+#     컴플라이언스 상태만 들고 있고, 정산 계산은 열려 있지 않습니다.
+TRK_CW=$(psql "$DB" -tAqc "SELECT id FROM tracks WHERE code='CARE_WORKER';" | tr -d '[:space:]')
+ENG=$(curl -sS -X POST "$B/engagements" "${A[@]}" \
+  -d "{\"workerUserId\":\"$DU\",\"candidateId\":\"$CDUAL\",\"organizationId\":\"$ORG_V\",\"trackId\":\"$TRK_CW\",\"model\":\"DELEGATION\",\"startedOn\":\"$(date -u +%Y-%m-%d)\"}" | J "['id']")
+if [ -n "$ENG" ]; then
+  # 컴플라이언스 체크를 전부 통과시키지 **않습니다.** 하나를 남겨 두면
+  # 'ACTIVE로 못 넘어간다'는 게이트를 화면에서 확인할 수 있습니다 (§6-9).
+  for c in IDENTITY_CONFIRMED CONTRACT_SIGNED INSURANCE_ENROLLED; do
+    curl -sS -X PATCH "$B/engagements/$ENG/compliance" "${A[@]}" \
+      -d "{\"checkCode\":\"$c\",\"result\":\"PASS\"}" >/dev/null
+  done
+fi
+
+# (3) 파트너 (SCR-510) — 읽기 전용 화면이라 테이블에 직접 넣습니다.
+q "INSERT INTO partners (partner_type, name, country, region, status, contact_name, mou_signed_on, mou_expires_on)
+   VALUES ('UNIVERSITY','하노이 보건직업대학','VN','하노이','ACTIVE','Tran Thi Mai', current_date - 200, current_date + 500),
+          -- MOU 만료 D-60. 만료가 임박한 파트너가 하나는 있어야 그 경고가
+          -- 화면에 뜨는지 확인할 수 있습니다.
+          ('TRAINING_CENTER','서울요양보호사교육원','KR','서울','MOU_SIGNED','박정훈', current_date - 400, current_date + 60),
+          ('OVERSEAS_AGENCY','타슈켄트 인력송출','UZ','타슈켄트','IN_TALKS','Aziz Karimov', NULL, NULL)
+   ON CONFLICT DO NOTHING;"
+
+# (4) 코호트 (SCR-511)
+#     **`dropped_stage`가 이 모듈의 존재 이유입니다** (§5.13). 이탈률만으로는
+#     대응할 수 없고, '교육 6주차에 몰린다'를 알아야 상담 주기를 바꿉니다.
+#     그래서 시드에도 이탈 1건을 반드시 넣습니다.
+CH=$(psql "$DB" -tAqc "SELECT id FROM recruiting_channels ORDER BY code LIMIT 1;" | tr -d '[:space:]')
+PT=$(psql "$DB" -tAqc "SELECT id FROM partners WHERE name='하노이 보건직업대학';" | tr -d '[:space:]')
+COH=$(curl -sS -X POST "$B/admin/recruiting/cohorts" "${A[@]}" \
+  -d "{\"channelId\":\"$CH\",\"code\":\"CH-2026-01\",\"name\":\"2026년 1기 (하노이)\",\"trainingPartnerId\":\"$PT\",\"targetSize\":30,\"startsOn\":\"$(date -u -d '-60 days' +%Y-%m-%d 2>/dev/null || date -u -v-60d +%Y-%m-%d)\"}" | J "['id']")
+if [ -n "$COH" ]; then
+  # 상태는 한 칸씩만 움직입니다 (PLANNED → RECRUITING → IN_TRAINING).
+  # 건너뛰면 전이 규칙이 막습니다 — 그게 정상입니다 (§5.3).
+  for st in RECRUITING IN_TRAINING; do
+    curl -sS -X PATCH "$B/admin/recruiting/cohorts/$COH/status" "${A[@]}" -d "{\"status\":\"$st\"}" >/dev/null
+  done
+  for c in "$C1" "$C2" "$C4"; do
+    curl -sS -X POST "$B/admin/recruiting/cohorts/$COH/members" "${A[@]}" -d "{\"candidateId\":\"$c\"}" >/dev/null
+  done
+  # 이탈 1건 — **`dropped_stage`가 이 모듈의 존재 이유입니다** (§5.13).
+  # 그 값은 API가 직접 받지 않고 **이탈 직전 단계에서 유도**합니다. 그래서
+  # 교육 중까지 올린 다음 이탈시킵니다 — '교육 6주차에 몰린다'가 그렇게 나옵니다.
+  M4=$(psql "$DB" -tAqc "SELECT id FROM cohort_members WHERE cohort_id='$COH' AND candidate_id='$C4';" | tr -d '[:space:]')
+  if [ -n "$M4" ]; then
+    for st in SELECTED IN_TRAINING; do
+      curl -sS -X PATCH "$B/admin/recruiting/cohort-members/$M4/stage" "${A[@]}" -d "{\"stage\":\"$st\"}" >/dev/null
+    done
+    curl -sS -X PATCH "$B/admin/recruiting/cohort-members/$M4/stage" "${A[@]}" \
+      -d '{"stage":"DROPPED","dropReason":"생활비 부담 — 교육 6주차"}' >/dev/null
+  fi
+  # 나머지 두 명은 교육 중까지 올려 둡니다. 전부 APPLIED면 퍼널이 첫 줄만 찹니다.
+  for c in "$C1" "$C2"; do
+    M=$(psql "$DB" -tAqc "SELECT id FROM cohort_members WHERE cohort_id='$COH' AND candidate_id='$c';" | tr -d '[:space:]')
+    [ -n "$M" ] && for st in SELECTED IN_TRAINING; do
+      curl -sS -X PATCH "$B/admin/recruiting/cohort-members/$M/stage" "${A[@]}" -d "{\"stage\":\"$st\"}" >/dev/null
+    done
+  done
+fi
+
+# (5) 사건 · 문의 (SCR-506)
+#     업무범위 초과와 안전사고는 4시간 SLA입니다. 큐가 비어 있으면 SLA 잡이
+#     도는지도, 유형별 에스컬레이션 경로가 갈리는지도 확인할 수 없습니다.
+R2=$(psql "$DB" -tAqc "SELECT id FROM care_requests WHERE status='OPS_REVIEW' LIMIT 1;" | tr -d '[:space:]')
+curl -sS -X POST "$B/support-tickets" -H "authorization: Bearer $GT" -H 'content-type: application/json' \
+  -d "{\"ticketType\":\"SCOPE_VIOLATION\",\"relatedType\":\"CARE_REQUEST\",\"relatedId\":\"$R2\"}" >/dev/null
+curl -sS -X POST "$B/support-tickets" -H "authorization: Bearer $c1t" -H 'content-type: application/json' \
+  -d '{"ticketType":"WORK_HOUR_DISPUTE","severity":"NORMAL"}' >/dev/null
+
+# (6) 근무 기록 (SCR-306 · 307 · 404)
+#     보호자가 이 화면에서 가장 많이 하는 행동이 "잘 있나 확인"입니다.
+#     기록이 없으면 그 화면이 통째로 빈 채로 뜹니다.
+#
+#     **휴게는 기록된 것만 공제합니다** (§5.12-2). 그래서 BREAK_START/END를
+#     실제로 찍습니다 — 계획된 60분을 대신 빼지 않습니다.
+QR="$H1:703호"
+# 근무 시작만 API로 찍습니다 — **병실 QR 게이트가 실제로 도는지** 여기서
+# 확인됩니다 (§6-3. GPS는 기본이 아닙니다).
+curl -sS -X POST "$B/care-assignments/$A1/start" -H "authorization: Bearer $c1t" -H 'content-type: application/json' \
+  -d "{\"checkMethod\":\"QR\",\"qrToken\":\"$QR\"}" >/dev/null
+
+# 나머지 기록은 시각을 벌려서 직접 넣습니다.
+#
+# API로 넣으면 전부 '지금'이 찍혀 **휴게가 0분**이 됩니다. 0분 휴게는
+# '기록은 있는데 못 쉰' 상태와 구분되지 않고, 그 구분이 §5.12-2의 요점입니다.
+# 시각을 나중에 고칠 수도 없습니다 — service_logs는 append-only라 트리거가
+# UPDATE를 막습니다 (§5.4). 그래서 처음부터 원하는 시각으로 넣습니다.
+#
+# 시작 3시간 전으로 잡아 '근무 중'으로 보이게 합니다. 종료 기록은
+# 일부러 넣지 않습니다 — 보호자 화면의 '근무 중' 상태를 봐야 하니까요.
+q "INSERT INTO service_logs (assignment_id, log_type, item_code, occurred_at, created_by)
+   VALUES ('$A1','SUPPORT','MEAL_SUPPORT', now() - interval '2 hours 30 minutes', '$CG1U'),
+          ('$A1','SUPPORT','MOBILITY',     now() - interval '2 hours',            '$CG1U'),
+          ('$A1','BREAK_START', NULL,      now() - interval '1 hour 20 minutes',  '$CG1U'),
+          ('$A1','BREAK_END',   NULL,      now() - interval '40 minutes',         '$CG1U'),
+          ('$A1','SUPPORT','POSITION_CHANGE', now() - interval '20 minutes',      '$CG1U');"
 
 # 시드가 로그인하면서 남긴 쿨다운을 지웁니다. 안 지우면 시드 직후 30초 동안
 # 브라우저에서 로그인이 막히고, 처음 써 보는 사람은 그걸 고장으로 읽습니다.
