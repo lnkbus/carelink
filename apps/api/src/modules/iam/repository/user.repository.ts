@@ -127,6 +127,21 @@ export class UserRepository {
   }
 
   /**
+   * 표시용 기관 이름. 알림 문구에 넣습니다 — '승인되었습니다'만으로는
+   * 무엇이 승인됐는지 알 수 없습니다. 여러 곳에 신청했을 수 있습니다.
+   *
+   * `isOrganizationVerified`와 같은 §5.1 예외입니다. 읽는 값은 이름 하나이고
+   * 쓰기는 하지 않습니다.
+   */
+  async organizationName(organizationId: string): Promise<string | null> {
+    const row = await this.db.one<{ name: string }>(
+      `SELECT name FROM organizations WHERE id = $1`,
+      [organizationId],
+    );
+    return row?.name ?? null;
+  }
+
+  /**
    * 역할 부여. ORG_MEMBER/ORG_ADMIN은 approved_at을 비워 승인 대기로 둔다.
    * UNIQUE(user_id, role, organization_id)라 중복은 DB가 막는다.
    */

@@ -1,5 +1,6 @@
 import { DomainError } from '../../../core/errors/domain-error';
 import { AuditService } from '../../ops/service/audit.service';
+import { NotificationService } from '../../ops/service/notification.service';
 import { needsApproval } from '../iam.types';
 import { UserRepository, type UserRoleRow } from '../repository/user.repository';
 import { MembershipService } from './membership.service';
@@ -40,9 +41,22 @@ function build(opts: { row?: UserRoleRow | null; hasAdmin?: boolean } = {}) {
     }),
     rejectRole: jest.fn(async () => true),
     listPendingRoles: jest.fn(async () => []),
+    organizationName: jest.fn(async () => '서울중앙요양병원'),
   } as unknown as UserRepository;
   const audit = { record: jest.fn(async () => undefined) } as unknown as AuditService;
-  return { svc: new MembershipService(users, audit), users, audit, approved };
+  const notifications = { enqueue: jest.fn(async () => undefined) } as unknown as NotificationService;
+  return {
+    svc: new MembershipService(users, audit, notifications),
+    users, audit, notifications, approved,
+  };
+}
+
+/** 마지막으로 큐에 넣은 알림. */
+function lastNotice(notifications: NotificationService) {
+  const calls = (notifications.enqueue as jest.Mock).mock.calls;
+  if (calls.length === 0) return null;
+  const [userId, code, payload] = calls[calls.length - 1];
+  return { userId, code, payload };
 }
 
 async function codeOf(p: Promise<unknown>): Promise<string> {
@@ -131,6 +145,55 @@ describe('MembershipService — 이미 결정된 건', () => {
     const call = (audit.record as jest.Mock).mock.calls[0][0];
     expect(call.action).toBe('user.role.reject');
     expect(call.after.reason).toBe('사업자등록증과 기관명이 다름');
+  });
+});
+
+describe('MembershipService — 신청한 사람에게 알린다', () => {
+  it('승인하면 승인 알림이 간다 — 기관 이름과 함께', async () => {
+    const { svc, notifications } = build();
+    await svc.approve('id', ACTOR, null);
+    const n = lastNotice(notifications)!;
+    expect(n.code).toBe('IAM_ROLE_APPROVED');
+    // 신청자에게 갑니다. 승인한 사람이 아니라.
+    expect(n.userId).toBe('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
+    // '승인되었습니다'만으로는 무엇이 승인됐는지 알 수 없습니다.
+    expect(n.payload.organizationName).toBe('서울중앙요양병원');
+  });
+
+  it('첫 담당자에게는 관리자가 됐다는 사실도 알린다', async () => {
+    const { svc, notifications } = build({ hasAdmin: false });
+    await svc.approve('id', ACTOR, null);
+    expect(lastNotice(notifications)!.payload.becameAdmin).toBe(true);
+  });
+
+  it('두 번째 이후 담당자에게는 관리자 안내를 하지 않는다', async () => {
+    const { svc, notifications } = build({ hasAdmin: true });
+    await svc.approve('id', ACTOR, null);
+    expect(lastNotice(notifications)!.payload.becameAdmin).toBe(false);
+  });
+
+  it('반려하면 **사유가 담긴** 알림이 간다', async () => {
+    // 반려는 행을 지우므로 신청자 화면에는 아무것도 남지 않습니다.
+    // 이 알림이 사유가 신청자에게 닿는 유일한 경로입니다.
+    const { svc, notifications } = build();
+    await svc.reject('id', '사업자등록증과 기관명이 다릅니다', ACTOR, null);
+    const n = lastNotice(notifications)!;
+    expect(n.code).toBe('IAM_ROLE_REJECTED');
+    expect(n.payload.reason).toBe('사업자등록증과 기관명이 다릅니다');
+    expect(n.userId).toBe('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
+  });
+
+  it('막힌 요청에는 알림을 보내지 않는다 — 남의 기관을 건드린 경우', async () => {
+    const { svc, notifications } = build({ row: row({ organization_id: ORG_A }) });
+    await codeOf(svc.approve('id', ACTOR, ORG_B));
+    expect(notifications.enqueue).not.toHaveBeenCalled();
+  });
+
+  it('파트너 신청에는 기관 이름이 없다', async () => {
+    const { svc, notifications, users } = build({ row: row({ role: 'PARTNER', organization_id: null }) });
+    await svc.approve('id', ACTOR, null);
+    expect(users.organizationName).not.toHaveBeenCalled();
+    expect(lastNotice(notifications)!.payload.organizationName).toBeNull();
   });
 });
 

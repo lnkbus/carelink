@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DomainError } from '../../../core/errors/domain-error';
 import { AuditService } from '../../ops/service/audit.service';
+import { NotificationService } from '../../ops/service/notification.service';
 import { PENDING_APPROVAL_ROLES, type UserRole } from '../iam.types';
 import { UserRepository, type PendingRoleRow, type UserRoleRow } from '../repository/user.repository';
 
@@ -33,6 +34,7 @@ export class MembershipService {
   constructor(
     private readonly users: UserRepository,
     private readonly audit: AuditService,
+    private readonly notifications: NotificationService,
   ) {}
 
   /**
@@ -80,6 +82,18 @@ export class MembershipService {
       before: { role: row.role, approved: false },
       after: { role, approved: true, organizationId: row.organization_id },
     });
+
+    // 신청한 사람에게 알립니다. 이것이 없으면 그 사람은 승인됐는지 알
+    // 방법이 없어 대기 화면을 계속 새로 고칩니다. 승인은 사람이 누르는
+    // 것이라 언제 될지도 알 수 없습니다.
+    await this.notifications.enqueue(row.user_id, 'IAM_ROLE_APPROVED', {
+      role,
+      organizationId: row.organization_id,
+      // 문구에 기관 이름이 들어갑니다 — '승인되었습니다'만으로는 무엇이
+      // 승인됐는지 알 수 없습니다. 여러 곳에 신청했을 수 있습니다.
+      organizationName: await this.organizationNameOf(row.organization_id),
+      becameAdmin: role === 'ORG_ADMIN' && row.role !== 'ORG_ADMIN',
+    });
     return approved;
   }
 
@@ -108,6 +122,24 @@ export class MembershipService {
       before: { role: row.role, organizationId: row.organization_id, userId: row.user_id },
       after: { rejected: true, reason },
     });
+
+    // **사유가 신청자에게 닿는 유일한 경로입니다.**
+    //
+    // 반려는 행을 지우므로 신청자 화면에는 아무것도 남지 않습니다. 감사
+    // 로그는 운영자만 봅니다. 알림이 없으면 그 사람은 대기 화면에 있다가
+    // 어느 날 '신청한 적 없는 상태'로 돌아가 있는 것을 보게 되고,
+    // 무엇을 고쳐야 하는지 모른 채 같은 신청을 다시 냅니다.
+    await this.notifications.enqueue(row.user_id, 'IAM_ROLE_REJECTED', {
+      role: row.role,
+      organizationId: row.organization_id,
+      organizationName: await this.organizationNameOf(row.organization_id),
+      reason,
+    });
+  }
+
+  /** 알림 문구에 넣을 기관 이름. 파트너 신청은 기관이 없어 null입니다. */
+  private organizationNameOf(organizationId: string | null): Promise<string | null> {
+    return organizationId ? this.users.organizationName(organizationId) : Promise.resolve(null);
   }
 
   /** 승인 대상인지 + 승인할 자격이 있는지. 둘 다 여기서 막습니다. */

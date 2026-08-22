@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { StatusPill } from '@carelink/ui';
+import { RoleDecisionNotice } from '@/components/RoleDecisionNotice';
 import { LogoutLink } from '@/components/SessionBox';
 import { Note, SignupCard } from '../signup/Card';
 import { currentUser, hasPending, landingFor } from '@/lib/session';
@@ -55,6 +56,11 @@ export default async function PendingPage() {
       title="승인을 기다리는 중입니다"
       lead="신청은 접수됐습니다. 다시 신청하지 않으셔도 됩니다."
     >
+      {/* 여러 건을 신청한 사람은 하나가 반려되고 하나가 대기 중일 수
+          있습니다. 결과를 먼저 보여 줍니다 — 대기 목록만 보면 반려된 건이
+          조용히 사라진 것으로 읽힙니다. */}
+      <RoleDecisionNotice />
+
       <div style={{ display: 'grid', gap: 'var(--cl-s4)' }}>
         {pending.map((r) => (
           <div

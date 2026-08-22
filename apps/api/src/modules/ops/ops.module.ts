@@ -1,6 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { TalentModule } from '../talent/talent.module';
 import { JobsController } from './controller/jobs.controller';
+import { NotificationController } from './controller/notification.controller';
 import { OpsController } from './controller/ops.controller';
 import { TicketController } from './controller/ticket.controller';
 import { RetentionRepository } from './repository/retention.repository';
@@ -25,7 +26,7 @@ import { NotificationService } from './service/notification.service';
 @Global()
 @Module({
   imports: [TalentModule],
-  controllers: [JobsController, OpsController, TicketController],
+  controllers: [JobsController, OpsController, TicketController, NotificationController],
   providers: [
     AuditService, NotificationService, ExpiryJobs, MatchingJobs, MetricsRepository, OpsService,
     TicketRepository, TicketService, TicketJobs,

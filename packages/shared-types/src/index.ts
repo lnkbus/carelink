@@ -71,6 +71,26 @@ export interface PendingRoleRequest {
   becomesAdmin: boolean;
 }
 
+/**
+ * 알림 한 건. 문구는 **서버가 붙여서** 옵니다 —
+ * `notification_templates(code, locale, channel)`에서 수신자 언어로
+ * 조회하고 payload를 치환한 결과입니다 (docs/02 §10).
+ *
+ * 오류 코드와 다릅니다. 오류는 클라이언트가 번역하지만 알림은 그러지
+ * 않습니다. 문구가 운영 중에 자주 바뀌고, 배포 없이 바꿀 수 있어야 합니다.
+ */
+export interface Notification {
+  id: string;
+  code: string;
+  title: string | null;
+  body: string | null;
+  channel: string;
+  read: boolean;
+  createdAt: string;
+  /** 화면이 문장 밖에서 값을 써야 할 때 (반려 사유를 별도 상자에 넣는 것처럼). */
+  payload: Record<string, unknown>;
+}
+
 // ── talent ──────────────────────────────────────────────────────────────────
 
 export type CandidateStatus =

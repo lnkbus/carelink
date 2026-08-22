@@ -1,5 +1,10 @@
 import Link from 'next/link';
+import { RoleDecisionNotice } from '@/components/RoleDecisionNotice';
 import { LogoutLink } from '@/components/SessionBox';
+
+// 알림을 읽으므로 정적일 수 없습니다. 캐시되면 반려 사유가 늦게 뜨거나
+// 남의 것이 뜹니다.
+export const dynamic = 'force-dynamic';
 
 /**
  * 로그인은 됐는데 볼 화면이 없는 계정.
@@ -10,7 +15,7 @@ import { LogoutLink } from '@/components/SessionBox';
  * 통합 전에는 이 상태가 '로그인 화면으로 되돌아감'으로 보였습니다.
  * 방금 인증에 성공한 사람이 로그인 화면을 다시 보면 인증이 실패한 줄 압니다.
  */
-export default function NoAccessPage() {
+export default async function NoAccessPage() {
   return (
     <div
       style={{
@@ -29,6 +34,10 @@ export default function NoAccessPage() {
         <h1 style={{ margin: 0, fontSize: 'var(--cl-title)', fontWeight: 700 }}>
           아직 사용할 수 있는 화면이 없습니다
         </h1>
+        {/* 반려된 사람이 도착하는 곳입니다. 신청 행이 지워졌으므로
+            /pending을 지나 여기로 옵니다 — 사유를 볼 수 있는 마지막 화면입니다. */}
+        <RoleDecisionNotice />
+
         <p style={{ margin: 'var(--cl-s5) 0 0', color: 'var(--cl-text-sub)', lineHeight: 1.7 }}>
           로그인은 됐지만 이 계정에 운영자 권한도, 승인된 기관 소속도 없습니다.
           기관 담당자나 파트너라면 아래에서 신청하세요 — 종전에는 여기가 막다른
