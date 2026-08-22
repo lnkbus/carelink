@@ -26,6 +26,9 @@ const NAV = [
     items: [
       { href: '/admin/candidates', label: '후보자 관리' },
       { href: '/admin/organizations', label: '기관 관리' },
+      // 이 큐가 밀리면 기관 담당자는 로그인해도 아무 화면을 못 엽니다 —
+      // 사람이 기다리는 큐라 '자원' 그룹 안에서도 기관 바로 밑에 둡니다.
+      { href: '/admin/approvals', label: '가입 승인', badge: 'approvals' as const },
       { href: '/admin/engagements', label: '고용 · 계약' },
       { href: '/admin/clearances', label: '품질 · 안전' },
     ],

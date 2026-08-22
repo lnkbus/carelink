@@ -52,6 +52,25 @@ export interface Me {
   roleAssignmentState: string;
 }
 
+/**
+ * 승인 대기 한 건 — 운영자 큐와 기관 관리자 큐가 같은 모양을 씁니다.
+ *
+ * `businessRegNo`는 운영자에게만 나갑니다. 기관 관리자에게는 자기 기관의
+ * 번호라 승인 판단에 보탬이 되지 않습니다.
+ */
+export interface PendingRoleRequest {
+  id: string;
+  role: UserRole;
+  requestedAt: string;
+  phone: string | null;
+  organizationId: string | null;
+  organizationName: string | null;
+  businessRegNo?: string | null;
+  verificationStatus: string | null;
+  /** 승인하면 이 사람이 그 기관의 관리자가 됩니다 — 첫 담당자입니다. */
+  becomesAdmin: boolean;
+}
+
 // ── talent ──────────────────────────────────────────────────────────────────
 
 export type CandidateStatus =

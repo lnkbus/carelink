@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { LocaleSwitcher, StatusPill } from '@carelink/ui';
-import { currentUser, orgBadges } from '@/lib/session';
+import { canApproveMembers, currentUser, orgBadges } from '@/lib/session';
 import { NavItem } from './NavItem';
 import { SessionBox } from './SessionBox';
 
@@ -18,6 +18,17 @@ const NAV = [
   { href: '/org/interviews', label: '면접 관리', badge: 'interviews' as const },
 ];
 
+/**
+ * 기관 관리자에게만 보이는 항목.
+ *
+ * 일반 담당자에게 걸어 두고 눌렀을 때 403을 주면 그 사람은 자기 계정이
+ * 고장 났다고 생각합니다. 숨긴 것은 언젠가 드러나므로, 아예 만들지
+ * 않습니다 (CLAUDE.md §4.2).
+ */
+const ADMIN_NAV = [
+  { href: '/org/members', label: '담당자 승인', badge: 'members' as const },
+];
+
 export async function OrgShell({
   children, orgName, verificationStatus,
 }: {
@@ -27,6 +38,7 @@ export async function OrgShell({
 }) {
   const verified = verificationStatus === 'VERIFIED';
   const [me, badges] = await Promise.all([currentUser(), orgBadges()]);
+  const nav = canApproveMembers(me) ? [...NAV, ...ADMIN_NAV] : NAV;
   return (
     <div className="cl-shell">
       <nav className="cl-sidebar">
@@ -63,7 +75,7 @@ export async function OrgShell({
           </div>
         )}
 
-        {NAV.map((item) => (
+        {nav.map((item) => (
           <NavItem
             key={item.href}
             href={item.href}

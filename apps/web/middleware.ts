@@ -33,16 +33,25 @@ function rolesOf(token: string | undefined): string[] {
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const roles = rolesOf(req.cookies.get('cl_at')?.value);
+  const token = req.cookies.get('cl_at')?.value;
+  const roles = rolesOf(token);
 
   const isAdmin = roles.some((r) => ADMIN.includes(r));
   const isOrg = roles.some((r) => ORG.includes(r));
 
-  // 세션이 없으면 로그인. 토큰이 만료된 경우도 여기로 옵니다 —
-  // payload는 읽히지만 API가 401을 주므로 페이지가 다시 보냅니다.
   if (roles.length === 0) {
     const url = req.nextUrl.clone();
-    url.pathname = '/login';
+    // 로그인한 사람과 아닌 사람을 가릅니다.
+    //
+    // 토큰의 roles에는 **승인된 역할만** 들어갑니다. 그래서 승인을 기다리는
+    // 사람은 여기서 '역할 없음'으로 보이고, 종전에는 그대로 로그인 화면으로
+    // 갔습니다 — 방금 인증에 성공한 사람이 로그인 화면을 다시 보면 인증이
+    // 실패한 줄 압니다. 이 코드 바로 위 주석이 경고하던 그 상황입니다.
+    //
+    // 토큰이 있으면 로그인은 된 것이므로 `/pending`으로 보냅니다. 거기서
+    // 대기 중인 신청이 없으면 `/no-access`로 다시 넘어갑니다 — 판정은
+    // 서버가 실제 역할 목록을 보고 하고, 여기서는 문만 고릅니다.
+    url.pathname = token ? '/pending' : '/login';
     url.search = '';
     return NextResponse.redirect(url);
   }

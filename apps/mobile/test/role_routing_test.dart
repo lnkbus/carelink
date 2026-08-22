@@ -23,7 +23,7 @@ import 'package:http/http.dart' as http;
 
 /// 지정한 역할만 돌려주는 가짜 서버. 실제 `AppState.refreshMe()` 경로를
 /// 그대로 태웁니다 — 상태를 손으로 밀어 넣으면 정작 파싱이 틀려도 통과합니다.
-http.Client _serverWithRoles(List<String> roles) {
+http.Client _serverWithRoles(List<String> roles, {Set<String> unapproved = const {}}) {
   return _StubClient((req) {
     if (req.url.path.endsWith('/auth/me')) {
       return http.Response(
@@ -34,7 +34,10 @@ http.Client _serverWithRoles(List<String> roles) {
           'status': 'ACTIVE',
           'roles': [
             for (final r in roles)
-              {'role': r, 'organizationId': null, 'isPrimary': true, 'approved': true},
+              {
+                'role': r, 'organizationId': null, 'isPrimary': true,
+                'approved': !unapproved.contains(r),
+              },
           ],
         }),
         200,
@@ -72,9 +75,16 @@ class _MemoryStore implements SecureStore {
   Future<void> delete({required String key}) async => _m.remove(key);
 }
 
-Future<AppState> _bootedWith(WidgetTester tester, List<String> roles) async {
+Future<AppState> _bootedWith(
+  WidgetTester tester,
+  List<String> roles, {
+  Set<String> unapproved = const {},
+}) async {
   final state = AppState(
-    api: ApiClient(baseUrl: 'http://test/api/v1', inner: _serverWithRoles(roles)),
+    api: ApiClient(
+      baseUrl: 'http://test/api/v1',
+      inner: _serverWithRoles(roles, unapproved: unapproved),
+    ),
     storage: _MemoryStore(),
   );
   state.api.setTokens(access: 'a', refresh: 'r');
@@ -187,7 +197,40 @@ void main() {
     });
   });
 
+  _approvalTests();
   _viewportTests();
+}
+
+/// 승인 대기 역할은 권한이 아닙니다.
+///
+/// 지금 앱의 세 역할은 승인이 없어 늘 `approved: true`로 옵니다. 그런데
+/// 서버에서는 같은 목록이 두 곳에 있었고, 한쪽에 PARTNER를 넣지 않아
+/// **승인 대기 중인 파트너가 권한을 그대로 받았습니다.** 앱도 같은 모양의
+/// 구멍을 갖고 있었습니다 — 승인 여부를 보지 않고 역할 이름만 읽었습니다.
+///
+/// 승인이 붙는 역할이 앱에 하나라도 들어오는 순간 셸이 열리고 모든 API가
+/// 403을 돌려줍니다. 사용자는 오류만 가득한 화면을 봅니다 (CLAUDE.md §4.2).
+void _approvalTests() {
+  group('승인', () {
+    testWidgets('승인되지 않은 역할로는 셸이 열리지 않는다', (t) async {
+      final state = await _bootedWith(
+        t, ['CANDIDATE'], unapproved: {'CANDIDATE'},
+      );
+      expect(state.fieldRoles, isEmpty);
+      expect(state.activeRole, isNull);
+      // 역할이 없는 것과 같은 화면 — 역할 선택으로 돌아갑니다.
+      expect(find.byType(CandidateShell), findsNothing);
+    });
+
+    testWidgets('승인된 역할만 셈한다 — 섞여 있어도', (t) async {
+      final state = await _bootedWith(
+        t, ['CANDIDATE', 'CAREGIVER'], unapproved: {'CAREGIVER'},
+      );
+      expect(state.fieldRoles, ['CANDIDATE']);
+      expect(state.canSwitchRole, isFalse);
+      expect(find.byType(CandidateShell), findsOneWidget);
+    });
+  });
 }
 
 /// 웹으로 열었을 때 폭 처리.

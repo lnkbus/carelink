@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { LogoutLink } from '@/components/SessionBox';
 
 /**
@@ -30,9 +31,22 @@ export default function NoAccessPage() {
         </h1>
         <p style={{ margin: 'var(--cl-s5) 0 0', color: 'var(--cl-text-sub)', lineHeight: 1.7 }}>
           로그인은 됐지만 이 계정에 운영자 권한도, 승인된 기관 소속도 없습니다.
-          기관을 아직 등록하지 않았다면 운영자에게 기관 등록을, 이미 등록돼 있다면
-          소속 승인을 요청하세요.
+          기관 담당자나 파트너라면 아래에서 신청하세요 — 종전에는 여기가 막다른
+          길이어서 운영자에게 전화하는 것 말고는 방법이 없었습니다.
         </p>
+        <div style={{ marginTop: 'var(--cl-s6)' }}>
+          <Link
+            href="/signup"
+            style={{
+              display: 'inline-flex', alignItems: 'center', height: 'var(--cl-tap-desk)',
+              padding: '0 var(--cl-s5)', borderRadius: 'var(--cl-r-desk)',
+              background: 'var(--cl-action-strong)', color: '#fff',
+              fontSize: 'var(--cl-body)', fontWeight: 600,
+            }}
+          >
+            기관 · 파트너로 신청하기
+          </Link>
+        </div>
         <p style={{ margin: 'var(--cl-s5) 0 0', fontSize: 'var(--cl-caption)', color: 'var(--cl-text-muted)', lineHeight: 1.7 }}>
           후보자 · 간병사 · 보호자 계정이라면 여기가 아니라 앱을 쓰세요.
           이 주소는 운영자와 기관 담당자를 위한 화면입니다.

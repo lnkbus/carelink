@@ -90,8 +90,15 @@ class AppState extends ChangeNotifier {
   Future<void> refreshMe() async {
     try {
       final me = await api.get('/auth/me') as Map<String, dynamic>;
+      // **승인된 역할만** 셉니다. 지금 앱의 세 역할(후보자·간병사·보호자)은
+      // 승인이 없어 늘 true지만, 승인이 붙는 역할이 하나라도 앱에 들어오면
+      // 그때 셸이 열리고 모든 API가 403을 돌려줍니다 — 사용자는 오류만
+      // 가득한 화면을 봅니다 (CLAUDE.md §4.2). 서버에서도 같은 목록이
+      // 둘로 갈라져 승인 대기 파트너에게 권한이 샜습니다.
       _roles = ((me['roles'] as List?) ?? const [])
-          .map((r) => (r as Map<String, dynamic>)['role'] as String)
+          .cast<Map<String, dynamic>>()
+          .where((r) => r['approved'] != false)
+          .map((r) => r['role'] as String)
           .toList();
       _phone = me['phone'] as String?;
       notifyListeners();

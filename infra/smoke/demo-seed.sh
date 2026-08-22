@@ -8,12 +8,13 @@
 # 인증번호는 개발 환경에서 화면에 표시됩니다.
 #
 #   01011110001  운영자
-#   01022220001  기관 담당자 (검증 완료)
+#   01022220001  기관 담당자 (검증 완료) — 합류 신청을 승인하는 기관 관리자
 #   01022220002  기관 담당자 (검증 대기 — 개인정보 게이트 확인용)
 #   01033330001  후보자
 #   01044440001~3  간병사 3명
 #   01055550001  보호자
 #   01066660001  후보자 + 간병사 (역할 전환 확인용)
+#   01077770001~3  승인 대기 3건 (기관 신규 · 기관 합류 · 파트너 제휴)
 #
 # **운영 DB에 돌리지 마세요.** 이 스크립트는 계정을 만듭니다.
 set -uo pipefail
@@ -156,6 +157,10 @@ summary() {
                  01044440003               클리어런스 5/6 (매칭에서 빠짐)
   역할 2개       01066660001   앱          ← 후보자 + 간병사.
                                              내 정보에 '역할 바꾸기'가 뜹니다
+  승인 대기      01077770001   웹 → /pending  기관 신규 등록 (운영자가 승인)
+                 01077770002   웹 → /pending  서울중앙요양병원 합류
+                                             (01022220001이 /org/members에서 승인)
+                 01077770003   웹 → /pending  파트너 제휴 (운영자만 승인 가능)
 
   병실 QR 토큰   $H1:703호
 
@@ -188,12 +193,30 @@ ORG_V=$(psql "$DB" -tAqc "INSERT INTO organizations (name, industry_id, org_type
 ORG_P=$(psql "$DB" -tAqc "INSERT INTO organizations (name, industry_id, org_type, business_reg_no, region, verification_status)
   VALUES ('분당실버케어','$IND','NURSING_HOME','444-55-66666','경기','PENDING') RETURNING id;" | tr -d '[:space:]')
 
+# 소속 승인을 **API로** 합니다.
+#
+# 종전에는 `UPDATE user_roles SET approved_at = now()`로 psql이 우회했습니다.
+# 승인할 엔드포인트가 아예 없었기 때문입니다 — 그래서 시드는 돌지만 사람은
+# 같은 일을 할 수 없었습니다. 이제 운영자가 화면에서 누르는 것과 **같은
+# 경로**를 시드도 지나갑니다. 우회가 남아 있으면 그 경로가 깨져도 시드는
+# 태연히 통과합니다.
+approve_role() {   # $1=운영자 토큰  $2=신청자 user_id
+  local rid out
+  rid=$(psql "$DB" -tAqc "SELECT id FROM user_roles WHERE user_id='$2' AND approved_at IS NULL LIMIT 1;" | tr -d '[:space:]')
+  [ -z "$rid" ] && die "승인할 신청을 찾지 못했습니다 (user=$2)"
+  out=$(curl -sS -X PATCH "$B/role-requests/$rid" -H "authorization: Bearer $1" \
+    -H 'content-type: application/json' -d '{"decision":"APPROVE"}')
+  echo "$out" | grep -q '"code"' && die "소속 승인 실패 (user=$2)
+  $out"
+  return 0
+}
+
 read -r OT OR OU <<<"$(login 01022220001)"
 role "$OT" "{\"role\":\"ORG_MEMBER\",\"organizationId\":\"$ORG_V\",\"makePrimary\":true}"
-q "UPDATE user_roles SET approved_at = now() WHERE user_id='$OU' AND role='ORG_MEMBER';"
+approve_role "$AT" "$OU"
 read -r PT PR PU <<<"$(login 01022220002)"
 role "$PT" "{\"role\":\"ORG_MEMBER\",\"organizationId\":\"$ORG_P\",\"makePrimary\":true}"
-q "UPDATE user_roles SET approved_at = now() WHERE user_id='$PU' AND role='ORG_MEMBER';"
+approve_role "$AT" "$PU"
 
 say "3/6 채용 요청"
 OT=$(reissue "$OR"); O=(-H "authorization: Bearer $OT" -H 'content-type: application/json')
@@ -477,6 +500,29 @@ q "INSERT INTO service_logs (assignment_id, log_type, item_code, occurred_at, cr
           ('$A1','BREAK_START', NULL,      now() - interval '1 hour 20 minutes',  '$CG1U'),
           ('$A1','BREAK_END',   NULL,      now() - interval '40 minutes',         '$CG1U'),
           ('$A1','SUPPORT','POSITION_CHANGE', now() - interval '20 minutes',      '$CG1U');"
+
+# ── 8/8 승인 대기 3건 ────────────────────────────────────────────────────
+#
+# 승인 큐가 비어 있으면 그 화면이 도는지 알 수 없습니다. 승인을 눌러 볼
+# 대상도 없습니다. 세 갈래를 전부 남겨 둡니다:
+#
+#   기관 신규 등록  → 운영자 큐 (/admin/approvals). 승인하면 ORG_ADMIN이 됩니다
+#   기존 기관 합류  → 서울중앙요양병원의 관리자 큐 (/org/members)
+#   파트너 제휴     → 운영자 큐. 기관 관리자는 승인할 수 없습니다
+#
+# **여기서는 승인하지 않습니다.** 대기 상태 그대로 두는 것이 목적입니다.
+say "8/8 승인 대기 3건 (기관 신규 · 합류 · 파트너)"
+
+read -r NT NR NU <<<"$(login 01077770001)"
+curl -sS -X POST "$B/signup/organization" -H "authorization: Bearer $NT" -H 'content-type: application/json' \
+  -d "{\"name\":\"수원행복요양병원\",\"industryId\":\"$IND\",\"orgType\":\"HOSPITAL\",\"businessRegNo\":\"777-11-22222\",\"region\":\"경기 수원\",\"contactName\":\"이신청\"}" >/dev/null
+
+read -r JT JR JU <<<"$(login 01077770002)"
+curl -sS -X POST "$B/signup/organization/join" -H "authorization: Bearer $JT" -H 'content-type: application/json' \
+  -d '{"businessRegNo":"111-22-33333"}' >/dev/null
+
+read -r RT RR RU <<<"$(login 01077770003)"
+curl -sS -X POST "$B/signup/partner" -H "authorization: Bearer $RT" -H 'content-type: application/json' >/dev/null
 
 # 시드가 로그인하면서 남긴 쿨다운을 지웁니다. 안 지우면 시드 직후 30초 동안
 # 브라우저에서 로그인이 막히고, 처음 써 보는 사람은 그걸 고장으로 읽습니다.

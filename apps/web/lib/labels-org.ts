@@ -64,6 +64,12 @@ const ERROR_DICT: Record<string, string> = {
   ORG_NOT_FOUND: '승인된 기관 소속이 아닙니다. 관리자에게 소속 승인을 요청하세요.',
   ORG_E7_SPONSOR_INELIGIBLE: 'E-7-2 스폰서 자격이 확인되지 않아 외국인력을 배치할 수 없습니다.',
   MATCHING_JOB_NOT_OPEN: '모집 중인 채용 요청이 아닙니다.',
+  IAM_ORG_ALREADY_REGISTERED: '이미 등록된 사업자등록번호입니다. 그 기관에 담당자로 합류를 신청하세요.',
+  IAM_ROLE_ALREADY_HELD: '이미 신청한 기관입니다. 승인을 기다리는 중입니다.',
+  IAM_ROLE_ALREADY_APPROVED: '이미 처리된 신청입니다. 목록을 새로 고쳐 주세요.',
+  IAM_ROLE_REQUEST_NOT_FOUND: '신청을 찾을 수 없습니다. 이미 처리됐거나 취소된 건입니다.',
+  IAM_REJECT_REASON_REQUIRED: '반려 사유를 입력하세요. 사유가 없으면 신청자가 같은 신청을 다시 냅니다.',
+  IAM_ROLE_FORBIDDEN: '이 신청을 처리할 권한이 없습니다. 자기 기관의 신청만 승인할 수 있습니다.',
 };
 
 /**

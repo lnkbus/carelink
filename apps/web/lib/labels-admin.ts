@@ -101,6 +101,9 @@ const ERROR_DICT: Record<string, string> = {
   CARE_REST_PERIOD_TOO_SHORT: '직전 근무와의 간격이 11시간 미만입니다. 연속 교대는 사실상 24시간 근무가 됩니다.',
   CARE_SHIFT_OVERLAP: '이 간병사에게 겹치는 근무가 이미 있습니다.',
   TRACK_NO_REQUIREMENTS: '요건이 하나도 없는 트랙은 열 수 없습니다. 무엇을 확인할지 먼저 정의하세요.',
+  IAM_ROLE_ALREADY_APPROVED: '이미 처리된 신청입니다. 다른 사람이 먼저 눌렀을 수 있습니다 — 목록을 새로 고치세요.',
+  IAM_ROLE_REQUEST_NOT_FOUND: '신청을 찾을 수 없습니다. 이미 처리됐거나 취소된 건입니다.',
+  IAM_REJECT_REASON_REQUIRED: '반려 사유를 입력하세요. 사유가 없으면 신청자가 같은 신청을 다시 냅니다.',
 };
 
 /**

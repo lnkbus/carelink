@@ -34,7 +34,27 @@ export function landingFor(me: Me | null): string {
   const roles = (me?.roles ?? []).filter((r) => r.approved).map((r) => r.role);
   if (roles.some((r) => ADMIN_ROLES.includes(r))) return '/admin';
   if (roles.some((r) => ORG_ROLES.includes(r))) return '/org';
+  // 신청해 둔 사람은 '볼 화면이 없다'가 아니라 '기다리는 중'입니다. 둘을
+  // 같은 화면으로 보내면, 방금 신청한 사람이 신청이 접수되지 않았다고
+  // 생각하고 한 번 더 신청합니다 — 승인 큐가 두 배가 됩니다.
+  if (hasPending(me)) return '/pending';
   return '/no-access';
+}
+
+/** 승인을 기다리는 신청이 있는가. */
+export function hasPending(me: Me | null): boolean {
+  return (me?.roles ?? []).some((r) => !r.approved);
+}
+
+/**
+ * 담당자 승인 권한이 있는가 — 사이드바에 '담당자' 항목을 걸지 결정합니다.
+ *
+ * 기관에서 승인할 수 있는 사람은 `ORG_ADMIN` 뿐입니다. 일반 담당자에게
+ * 항목을 보여 주고 눌렀을 때 403을 주면, 그 사람은 자기 계정이 고장 났다고
+ * 생각합니다 — 없는 편이 낫습니다 (CLAUDE.md §4.2).
+ */
+export function canApproveMembers(me: Me | null): boolean {
+  return (me?.roles ?? []).some((r) => r.approved && r.role === 'ORG_ADMIN');
 }
 
 /**
@@ -77,8 +97,8 @@ export async function currentOrg(): Promise<Organization> {
  *
  * 실패하면 0으로 둡니다 — 배지 하나 때문에 콘솔 전체가 죽으면 안 됩니다.
  */
-export async function adminBadges(): Promise<{ matching: number; tickets: number }> {
-  const [matching, tickets] = await Promise.all([
+export async function adminBadges(): Promise<{ matching: number; tickets: number; approvals: number }> {
+  const [matching, tickets, approvals] = await Promise.all([
     // 매칭 센터에서 손대야 하는 건 = 상태 변경 후 무응답으로 멈춰 있는 지원.
     // 이게 밀리면 지원자가 '연락이 없다'며 이탈합니다 (CLAUDE.md §7).
     apiGet<{ todayQueue?: { kind: string }[] }>('/admin/metrics')
@@ -87,8 +107,11 @@ export async function adminBadges(): Promise<{ matching: number; tickets: number
     apiGet<{ status: string }[]>('/admin/support-tickets', { status: 'OPEN' })
       .then((t) => t.length)
       .catch(() => 0),
+    // 승인 대기는 사람이 기다리는 큐입니다. 밀리면 기관 담당자가 아무
+    // 화면도 못 열고, 그 사람은 전화를 겁니다.
+    apiGet<unknown[]>('/admin/role-requests').then((r) => r.length).catch(() => 0),
   ]);
-  return { matching, tickets };
+  return { matching, tickets, approvals };
 }
 
 /**
@@ -98,8 +121,8 @@ export async function adminBadges(): Promise<{ matching: number; tickets: number
  * 담당자가 로그인해서 가장 먼저 보는 것이 사이드바이고, 숫자가 없으면
  * 화면을 하나씩 열어 확인해야 합니다.
  */
-export async function orgBadges(): Promise<{ jobs: number; interviews: number }> {
-  const [jobs, interviews] = await Promise.all([
+export async function orgBadges(): Promise<{ jobs: number; interviews: number; members: number }> {
+  const [jobs, interviews, members] = await Promise.all([
     apiGet<{ items: { status: string }[] }>('/jobs', { size: 100 })
       .then((p) => p.items.filter((j) => j.status === 'OPEN').length)
       .catch(() => 0),
@@ -107,6 +130,8 @@ export async function orgBadges(): Promise<{ jobs: number; interviews: number }>
     apiGet<{ status: string }[]>('/interviews')
       .then((r) => r.filter((i) => i.status === 'REQUESTED').length)
       .catch(() => 0),
+    // ORG_ADMIN이 아니면 403입니다 — 0으로 두면 항목이 조용히 사라집니다.
+    apiGet<unknown[]>('/organizations/me/members/pending').then((r) => r.length).catch(() => 0),
   ]);
-  return { jobs, interviews };
+  return { jobs, interviews, members };
 }
