@@ -26,6 +26,7 @@ const ko: Dict = {
   'nav.flow': '진행 절차',
   'nav.stages': '전체 단계',
   'nav.login': '로그인',
+  'nav.signup': '가입 신청',
   'nav.mine': '내 화면으로',
 
   'hero.badge': '서류 접수부터 근무 시작까지 평균 18일',
@@ -109,7 +110,7 @@ const ko: Dict = {
   'cta.title': '돌봄이 필요한 곳에, 준비된 사람을',
   'cta.lead': '지원부터 배치까지 CareLink가 처음부터 끝까지 관리합니다.',
   'cta.primary': '간병인으로 지원',
-  'cta.secondary': '기관 문의',
+  'cta.secondary': '기관 · 파트너로 가입 신청',
 
   'foot.tagline': '국제 간병 인력 배치 플랫폼',
   'foot.support': '고객센터 1600-0000 · 평일 09:00–18:00',
@@ -125,6 +126,7 @@ const vi: Dict = {
   'nav.flow': 'Quy trình',
   'nav.stages': 'Toàn bộ giai đoạn',
   'nav.login': 'Đăng nhập',
+  'nav.signup': 'Đăng ký',
   'nav.mine': 'Vào màn hình của tôi',
 
   'hero.badge': 'Trung bình 18 ngày từ nộp hồ sơ đến bắt đầu làm việc',
@@ -206,7 +208,7 @@ const vi: Dict = {
   'cta.title': 'Người đã sẵn sàng, đến nơi đang cần',
   'cta.lead': 'Từ ứng tuyển đến bố trí, CareLink lo từ đầu đến cuối.',
   'cta.primary': 'Ứng tuyển làm người chăm sóc',
-  'cta.secondary': 'Liên hệ cho cơ sở',
+  'cta.secondary': 'Đăng ký cho cơ sở · đối tác',
 
   'foot.tagline': 'Nền tảng bố trí nhân lực chăm sóc quốc tế',
   'foot.support': 'Tổng đài 1600-0000 · T2–T6 09:00–18:00',
@@ -222,6 +224,7 @@ const ru: Dict = {
   'nav.flow': 'Как это работает',
   'nav.stages': 'Все этапы',
   'nav.login': 'Войти',
+  'nav.signup': 'Подать заявку',
   'nav.mine': 'К моему экрану',
 
   'hero.badge': 'В среднем 18 дней от подачи документов до выхода на работу',
@@ -303,7 +306,7 @@ const ru: Dict = {
   'cta.title': 'Туда, где нужен уход — подготовленные люди',
   'cta.lead': 'От заявки до размещения CareLink ведёт весь путь.',
   'cta.primary': 'Подать заявку как сиделка',
-  'cta.secondary': 'Запрос для учреждения',
+  'cta.secondary': 'Заявка для учреждения · партнёра',
 
   'foot.tagline': 'Платформа международного подбора сиделок',
   'foot.support': 'Поддержка 1600-0000 · будни 09:00–18:00',
@@ -319,6 +322,7 @@ const en: Dict = {
   'nav.flow': 'How it works',
   'nav.stages': 'All stages',
   'nav.login': 'Sign in',
+  'nav.signup': 'Apply',
   'nav.mine': 'Go to my screen',
 
   'hero.badge': '18 days on average from paperwork to first shift',
@@ -400,7 +404,7 @@ const en: Dict = {
   'cta.title': 'Prepared people, where care is needed',
   'cta.lead': 'From application to placement, CareLink runs the whole way.',
   'cta.primary': 'Apply as a care worker',
-  'cta.secondary': 'Enquire for a facility',
+  'cta.secondary': 'Apply as a facility or partner',
 
   'foot.tagline': 'International care workforce platform',
   'foot.support': 'Support 1600-0000 · weekdays 09:00–18:00',

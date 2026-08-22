@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { Note, SignupCard } from '../Card';
+import { LoginRequired, Note, SignupCard } from '../Card';
 import { PartnerRequest } from './PartnerRequest';
 import { currentUser, landingFor } from '@/lib/session';
 
@@ -8,9 +8,9 @@ export const dynamic = 'force-dynamic';
 /** 교육기관 · 송출기관 제휴 신청 (SCR-510의 입구). */
 export default async function PartnerSignupPage() {
   const me = await currentUser();
-  if (!me) redirect('/login');
-  const landing = landingFor(me);
-  if (landing !== '/no-access') redirect(landing);
+  const landing = me ? landingFor(me) : null;
+  // 이미 쓸 수 있는 화면이 있거나 대기 중이면 신청서를 또 받지 않습니다.
+  if (landing && landing !== '/no-access') redirect(landing);
 
   return (
     <SignupCard
@@ -18,7 +18,7 @@ export default async function PartnerSignupPage() {
       lead="교육기관 · 대학 · 해외 송출기관이 후보자를 보내는 경로입니다."
       back={{ href: '/signup', label: '뒤로' }}
     >
-      <PartnerRequest />
+      {me ? <PartnerRequest /> : <LoginRequired next="/signup/partner" what="파트너 제휴 신청" />}
 
       <Note>
         제휴는 <strong style={{ color: 'var(--cl-text)' }}>계약</strong>이라 운영자만 승인합니다.

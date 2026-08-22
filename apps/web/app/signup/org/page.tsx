@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import type { Industry } from '@carelink/shared-types';
-import { Note, SignupCard } from '../Card';
+import { LoginRequired, Note, SignupCard } from '../Card';
 import { OrgSignupForm } from './OrgSignupForm';
 import { apiGet } from '@/lib/api';
 import { currentUser, landingFor } from '@/lib/session';
@@ -19,13 +19,16 @@ export const dynamic = 'force-dynamic';
  */
 export default async function OrgSignupPage() {
   const me = await currentUser();
-  if (!me) redirect('/login');
-  const landing = landingFor(me);
-  if (landing !== '/no-access') redirect(landing);
+  const landing = me ? landingFor(me) : null;
+  // 이미 쓸 수 있는 화면이 있거나 대기 중이면 신청서를 또 받지 않습니다.
+  if (landing && landing !== '/no-access') redirect(landing);
 
   // 산업 목록은 로그인한 사용자면 누구나 봅니다 — 기관명·라벨이라 개인정보가
-  // 아닙니다. 실패하면 빈 목록으로 두고 폼이 그 사실을 말합니다.
-  const industries = await apiGet<Industry[]>('/industries').catch(() => [] as Industry[]);
+  // 아닙니다. 미로그인이면 애초에 부르지 않습니다 — 401을 '불러오지
+  // 못했습니다'로 보여 주면 원인이 로그인인 줄 모릅니다.
+  const industries = me
+    ? await apiGet<Industry[]>('/industries').catch(() => [] as Industry[])
+    : [];
 
   return (
     <SignupCard
@@ -33,7 +36,9 @@ export default async function OrgSignupPage() {
       lead="사업자등록번호를 먼저 넣어 주세요. 이미 등록된 기관이면 합류 신청으로 안내합니다."
       back={{ href: '/signup', label: '뒤로' }}
     >
-      {industries.length === 0 ? (
+      {!me ? (
+        <LoginRequired next="/signup/org" what="기관 등록 신청" />
+      ) : industries.length === 0 ? (
         <Note>
           산업 목록을 불러오지 못했습니다. 잠시 뒤 다시 시도해 주세요 — 이 값이 없으면
           신청을 접수해도 어느 산업의 기관인지 정할 수 없습니다.

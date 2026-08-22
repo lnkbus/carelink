@@ -71,7 +71,10 @@ export const VERTICALS = [
 export const ROLE_CARDS = [
   { key: 'role.candidate', icon: 'user' as const, tone: 'action' as const, href: APP_URL },
   { key: 'role.guardian', icon: 'heart' as const, tone: 'signal' as const, href: APP_URL },
-  { key: 'role.org', icon: 'building' as const, tone: 'neutral' as const, href: '/login' },
+  // 기관은 '로그인'이 아니라 **가입 신청**으로 보냅니다. 계정이 없는
+  // 담당자를 로그인 화면에 세우면 거기서 할 수 있는 일이 없습니다 —
+  // 종전에 인트로 어디에도 /signup으로 가는 길이 없었습니다.
+  { key: 'role.org', icon: 'building' as const, tone: 'neutral' as const, href: '/signup/org' },
 ];
 
 /** 진행 절차 5단계 (핸드오프 §Screens 6). 1~3은 진행·완료, 4~5는 예정 표현입니다. */

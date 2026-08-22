@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Note, SignupCard } from './Card';
 import { APP_URL } from '@/lib/intro';
-import { currentUser, hasPending, landingFor } from '@/lib/session';
+import { currentUser, landingFor } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,18 +37,32 @@ const PATHS = [
 
 export default async function SignupPage() {
   const me = await currentUser();
-  // 로그인하지 않았으면 로그인 먼저. 로그인 뒤에는 역할이 없으므로
-  // `/no-access`로 가고, 거기서 이 화면으로 오는 길이 있습니다.
-  if (!me) redirect('/login');
-  // 이미 쓸 수 있는 화면이 있거나 신청이 대기 중이면 신청서를 또 받지
-  // 않습니다 — 두 번 내면 승인 큐에 같은 사람이 둘 쌓입니다.
-  const landing = landingFor(me);
-  if (landing !== '/no-access') redirect(landing);
+
+  // **로그인하지 않아도 이 화면은 보여 줍니다.**
+  //
+  // 종전에는 여기서 `/login`으로 돌려보냈습니다. 무엇을 신청할 수 있는지
+  // 보기도 전에 번호부터 넣으라는 뜻이었고, 순서가 거꾸로입니다. 게다가
+  // 서버 리다이렉트라 인트로에서 '가입 신청'을 눌러도 화면이 그대로
+  // 머물렀습니다 — 버튼이 죽은 것처럼 보였습니다.
+  //
+  // 로그인은 **신청서를 낼 때** 필요합니다. 그때 안내합니다.
+  if (me) {
+    // 이미 쓸 수 있는 화면이 있거나 신청이 대기 중이면 신청서를 또 받지
+    // 않습니다 — 두 번 내면 승인 큐에 같은 사람이 둘 쌓입니다.
+    const landing = landingFor(me);
+    if (landing !== '/no-access') redirect(landing);
+  }
 
   return (
     <SignupCard
       title="어떤 자격으로 쓰시나요"
-      lead="계정은 이미 만들어졌습니다. 이제 무엇으로 쓸지 신청합니다."
+      // 로그인 전에는 계정이 아직 없습니다. '이미 만들어졌습니다'를 그대로
+      // 두면 처음 온 사람에게 거짓말이 됩니다.
+      lead={
+        me
+          ? '계정은 이미 만들어졌습니다. 이제 무엇으로 쓸지 신청합니다.'
+          : '기관과 파트너는 신청 후 승인을 거칩니다. 무엇을 신청하는지 먼저 보시고, 번호 인증은 신청서를 낼 때 합니다.'
+      }
     >
       <div style={{ display: 'grid', gap: 'var(--cl-s4)' }}>
         {PATHS.map((p) => (
@@ -71,6 +85,17 @@ export default async function SignupPage() {
           </Link>
         ))}
       </div>
+
+      {!me && (
+        <Note>
+          신청서를 내려면 <strong style={{ color: 'var(--cl-text)' }}>휴대폰 번호 인증</strong>이
+          필요합니다. 비밀번호는 없습니다 — 번호를 넣으면 인증 문자가 갑니다.
+          {' '}
+          <Link href="/login?next=/signup" style={{ color: 'var(--cl-action-strong)', fontWeight: 600 }}>
+            번호 인증하고 계속하기
+          </Link>
+        </Note>
+      )}
 
       <Note>
         <strong style={{ color: 'var(--cl-text)' }}>후보자 · 간병사 · 보호자이신가요?</strong>

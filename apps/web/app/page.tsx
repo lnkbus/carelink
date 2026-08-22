@@ -182,7 +182,7 @@ export default async function IntroPage({
               {t('cta.primary')}
               <Icon name="chevronRight" size={20} stroke={2.6} />
             </Link>
-            <Link href={withLang('/login', locale)} className="cl-lp-btn-ghost">
+            <Link href={withLang('/signup', locale)} className="cl-lp-btn-ghost">
               {t('cta.secondary')}
             </Link>
           </div>
@@ -259,9 +259,22 @@ function Header({
               </Link>
             ))}
           </span>
-          <Link href={landing ?? withLang('/login', locale)} className="cl-lp-btn-primary">
-            {landing ? t('nav.mine') : t('nav.login')}
-          </Link>
+          {/* 로그인한 사람에게는 '내 화면으로' 하나만. 이미 계정이 있는
+              사람에게 가입 버튼을 보여 주면 무엇을 눌러야 할지 헷갈립니다. */}
+          {landing ? (
+            <Link href={landing} className="cl-lp-btn-primary">{t('nav.mine')}</Link>
+          ) : (
+            <>
+              <Link href={withLang('/login', locale)} className="cl-lp-nav-link">
+                {t('nav.login')}
+              </Link>
+              {/* 가입 입구가 첫 화면에 없으면 기관 담당자는 로그인만 보고
+                  '계정을 어디서 만드나' 하고 멈춥니다. */}
+              <Link href={withLang('/signup', locale)} className="cl-lp-btn-primary">
+                {t('nav.signup')}
+              </Link>
+            </>
+          )}
         </nav>
       </div>
     </header>

@@ -1,11 +1,12 @@
 'use client';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { PhoneInput } from '@carelink/ui';
 import { errorLabel } from '@/lib/labels-admin';
 
 export function LoginForm() {
   const router = useRouter();
+  const params = useSearchParams();
   const [phone, setPhone] = useState('');
   // 국가번호. 해외 거주 후보자가 여기를 바꿉니다 (docs/08 E·F 세그먼트).
   const [dial, setDial] = useState('+82');
@@ -56,9 +57,26 @@ export function LoginForm() {
       // 역할이 랜딩을 정합니다 — 서버가 세션을 만들면서 같이 알려줍니다.
       // 클라이언트가 판정하면 역할 목록을 브라우저로 내려야 하고, 그러면
       // 승인되지 않은 소속까지 노출됩니다.
-      router.push(typeof data.landing === 'string' ? data.landing : '/');
+      const landing = typeof data.landing === 'string' ? data.landing : '/';
+      // **역할이 있으면 역할이 이깁니다.** `next`는 갈 곳이 없는 사람에게만
+      // 씁니다 — 가입 신청을 하러 왔다가 번호 인증을 하고 온 경우입니다.
+      // 그러지 않으면 운영자가 남이 보낸 링크로 엉뚱한 화면에 떨어집니다.
+      router.push(landing === '/no-access' ? safeNext() : landing);
       router.refresh();
     } finally { setBusy(false); }
+  }
+
+  /**
+   * 돌아갈 곳.
+   *
+   * **같은 사이트 안의 경로만** 받습니다. `//evil.com`처럼 시작하는 값도
+   * 브라우저에는 다른 사이트입니다 — 로그인 직후 남의 주소로 튀는 것이
+   * 오픈 리다이렉트입니다.
+   */
+  function safeNext(): string {
+    const raw = params.get('next');
+    if (!raw || !raw.startsWith('/') || raw.startsWith('//')) return '/no-access';
+    return raw;
   }
 
   const field: React.CSSProperties = {
