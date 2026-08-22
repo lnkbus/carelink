@@ -110,6 +110,9 @@ services:
       # 브라우저(로그인 화면)는 호스트에서 부르므로 localhost입니다.
       # 둘을 같은 값으로 두면 한쪽이 반드시 실패합니다.
       NEXT_PUBLIC_API_URL: http://localhost:3000/api/v1
+      # 인트로의 역할 카드 두 개(간병인 지원 · 간병인 찾기)가 앱으로 나갑니다.
+      # 그 화면들은 웹에 없습니다 (CLAUDE.md §4.1).
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3300}
     ports: ['3100:3100']
 
   # FIELD 앱 한 벌 — 후보자 · 간병사 · 보호자. 웹 빌드입니다.

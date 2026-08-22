@@ -6,195 +6,535 @@
  * 실제로 사이드바가 216px와 232px로 어긋나 있었습니다.
  */
 
-/* ── 인트로 (공개 화면) ────────────────────────────────────────────────────
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * 인트로 (공개 랜딩) — design_handoff_carelink_intro 최종본
  *
- * 로그인 뒤 화면들과 달리 **폭이 정해져 있지 않습니다.** 링크를 받은 사람이
- * 폰으로도 열고 데스크톱으로도 엽니다. 그래서 여기만 유동 폭을 씁니다 —
- * DESK 셸(232px 사이드바 + 표)은 그 뒤부터입니다.
- */
-/* 한국어는 단어 안에서 줄바꿈하면 읽기가 크게 나빠집니다 —
-   '하 / 나의'처럼 끊깁니다. 어절 단위로만 넘깁니다. */
-.cl-intro,
-.cl-intro h1,
-.cl-intro h2,
-.cl-intro h3,
-.cl-intro p {
-  word-break: keep-all;
-}
+ * 로그인 뒤 화면들과 규격이 다릅니다. DESK 셸(232px 사이드바 + 표)은
+ * 마우스로 표를 다루는 화면이고, 여기는 **링크를 받은 사람이 폰으로도
+ * 데스크톱으로도 여는 화면**입니다. 그래서 컨테이너 1180px에 유동 폭입니다.
+ *
+ * 미디어 쿼리를 거의 쓰지 않습니다 — clamp() + grid auto-fit + flex-wrap으로
+ * 리플로우합니다. 브레이크포인트는 콘텐츠가 정합니다 (핸드오프 §Interactions).
+ * 손으로 끊은 브레이크포인트는 그 사이 폭에서 반드시 어색해집니다.
+ * ══════════════════════════════════════════════════════════════════════════ */
 
-.cl-intro {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+.cl-lp {
+  color: var(--cl-text);
   background: var(--cl-bg);
+  /* 한국어는 단어 안에서 끊으면 크게 나빠집니다 — '하 / 나의'처럼 됩니다. */
+  word-break: keep-all;
+  text-wrap: pretty;
+  -webkit-font-smoothing: antialiased;
 }
 
-.cl-intro-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--cl-s5);
-  padding: var(--cl-s5) clamp(var(--cl-s5), 5vw, var(--cl-s8));
+.cl-lp-wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-inline: clamp(20px, 4vw, 40px);
+}
+
+/* sticky 헤더 68px에 앵커 대상이 가리지 않게 (핸드오프 §Interactions). */
+.cl-lp [id] { scroll-margin-top: 80px; }
+html:has(.cl-lp) { scroll-behavior: smooth; }
+
+/* 시안에 포커스 상태가 없었습니다. 키보드 사용자에게는 그게 곧 '길 없음'입니다. */
+.cl-lp a:focus-visible,
+.cl-lp button:focus-visible {
+  outline: 2px solid var(--cl-action);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.cl-lp .cl-mono { font-family: var(--cl-font-mono); }
+
+/* ── 1. 헤더 (sticky) ─────────────────────────────────────────────────── */
+.cl-lp-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgb(255 255 255 / 92%);
+  backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--cl-line);
 }
 
-.cl-intro-brand {
-  display: inline-flex;
+.cl-lp-header-in {
+  min-height: 68px;
+  display: flex;
   align-items: center;
-  gap: var(--cl-s3);
-  font-size: var(--cl-subtitle);
-  font-weight: 700;
+  gap: 16px;
 }
 
-.cl-intro-mark {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: var(--cl-action-strong);
+.cl-lp-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--cl-text);
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  flex: none;
+}
+
+.cl-lp-brand-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--cl-action);
   color: #fff;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
+  flex: none;
+}
+
+.cl-lp-nav {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 2.2vw, 26px);
+  margin-left: auto;
+}
+
+.cl-lp-nav-link {
+  color: var(--cl-text-sub);
   font-size: 15px;
+  font-weight: 600;
 }
 
-.cl-intro-cta {
+.cl-lp-locale {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 13px;
+  border: 1px solid var(--cl-line);
+  border-radius: 999px;
+  color: var(--cl-text-sub);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/*
+ * 640px 아래에서 앵커와 언어 표시를 숨깁니다 (핸드오프 Open items 2 — 결정).
+ * 두면 flex-wrap으로 헤더가 두 줄이 되어 화면의 4분의 1을 먹습니다.
+ * 한 페이지 스크롤이라 앵커는 편의 기능이지 없으면 못 가는 길이 아닙니다.
+ * 로고와 로그인은 남깁니다 — 그 둘이 헤더의 이유입니다.
+ */
+@media (max-width: 640px) {
+  .cl-lp-nav-link,
+  .cl-lp-locale { display: none; }
+  /* 손가락으로 누르는 폭에서는 40px이 모자랍니다. */
+  .cl-lp-btn-primary { min-height: 44px; }
+}
+
+/* ── 버튼 ─────────────────────────────────────────────────────────────── */
+.cl-lp-btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
-  padding: 0 var(--cl-s6);
-  border-radius: var(--cl-r-desk);
-  background: var(--cl-action-strong);
+  min-height: 40px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: var(--cl-action);
   color: #fff;
-  font-size: var(--cl-body);
+  font-size: 15px;
   font-weight: 700;
+  transition: background 120ms ease;
+}
+.cl-lp-btn-primary:hover { background: var(--cl-action-strong); color: #fff; }
+
+.cl-lp-btn-white,
+.cl-lp-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 56px;
+  padding: 0 28px;
+  border-radius: 14px;
+  font-size: 18px;
+  transition: background 120ms ease;
 }
 
-.cl-intro-cta-lg {
-  min-height: 60px;
-  padding: 0 var(--cl-s8);
-  font-size: var(--cl-subtitle);
-  margin-top: var(--cl-s7);
-}
-
-.cl-intro-hero {
-  /* 읽는 폭은 화면 폭이 아니라 문장 길이가 정합니다. 넓은 화면에서
-     한 줄이 120자가 되면 눈이 다음 줄 첫 글자를 못 찾습니다. */
-  max-width: 760px;
-  width: 100%;
-  margin: 0 auto;
-  padding: clamp(var(--cl-s8), 9vw, 96px) clamp(var(--cl-s5), 5vw, var(--cl-s8));
-}
-
-.cl-intro-eyebrow {
-  margin: 0;
-  font-family: var(--cl-font-mono);
-  font-size: var(--cl-caption);
-  font-weight: 600;
-  letter-spacing: 0.08em;
+.cl-lp-btn-white {
+  background: #fff;
   color: var(--cl-action-text);
+  font-weight: 800;
+}
+.cl-lp-btn-white:hover { background: var(--cl-action-tint); color: var(--cl-action-text); }
+
+.cl-lp-btn-ghost {
+  border: 1px solid rgb(255 255 255 / 50%);
+  color: #fff;
+  font-weight: 700;
+}
+.cl-lp-btn-ghost:hover { background: rgb(255 255 255 / 14%); color: #fff; }
+
+/* ── 2. Hero ──────────────────────────────────────────────────────────── */
+.cl-lp-hero {
+  padding-top: clamp(56px, 9vw, 104px);
+  padding-bottom: clamp(36px, 5vw, 56px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 22px;
 }
 
-.cl-intro-hero h1 {
-  /* 폰에서 28px, 데스크톱에서 52px까지. 고정값을 쓰면 한쪽이 반드시 깨집니다. */
-  margin: var(--cl-s5) 0 0;
-  font-size: clamp(28px, 5.5vw, 52px);
+.cl-lp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--cl-action-tint);
+  color: var(--cl-action-text);
+  font-size: 14px;
   font-weight: 700;
-  line-height: 1.28;
+}
+
+.cl-lp-hero h1 {
+  margin: 0;
+  font-size: clamp(32px, 5.4vw, 58px);
+  line-height: 1.18;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  max-width: 16ch;
+}
+
+.cl-lp-hero p {
+  margin: 0;
+  font-size: clamp(16px, 1.7vw, 19px);
+  line-height: 1.6;
+  color: var(--cl-text-sub);
+  max-width: 44ch;
+}
+
+/* ── 3. 역할 분기 카드 ────────────────────────────────────────────────── */
+.cl-lp-roles {
+  padding-bottom: clamp(56px, 7vw, 88px);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 16px;
+}
+
+.cl-lp-role {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: clamp(24px, 3vw, 32px);
+  border: 1px solid var(--cl-line);
+  border-radius: 20px;
+  background: var(--cl-bg);
+  color: var(--cl-text);
+  min-height: 230px;
+  transition: border-color 150ms, transform 150ms;
+}
+.cl-lp-role:hover {
+  border-color: var(--cl-action);
+  transform: translateY(-3px);
+  color: var(--cl-text);
+}
+
+.cl-lp-role-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.cl-lp-tone-action  { background: var(--cl-action-tint); color: var(--cl-action); }
+.cl-lp-tone-signal  { background: var(--cl-signal-tint); color: var(--cl-signal); }
+.cl-lp-tone-neutral { background: var(--cl-bg-sub);      color: var(--cl-text-sub); }
+
+.cl-lp-role-title { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+
+.cl-lp-role-body {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--cl-text-muted);
+  flex: 1;
+}
+
+.cl-lp-role-cta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--cl-action-text);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* ── 4. 지표 ──────────────────────────────────────────────────────────── */
+.cl-lp-stats-band {
+  border-top: 1px solid var(--cl-line);
+  border-bottom: 1px solid var(--cl-line);
+}
+
+.cl-lp-stats {
+  padding-block: clamp(40px, 5vw, 64px);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: clamp(20px, 3vw, 36px);
+}
+
+.cl-lp-stat { display: flex; flex-direction: column; gap: 6px; }
+
+.cl-lp-stat-n {
+  font-family: var(--cl-font-mono);
+  font-size: clamp(28px, 3.6vw, 42px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+.cl-lp-stat-signal { color: var(--cl-signal); }
+
+.cl-lp-stat-l { font-size: 15px; color: var(--cl-text-muted); }
+
+/* ── 5. 앱 미리보기 ───────────────────────────────────────────────────── */
+.cl-lp-app {
+  padding-block: clamp(52px, 7vw, 96px);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+  gap: clamp(32px, 5vw, 64px);
+  align-items: center;
+}
+
+.cl-lp-app-copy { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+
+.cl-lp-app-copy h2 {
+  margin: 0;
+  font-size: clamp(26px, 3.6vw, 42px);
+  line-height: 1.24;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+
+.cl-lp-app-copy > p {
+  margin: 0;
+  font-size: clamp(16px, 1.6vw, 18px);
+  line-height: 1.65;
+  color: var(--cl-text-sub);
+  max-width: 42ch;
+}
+
+.cl-lp-checks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.cl-lp-checks li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--cl-text-sub);
+  font-size: 16px;
+  font-weight: 600;
+}
+.cl-lp-checks svg { flex: none; color: var(--cl-signal); }
+
+.cl-lp-mock-wrap { display: flex; justify-content: center; min-width: 0; }
+
+.cl-lp-mock {
+  width: min(100%, 352px);
+  background: var(--cl-bg);
+  border: 1px solid var(--cl-line);
+  border-radius: 24px;
+  box-shadow: 0 18px 44px rgb(25 31 40 / 10%);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cl-lp-mock-profile { display: flex; align-items: center; gap: 11px; }
+
+.cl-lp-mock-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: var(--cl-bg-sub);
+  color: var(--cl-text-sub);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.cl-lp-mock-who { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cl-lp-mock-who b { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
+.cl-lp-mock-who span { font-size: 13px; color: var(--cl-text-muted); }
+
+.cl-lp-mock-action {
+  border-radius: 16px;
+  background: var(--cl-action);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cl-lp-mock-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #c9dbff;
+}
+.cl-lp-mock-action > b {
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+.cl-lp-mock-btn {
+  min-height: 48px;
+  border-radius: 11px;
+  background: #fff;
+  color: var(--cl-action-text);
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.cl-lp-mock-progress {
+  border: 1px solid var(--cl-line);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.cl-lp-mock-prow { display: flex; align-items: baseline; justify-content: space-between; }
+.cl-lp-mock-prow b { font-size: 16px; font-weight: 700; }
+.cl-lp-mock-count { font-size: 14px; font-weight: 700; color: var(--cl-action-text); }
+
+.cl-lp-mock-bars { display: flex; gap: 6px; }
+.cl-lp-bar { flex: 1; height: 8px; border-radius: 999px; background: var(--cl-line); }
+.cl-lp-bar-on { background: var(--cl-action); }
+
+.cl-lp-mock-warn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: var(--cl-flag-tint);
+  color: var(--cl-flag);
+  border-radius: 11px;
+  padding: 11px 13px;
+}
+.cl-lp-mock-warn svg { flex: none; }
+.cl-lp-mock-warn span { flex: 1; font-size: 15px; font-weight: 600; color: var(--cl-text); }
+.cl-lp-mock-warn b { font-size: 17px; font-weight: 700; }
+
+/* ── 6. 진행 절차 ─────────────────────────────────────────────────────── */
+.cl-lp-flow-band {
+  background: var(--cl-bg-sub);
+  border-top: 1px solid var(--cl-line);
+}
+
+.cl-lp-flow {
+  padding-block: clamp(56px, 7vw, 88px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(26px, 4vw, 44px);
+}
+
+.cl-lp-flow h2 {
+  margin: 0;
+  font-size: clamp(24px, 3.2vw, 34px);
+  font-weight: 800;
   letter-spacing: -0.03em;
 }
 
-.cl-intro-lead {
-  margin: var(--cl-s6) 0 0;
-  max-width: 56ch;
-  font-size: clamp(var(--cl-body), 2.2vw, var(--cl-subtitle));
-  line-height: 1.75;
-  color: var(--cl-text-sub);
-}
-
-.cl-intro-note {
-  margin: var(--cl-s5) 0 0;
-  font-size: var(--cl-caption);
-  line-height: 1.7;
-  color: var(--cl-text-muted);
-}
-
-.cl-intro-who {
-  background: var(--cl-bg-sub);
-  border-top: 1px solid var(--cl-line);
-  padding: clamp(var(--cl-s7), 6vw, 72px) clamp(var(--cl-s5), 5vw, var(--cl-s8));
-}
-
-.cl-intro-who > h2,
-.cl-intro-who > .cl-intro-note {
-  /* 그리드와 같은 폭·같은 시작선. 따로 두면 제목만 왼쪽 끝에 붙어
-     카드와 어긋납니다. margin 단축 속성으로 덮어쓰지 마세요. */
-  max-width: 1080px;
-  margin: 0 auto var(--cl-s6);
-}
-
-.cl-intro-who > h2 {
-  font-size: var(--cl-title);
-  font-weight: 700;
-}
-
-.cl-intro-who > .cl-intro-note {
-  margin-top: var(--cl-s6);
-  margin-bottom: 0;
-}
-
-.cl-intro-grid {
-  max-width: 1080px;
-  margin: 0 auto;
+.cl-lp-flow-grid {
   display: grid;
-  /* 칸 수를 폭이 정하게 둡니다. 미디어 쿼리로 1·2·3단을 손으로 끊으면
-     그 사이 폭에서 어색해집니다. */
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--cl-s5);
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
 }
 
-.cl-intro-grid article {
+.cl-lp-step {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 22px;
   background: var(--cl-bg);
-  border: 1px solid var(--cl-line);
-  border-radius: var(--cl-r-hero);
-  padding: var(--cl-s6);
+  border-radius: 16px;
 }
 
-.cl-intro-grid h3 {
-  margin: 0 0 var(--cl-s3);
-  font-size: var(--cl-subtitle);
-  font-weight: 700;
-}
-
-.cl-intro-grid p {
-  margin: 0;
-  font-size: var(--cl-body);
-  line-height: 1.7;
+.cl-lp-step-n {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: var(--cl-line);
   color: var(--cl-text-sub);
-}
-
-.cl-intro-where {
-  margin-top: var(--cl-s4) !important;
-  font-size: var(--cl-caption) !important;
-  color: var(--cl-text-muted) !important;
-}
-
-.cl-intro-where code {
   font-family: var(--cl-font-mono);
-  background: var(--cl-bg-sub);
-  border-radius: var(--cl-r-chip);
-  padding: 2px 6px;
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cl-lp-step-done { background: var(--cl-action); color: #fff; }
+
+.cl-lp-step-t { font-size: 18px; font-weight: 700; }
+.cl-lp-step-b { font-size: 15px; line-height: 1.6; color: var(--cl-text-muted); }
+
+/* ── 7. CTA 밴드 ──────────────────────────────────────────────────────── */
+.cl-lp-cta-band { background: var(--cl-action); color: #fff; }
+
+.cl-lp-cta {
+  padding-block: clamp(56px, 8vw, 96px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 24px;
 }
 
-.cl-intro-foot {
-  margin-top: auto;
+.cl-lp-cta h2 {
+  margin: 0;
+  font-size: clamp(28px, 4.6vw, 50px);
+  line-height: 1.18;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  max-width: 16ch;
+}
+
+.cl-lp-cta > p {
+  margin: 0;
+  font-size: clamp(16px, 1.8vw, 19px);
+  line-height: 1.6;
+  color: #dce8ff;
+  max-width: 44ch;
+}
+
+.cl-lp-cta-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
+
+/* ── 8. 푸터 ──────────────────────────────────────────────────────────── */
+.cl-lp-footer { background: var(--cl-text); color: #fff; }
+
+.cl-lp-footer-in {
+  padding-block: clamp(40px, 5vw, 64px);
   display: flex;
   flex-wrap: wrap;
-  gap: var(--cl-s4);
+  gap: 24px;
+  align-items: flex-start;
   justify-content: space-between;
-  padding: var(--cl-s6) clamp(var(--cl-s5), 5vw, var(--cl-s8));
-  border-top: 1px solid var(--cl-line);
-  font-size: var(--cl-caption);
-  color: var(--cl-text-muted);
 }
+
+.cl-lp-footer-brand { display: flex; flex-direction: column; gap: 8px; }
+.cl-lp-footer-brand b { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+.cl-lp-footer-brand span { font-size: 14px; color: var(--cl-text-disabled); }
+.cl-lp-footer-brand .cl-mono { font-size: 13px; }
+
+.cl-lp-footer-links { display: flex; gap: 20px; flex-wrap: wrap; }
+.cl-lp-footer-links a { color: #b0b8c1; font-size: 14px; font-weight: 600; }
+.cl-lp-footer-links a:hover { color: #fff; }

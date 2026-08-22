@@ -1,16 +1,20 @@
 import Link from 'next/link';
+import { Icon } from '@/components/Icon';
+import { APP_POINTS, FLOW, ROLE_CARDS, STATS } from '@/lib/intro';
 import { currentUser, landingFor } from '@/lib/session';
 
 /**
- * 인트로 — 로그인하지 않은 사람이 처음 보는 화면.
+ * 인트로 — 공개 랜딩 (`design_handoff_carelink_intro` 최종본).
  *
- * 종전에는 루트가 곧바로 `/login`으로 튕겼습니다. 주소를 받은 사람은
- * 무엇을 하는 곳인지 모른 채 번호부터 넣어야 했고, 기관 담당자에게 링크를
- * 보내면 "이게 뭐냐"는 회신이 먼저 왔습니다.
+ * 8개 섹션 한 페이지 스크롤. **1차 목표는 방문자를 세 갈래로 보내는 것**입니다
+ * (§Screens 3) — 간병인 지원자 · 환자·가족 · 병원·요양원 담당자. 그 아래로
+ * 지표 → 앱 미리보기 → 진행 절차 → CTA가 이어집니다.
  *
- * 이미 로그인한 사람은 여기 머물지 않습니다 — 역할이 목적지를 정합니다.
- * 매번 인트로를 지나게 하면 하루에 수십 번 들어오는 운영자에게는
- * 클릭 한 번이 통행세가 됩니다.
+ * 종전에는 루트가 곧바로 `/login`으로 튕겼습니다. 주소를 받은 사람은 무엇을
+ * 하는 곳인지 모른 채 번호부터 넣어야 했습니다.
+ *
+ * 이미 로그인한 사람에게는 헤더 버튼이 '내 화면으로'가 됩니다. 매번 인트로를
+ * 지나게 하면 하루에 수십 번 들어오는 운영자에게는 클릭 한 번이 통행세입니다.
  */
 export const dynamic = 'force-dynamic';
 
@@ -19,78 +23,229 @@ export default async function IntroPage() {
   const landing = me ? landingFor(me) : null;
 
   return (
-    <main className="cl-intro">
-      <header className="cl-intro-bar">
-        <span className="cl-intro-brand">
-          <span aria-hidden="true" className="cl-intro-mark">♥</span>
-          케어링크
+    <div className="cl-lp">
+      <Header landing={landing} />
+
+      {/* ── 2. Hero ── */}
+      <section id="top" className="cl-lp-wrap cl-lp-hero">
+        <span className="cl-lp-badge">
+          <Icon name="clock" size={16} />
+          서류 접수부터 근무 시작까지 평균 18일
         </span>
-        <Link className="cl-intro-cta" href={landing ?? '/login'}>
-          {landing ? '내 화면으로' : '로그인'}
-        </Link>
-      </header>
-
-      <section className="cl-intro-hero">
-        <p className="cl-intro-eyebrow">돌봄 · 의료 인력 운영 플랫폼</p>
-        <h1>
-          사람을 구하는 일과<br />
-          사람을 지키는 일을 한 곳에서
-        </h1>
-        <p className="cl-intro-lead">
-          확보 · 검증 · 교육 · 자격 · 매칭 · 배치 · 근무 · 근속.
-          흩어져 있던 여덟 단계를 하나의 기록으로 잇습니다.
+        <h1>간병 인력, 입국부터 현장까지 한 번에</h1>
+        <p>
+          CareLink는 해외 간병 인력의 서류·비자·매칭·근무 관리를 하나의 흐름으로
+          연결합니다. 지금 어디에 해당하시는지 골라주세요.
         </p>
-        <Link className="cl-intro-cta cl-intro-cta-lg" href={landing ?? '/login'}>
-          {landing ? '내 화면으로' : '휴대폰 번호로 시작'}
-        </Link>
-        <p className="cl-intro-note">비밀번호가 없습니다. 번호로 인증합니다.</p>
       </section>
 
-      {/*
-        누가 무엇을 하는 곳인지 먼저 말합니다. 이 플랫폼에는 수요 측이
-        둘이고 (기관은 인력을 고용하고, 보호자는 환자에게 간병사를 붙입니다),
-        그걸 설명하지 않으면 같은 화면을 보고 서로 다른 것을 기대합니다.
-      */}
-      <section className="cl-intro-who">
-        <h2>누가 쓰나요</h2>
-        <div className="cl-intro-grid">
-          <article>
-            <h3>기관</h3>
-            <p>병원 · 요양기관이 인력을 <b>고용</b>합니다.</p>
-            <p className="cl-intro-where">이 웹 · <code>/org</code></p>
-          </article>
-          <article>
-            <h3>운영자</h3>
-            <p>검증 · 매칭 · 품질 · 사건을 <b>관리</b>합니다.</p>
-            <p className="cl-intro-where">이 웹 · <code>/admin</code></p>
-          </article>
-          <article>
-            <h3>후보자</h3>
-            <p>자격을 갖춰 <b>일자리를 찾습니다</b>.</p>
-            <p className="cl-intro-where">앱</p>
-          </article>
-          <article>
-            <h3>간병사</h3>
-            <p>현장에서 <b>일하고 기록합니다</b>.</p>
-            <p className="cl-intro-where">앱</p>
-          </article>
-          <article>
-            <h3>보호자</h3>
-            <p>환자에게 <b>간병사를 요청합니다</b>.</p>
-            <p className="cl-intro-where">앱</p>
-          </article>
+      {/* ── 3. 역할 분기 — 페이지의 핵심 전환 지점 ── */}
+      <section id="roles" className="cl-lp-wrap cl-lp-roles">
+        {ROLE_CARDS.map((c) => (
+          <Link key={c.key} href={c.href} className="cl-lp-role">
+            <span className={`cl-lp-role-icon cl-lp-tone-${c.tone}`}>
+              <Icon name={c.icon} size={28} stroke={2.2} />
+            </span>
+            <span className="cl-lp-role-title">{c.title}</span>
+            <span className="cl-lp-role-body">{c.body}</span>
+            <span className="cl-lp-role-cta">
+              {c.cta}
+              <Icon name="chevronRight" size={18} stroke={2.4} />
+            </span>
+          </Link>
+        ))}
+      </section>
+
+      {/* ── 4. 지표 — ⚠️ 숫자는 시안용 샘플입니다 (lib/intro.ts STATS 주석) ── */}
+      <section className="cl-lp-stats-band">
+        <div className="cl-lp-wrap cl-lp-stats">
+          {STATS.map((s) => (
+            <div key={s.label} className="cl-lp-stat">
+              <span className={s.tone === 'signal' ? 'cl-lp-stat-n cl-lp-stat-signal' : 'cl-lp-stat-n'}>
+                {s.value}
+              </span>
+              <span className="cl-lp-stat-l">{s.label}</span>
+            </div>
+          ))}
         </div>
-        <p className="cl-intro-note">
-          이 주소는 <b>기관과 운영자</b>를 위한 화면입니다. 후보자 · 간병사 ·
-          보호자는 앱을 쓰세요 — 장갑 낀 손으로 몇 초 안에 쓰는 화면은
-          마우스와 표를 쓰는 화면과 규격이 다릅니다.
-        </p>
       </section>
 
-      <footer className="cl-intro-foot">
-        <span>CARELINK</span>
-        <span>돌봄 · 의료 인력 운영 플랫폼</span>
-      </footer>
-    </main>
+      {/* ── 5. 앱 미리보기 ── */}
+      <section id="app" className="cl-lp-wrap cl-lp-app">
+        <div className="cl-lp-app-copy">
+          <h2>
+            지금 내 서류가 어디까지 갔는지
+            <br />
+            한 화면에서 봅니다
+          </h2>
+          <p>
+            지원·서류·심사·매칭·배치를 다섯 단계로 나누고, 다음에 할 일 하나만
+            크게 보여줍니다. 글을 다 읽지 않아도 색과 아이콘으로 상태가 읽힙니다.
+          </p>
+          <ul className="cl-lp-checks">
+            {APP_POINTS.map((t) => (
+              <li key={t}>
+                <Icon name="circleCheck" size={20} stroke={2.1} />
+                {t}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <PhoneMock />
+      </section>
+
+      {/* ── 6. 진행 절차 ── */}
+      <section id="flow" className="cl-lp-flow-band">
+        <div className="cl-lp-wrap cl-lp-flow">
+          <h2>다섯 단계, 각 단계마다 담당자가 있습니다</h2>
+          <div className="cl-lp-flow-grid">
+            {FLOW.map((s) => (
+              <div key={s.n} className="cl-lp-step">
+                <span className={s.done ? 'cl-lp-step-n cl-lp-step-done' : 'cl-lp-step-n'}>{s.n}</span>
+                <span className="cl-lp-step-t">{s.title}</span>
+                <span className="cl-lp-step-b">{s.body}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 7. CTA 밴드 ── */}
+      <section className="cl-lp-cta-band">
+        <div className="cl-lp-wrap cl-lp-cta">
+          <h2>돌봄이 필요한 곳에, 준비된 사람을</h2>
+          <p>지원부터 배치까지 CareLink가 처음부터 끝까지 관리합니다.</p>
+          <div className="cl-lp-cta-row">
+            <Link href={ROLE_CARDS[0].href} className="cl-lp-btn-white">
+              간병인으로 지원
+              <Icon name="chevronRight" size={20} stroke={2.6} />
+            </Link>
+            <Link href="/login" className="cl-lp-btn-ghost">
+              기관 문의
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
+    </div>
+  );
+}
+
+/**
+ * 1. 헤더 (sticky).
+ *
+ * 앵커 링크는 **640px 아래에서 숨깁니다.** 시안에는 햄버거 메뉴가 없고
+ * (핸드오프 Open items 2), 좁은 폭에서 `flex-wrap`으로 두 줄이 되면 헤더가
+ * 화면의 4분의 1을 먹습니다. 한 페이지 스크롤이라 앵커는 편의 기능이지
+ * 없으면 못 가는 길이 아닙니다 — 스크롤하면 같은 곳에 닿습니다.
+ */
+function Header({ landing }: { landing: string | null }) {
+  return (
+    <header className="cl-lp-header">
+      <div className="cl-lp-wrap cl-lp-header-in">
+        <Link href="#top" className="cl-lp-brand">
+          <span className="cl-lp-brand-mark">
+            <Icon name="check" size={18} stroke={2.4} />
+          </span>
+          CareLink
+        </Link>
+        <nav className="cl-lp-nav">
+          <a href="#roles" className="cl-lp-nav-link">서비스</a>
+          <a href="#app" className="cl-lp-nav-link">앱 화면</a>
+          <a href="#flow" className="cl-lp-nav-link">진행 절차</a>
+          {/*
+            언어 전환은 아직 동작하지 않습니다 — 카피가 ko만 작성돼 있습니다
+            (핸드오프 Open items 4). 자리를 지우면 나중에 넣을 때 헤더를
+            다시 짜야 하므로 표시만 두고 버튼으로 만들지 않았습니다.
+          */}
+          <span className="cl-lp-locale">
+            <Icon name="globe" size={16} stroke={1.8} />
+            KO
+          </span>
+          <Link href={landing ?? '/login'} className="cl-lp-btn-primary">
+            {landing ? '내 화면으로' : '로그인'}
+          </Link>
+        </nav>
+      </div>
+    </header>
+  );
+}
+
+/**
+ * 앱 목업 — Candidate App(SCR-101)의 축약본입니다.
+ *
+ * 실제 앱 화면이 아니라 **인트로용 정적 표현**입니다. 값이 바뀌어도 여기는
+ * 따라오지 않습니다 — 따라오게 만들면 공개 페이지가 후보자 데이터를 부르게
+ * 되고, 그건 로그인 없이 열리는 화면입니다.
+ */
+function PhoneMock() {
+  return (
+    <div className="cl-lp-mock-wrap">
+      <div className="cl-lp-mock">
+        <div className="cl-lp-mock-profile">
+          <span className="cl-lp-mock-avatar">
+            <Icon name="user" size={24} stroke={2.1} />
+          </span>
+          <span className="cl-lp-mock-who">
+            <b>흐엉님</b>
+            <span className="cl-mono">#C-10428 · 요양보호사</span>
+          </span>
+        </div>
+
+        <div className="cl-lp-mock-action">
+          <span className="cl-lp-mock-label">
+            <Icon name="clock" size={15} stroke={2.2} />
+            지금 할 일
+          </span>
+          <b>건강검진 결과 올리기</b>
+          <span className="cl-lp-mock-btn">
+            <Icon name="camera" size={20} stroke={2.2} />
+            사진 올리기
+          </span>
+        </div>
+
+        <div className="cl-lp-mock-progress">
+          <div className="cl-lp-mock-prow">
+            <b>취업 준비 단계</b>
+            <span className="cl-mono cl-lp-mock-count">3 / 5</span>
+          </div>
+          <div className="cl-lp-mock-bars">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <span key={i} className={i < 3 ? 'cl-lp-bar cl-lp-bar-on' : 'cl-lp-bar'} />
+            ))}
+          </div>
+          {/*
+            체류자격은 날짜가 아니라 **남은 일수**로 보여줍니다. 사람은
+            2026-09-10을 보고 남은 날을 계산하지 않고, 계산을 놓치면 자격
+            무효가 아니라 불법 취업이 됩니다 (CLAUDE.md §5.9).
+          */}
+          <div className="cl-lp-mock-warn">
+            <Icon name="alert" size={20} stroke={2.1} />
+            <span>체류자격 만료</span>
+            <b className="cl-mono">D-42</b>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Footer() {
+  return (
+    <footer id="contact" className="cl-lp-footer">
+      <div className="cl-lp-wrap cl-lp-footer-in">
+        <div className="cl-lp-footer-brand">
+          <b>CareLink</b>
+          <span>국제 간병 인력 배치 플랫폼</span>
+          <span className="cl-mono">고객센터 1600-0000 · 평일 09:00–18:00</span>
+        </div>
+        <div className="cl-lp-footer-links">
+          <Link href="/login">이용약관</Link>
+          <Link href="/login">개인정보처리방침</Link>
+          <Link href="/login">채용</Link>
+        </div>
+      </div>
+    </footer>
   );
 }
