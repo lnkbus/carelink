@@ -28,9 +28,14 @@ export default async function IntroPage() {
 
       {/* ── 2. Hero ── */}
       <section id="top" className="cl-lp-wrap cl-lp-hero">
+        {/*
+          시안 배지는 '서류 접수부터 근무 시작까지 평균 18일'이었습니다.
+          지표 넷과 같은 문제입니다 — 근거가 없고, 공개 페이지에 걸면
+          약속이 됩니다 (D-12). 검증되는 사실로 바꿉니다.
+        */}
         <span className="cl-lp-badge">
-          <Icon name="clock" size={16} />
-          서류 접수부터 근무 시작까지 평균 18일
+          <Icon name="circleCheck" size={16} />
+          배치 전 6개 항목 확인 · 예외 처리 경로 없음
         </span>
         <h1>간병 인력, 입국부터 현장까지 한 번에</h1>
         <p>
@@ -56,7 +61,7 @@ export default async function IntroPage() {
         ))}
       </section>
 
-      {/* ── 4. 지표 — ⚠️ 숫자는 시안용 샘플입니다 (lib/intro.ts STATS 주석) ── */}
+      {/* ── 4. 지표 — 코드에서 확인되는 값만 (lib/intro.ts STATS 주석) ── */}
       <section className="cl-lp-stats-band">
         <div className="cl-lp-wrap cl-lp-stats">
           {STATS.map((s) => (
