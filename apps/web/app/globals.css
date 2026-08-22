@@ -631,35 +631,57 @@ html:has(.cl-lp) { scroll-behavior: smooth; }
   background: var(--cl-bg);
 }
 
-.cl-lp-stage-dot {
-  width: 30px;
-  height: 30px;
-  border-radius: 999px;
+.cl-lp-stage-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--cl-s3);
+}
+
+.cl-lp-stage-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
   background: var(--cl-bg-sub);
-  color: var(--cl-text-sub);
-  font-family: var(--cl-font-mono);
-  font-size: 14px;
-  font-weight: 700;
+  color: var(--cl-text-disabled);
   display: flex;
   align-items: center;
   justify-content: center;
+  flex: none;
 }
-.cl-lp-stage-live .cl-lp-stage-dot { background: var(--cl-signal); color: #fff; }
+.cl-lp-stage-live .cl-lp-stage-icon {
+  background: var(--cl-signal-tint);
+  color: var(--cl-signal);
+}
+
+/* 번호는 순서를 말합니다. 아이콘이 '무엇'이면 번호는 '몇 번째'입니다. */
+.cl-lp-stage-n {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--cl-text-disabled);
+}
+.cl-lp-stage-live .cl-lp-stage-n { color: var(--cl-text-muted); }
 
 .cl-lp-stage-t { font-size: 17px; font-weight: 700; }
 .cl-lp-stage-b { font-size: 14px; line-height: 1.6; color: var(--cl-text-muted); flex: 1; }
 
-/* 색만으로 상태를 전달하지 않습니다 — 문자열을 함께 답니다 (docs/09 §4.2). */
+/* 색 + 아이콘 + 텍스트 3중 표현 (docs/09 §4.2). 색만으로 상태를 말하면
+   색각 이상 사용자에게는 아무 변화가 없습니다. */
 .cl-lp-tag {
   align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   padding: 4px 9px;
   border-radius: var(--cl-r-chip);
   background: var(--cl-bg-sub);
   color: var(--cl-text-muted);
   font-size: 12px;
   font-weight: 700;
+  white-space: nowrap;
 }
-.cl-lp-stage-live .cl-lp-tag { background: var(--cl-signal-tint); color: var(--cl-signal); }
+.cl-lp-stage-live .cl-lp-tag,
+.cl-lp-vert-live .cl-lp-tag { background: var(--cl-signal-tint); color: var(--cl-signal); }
 
 /* ── 8. 산업 확장 ────────────────────────────────────────────────────── */
 .cl-lp-vert-band {
@@ -677,41 +699,55 @@ html:has(.cl-lp) { scroll-behavior: smooth; }
   letter-spacing: -0.03em;
 }
 
-.cl-lp-chips {
+.cl-lp-verts {
   margin-top: clamp(24px, 3.5vw, 36px);
+  display: grid;
+  /* 8단계 섹션과 같은 4열로 맞춥니다 — 6+2로 접히면 둘째 줄이 반쯤 비어
+     '뭔가 잘렸나' 하고 보게 됩니다. 여덟 개는 4+4일 때 가장 조용합니다.
+     좁아지면 auto-fit이 3·2·1로 접습니다. */
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 14px;
+}
+
+.cl-lp-vert-card {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.cl-lp-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 48px;
-  padding: 0 18px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px;
   border: 1px dashed var(--cl-line-strong);
-  border-radius: 999px;
+  border-radius: 18px;
   background: var(--cl-bg);
-  color: var(--cl-text-muted);
-  font-size: 16px;
-  font-weight: 700;
 }
 
-/* 운영 중은 실선 + 체크. 점선은 '아직 없음'을 형태로 말합니다. */
-.cl-lp-chip-live {
+/* 운영 중은 실선, 확장 예정은 점선. 형태로도 말합니다 — 확대해서 보지 않아도
+   '아직 없는 것'이 구분됩니다. */
+.cl-lp-vert-live {
   border-style: solid;
   border-color: var(--cl-signal);
-  color: var(--cl-text);
 }
-.cl-lp-chip-live svg { color: var(--cl-signal); }
 
-.cl-lp-chip small {
-  font-size: 12px;
-  font-weight: 600;
+.cl-lp-vert-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 15px;
+  background: var(--cl-bg-sub);
   color: var(--cl-text-disabled);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.cl-lp-chip-live small { color: var(--cl-signal); }
+.cl-lp-vert-live .cl-lp-vert-icon {
+  background: var(--cl-signal-tint);
+  color: var(--cl-signal);
+}
+
+.cl-lp-vert-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--cl-text-muted);
+}
+.cl-lp-vert-live .cl-lp-vert-name { color: var(--cl-text); }
 
 /* ── 푸터 안내 ───────────────────────────────────────────────────────── */
 .cl-lp-footer-note {

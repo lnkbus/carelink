@@ -123,13 +123,23 @@ export default async function IntroPage({
         <ol className="cl-lp-stage-rail">
           {STAGES.map((s) => (
             <li key={s.n} className={s.live ? 'cl-lp-stage cl-lp-stage-live' : 'cl-lp-stage'}>
-              <span className="cl-lp-stage-dot">
-                {s.live ? <Icon name="check" size={14} stroke={3} /> : s.n}
+              {/*
+                아이콘 + 번호 + 상태 태그. 글을 다 읽지 않아도 무슨 단계인지
+                보이는 것이 목적입니다 — 여덟 칸을 전부 읽는 사람은 없습니다.
+              */}
+              <span className="cl-lp-stage-head">
+                <span className="cl-lp-stage-icon">
+                  <Icon name={s.icon} size={26} stroke={2} />
+                </span>
+                <span className="cl-lp-stage-n cl-mono">{String(s.n).padStart(2, '0')}</span>
               </span>
               <span className="cl-lp-stage-t">{t(`${s.key}.t`)}</span>
               <span className="cl-lp-stage-b">{t(`${s.key}.b`)}</span>
               {/* 색만으로 구분하지 않습니다 — 색각 이상 사용자에게는 변화가 없습니다. */}
-              <span className="cl-lp-tag">{s.live ? t('stages.live') : t('stages.soon')}</span>
+              <span className="cl-lp-tag">
+                {s.live && <Icon name="check" size={13} stroke={3} />}
+                {s.live ? t('stages.live') : t('stages.soon')}
+              </span>
             </li>
           ))}
         </ol>
@@ -140,13 +150,23 @@ export default async function IntroPage({
         <div className="cl-lp-wrap cl-lp-vert">
           <h2>{t('verticals.title')}</h2>
           <p className="cl-lp-section-lead">{t('verticals.lead')}</p>
-          <div className="cl-lp-chips">
+          {/*
+            칩만 늘어놓으면 '농업'이 글자로만 남고, 어느 것이 열려 있는지도
+            테두리 하나로만 갈립니다. 아이콘 타일을 붙여 눈으로 먼저 읽히게
+            합니다 — 이 섹션은 읽는 자리가 아니라 훑는 자리입니다.
+          */}
+          <div className="cl-lp-verts">
             {VERTICALS.map((v) => (
-              <span key={v.key} className={v.live ? 'cl-lp-chip cl-lp-chip-live' : 'cl-lp-chip'}>
-                {v.live && <Icon name="check" size={15} stroke={2.6} />}
-                {t(v.key)}
-                <small>{v.live ? t('verticals.live') : t('verticals.planned')}</small>
-              </span>
+              <div key={v.key} className={v.live ? 'cl-lp-vert-card cl-lp-vert-live' : 'cl-lp-vert-card'}>
+                <span className="cl-lp-vert-icon">
+                  <Icon name={v.icon} size={30} stroke={1.9} />
+                </span>
+                <span className="cl-lp-vert-name">{t(v.key)}</span>
+                <span className="cl-lp-tag">
+                  {v.live && <Icon name="check" size={13} stroke={3} />}
+                  {v.live ? t('verticals.live') : t('verticals.planned')}
+                </span>
+              </div>
             ))}
           </div>
         </div>

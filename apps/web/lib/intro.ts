@@ -39,14 +39,14 @@ export const STATS: { key: string; tone?: 'signal' }[] = [
  * `live` 판정 기준은 V1 구현 여부입니다 (CLAUDE.md §2 · §8).
  */
 export const STAGES = [
-  { n: 1, key: 'stages.1', live: true },   // recruiting — 채널·파트너·코호트
-  { n: 2, key: 'stages.2', live: true },   // quality — worker_clearances 6종
-  { n: 3, key: 'stages.3', live: true },   // talent — 교육 진도
-  { n: 4, key: 'stages.4', live: true },   // talent — 커리어 여정
-  { n: 5, key: 'stages.5', live: true },   // matching — 룰 엔진 + 근거
-  { n: 6, key: 'stages.6', live: true },   // engagement — 모델·컴플라이언스
-  { n: 7, key: 'stages.7', live: true },   // care — QR 체크인·근무 기록 (V2)
-  { n: 8, key: 'stages.8', live: false },  // 근속 지표는 파일럿 이후
+  { n: 1, key: 'stages.1', icon: 'users' as const, live: true },   // recruiting — 채널·파트너·코호트
+  { n: 2, key: 'stages.2', icon: 'shield' as const, live: true },  // quality — worker_clearances 6종
+  { n: 3, key: 'stages.3', icon: 'cap' as const, live: true },     // talent — 교육 진도
+  { n: 4, key: 'stages.4', icon: 'award' as const, live: true },   // talent — 커리어 여정
+  { n: 5, key: 'stages.5', icon: 'swap' as const, live: true },    // matching — 룰 엔진 + 근거
+  { n: 6, key: 'stages.6', icon: 'pin' as const, live: true },     // engagement — 모델·컴플라이언스
+  { n: 7, key: 'stages.7', icon: 'qr' as const, live: true },      // care — 병실 QR 체크인 (V2)
+  { n: 8, key: 'stages.8', icon: 'trend' as const, live: false },  // 근속 지표는 파일럿 이후
 ];
 
 /**
@@ -57,14 +57,14 @@ export const STAGES = [
  * 코드 배포 없이. 그래서 여기 '확장 예정'은 희망이 아니라 구조입니다.
  */
 export const VERTICALS = [
-  { key: 'vertical.hospital', live: true },
-  { key: 'vertical.care', live: true },
-  { key: 'vertical.medical', live: true },
-  { key: 'vertical.agri', live: false },
-  { key: 'vertical.beauty', live: false },
-  { key: 'vertical.food', live: false },
-  { key: 'vertical.build', live: false },
-  { key: 'vertical.logistics', live: false },
+  { key: 'vertical.hospital', icon: 'heartPulse' as const, live: true },
+  { key: 'vertical.care', icon: 'users' as const, live: true },
+  { key: 'vertical.medical', icon: 'pulse' as const, live: true },
+  { key: 'vertical.agri', icon: 'sprout' as const, live: false },
+  { key: 'vertical.beauty', icon: 'scissors' as const, live: false },
+  { key: 'vertical.food', icon: 'chefHat' as const, live: false },
+  { key: 'vertical.build', icon: 'hardHat' as const, live: false },
+  { key: 'vertical.logistics', icon: 'truck' as const, live: false },
 ];
 
 /** 역할 분기 카드 (핸드오프 §Screens 3). 페이지의 핵심 전환 지점입니다. */
