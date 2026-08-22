@@ -66,3 +66,74 @@
 }
 
 tbody tr:hover { background: var(--cl-row-hover); }
+
+/* ── 반응형 ────────────────────────────────────────────────────────────────
+ *
+ * DESK는 마우스와 표를 쓰는 화면입니다. 좁은 폭에 억지로 밀어 넣으면
+ * 표가 읽히지 않으므로 **모바일 레이아웃으로 바꾸지 않습니다** — 대신
+ * 사이드바를 위로 접어 가로 메뉴로 만들고, 본문은 가로 스크롤로 둡니다.
+ *
+ * 운영자가 태블릿으로 대기 큐만 훑는 경우가 실제로 있고, 그때 232px
+ * 사이드바가 화면 절반을 먹으면 정작 봐야 할 표가 안 보입니다.
+ *
+ * 폰 폭에서 표를 쓰는 일은 상정하지 않습니다. 그 사람은 앱을 씁니다.
+ */
+@media (max-width: 900px) {
+  .cl-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .cl-sidebar {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--cl-line);
+    /* 메뉴가 가로로 흐르고, 넘치면 그 줄만 스크롤합니다. */
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    overflow-x: auto;
+    gap: var(--cl-s2);
+    padding: var(--cl-s3) var(--cl-s5);
+  }
+
+  /* 로고는 줄지 않습니다. 두면 '케어링 / 크'로 접힙니다. */
+  .cl-sidebar > a:first-child {
+    flex: none;
+    padding: 0 var(--cl-s4) 0 0;
+    border-right: 1px solid var(--cl-line);
+    margin-right: var(--cl-s3);
+  }
+
+  /* 그룹(운영·자원·공급)은 가로에서 의미가 없습니다. 껍데기를 없애
+     항목이 한 줄로 흐르게 합니다 — 두면 그룹마다 세로로 쌓입니다. */
+  .cl-sidebar > div:not(:last-child) { display: contents; }
+  .cl-nav-group { display: none; }
+
+  /* 언어·세션 블록. 메뉴를 다 밀어내지 않도록 폭을 묶습니다. */
+  .cl-sidebar > div:last-child {
+    flex: none;
+    margin-left: auto;
+    padding: 0 0 0 var(--cl-s5);
+    display: flex;
+    align-items: center;
+    gap: var(--cl-s3);
+  }
+  /* 사이드바가 세로일 때만 의미가 있는 설명입니다. */
+  .cl-sidebar > div:last-child p { display: none; }
+  .cl-sidebar > div:last-child > div { margin-top: 0; }
+  .cl-sidebar > div:last-child button { width: auto; padding: 0 var(--cl-s4); }
+
+  .cl-nav-item {
+    white-space: nowrap;
+    line-height: 40px;
+    min-height: 40px;   /* 터치로도 눌립니다 */
+    font-size: var(--cl-body);
+  }
+
+  .cl-body { padding: 0 var(--cl-s5) var(--cl-s7); }
+}
+
+/* 표는 어느 폭에서도 **자기 안에서** 가로 스크롤합니다.
+   페이지 전체가 가로로 밀리면 사이드바까지 사라져 길을 잃습니다. */
+.cl-table-wrap { overflow-x: auto; }

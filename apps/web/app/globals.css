@@ -5,3 +5,196 @@
  * 한 벌만 있습니다. 여기 복사하지 마세요 — 복사본은 반드시 갈라집니다.
  * 실제로 사이드바가 216px와 232px로 어긋나 있었습니다.
  */
+
+/* ── 인트로 (공개 화면) ────────────────────────────────────────────────────
+ *
+ * 로그인 뒤 화면들과 달리 **폭이 정해져 있지 않습니다.** 링크를 받은 사람이
+ * 폰으로도 열고 데스크톱으로도 엽니다. 그래서 여기만 유동 폭을 씁니다 —
+ * DESK 셸(232px 사이드바 + 표)은 그 뒤부터입니다.
+ */
+/* 한국어는 단어 안에서 줄바꿈하면 읽기가 크게 나빠집니다 —
+   '하 / 나의'처럼 끊깁니다. 어절 단위로만 넘깁니다. */
+.cl-intro,
+.cl-intro h1,
+.cl-intro h2,
+.cl-intro h3,
+.cl-intro p {
+  word-break: keep-all;
+}
+
+.cl-intro {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--cl-bg);
+}
+
+.cl-intro-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--cl-s5);
+  padding: var(--cl-s5) clamp(var(--cl-s5), 5vw, var(--cl-s8));
+  border-bottom: 1px solid var(--cl-line);
+}
+
+.cl-intro-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cl-s3);
+  font-size: var(--cl-subtitle);
+  font-weight: 700;
+}
+
+.cl-intro-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--cl-action-strong);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+}
+
+.cl-intro-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 var(--cl-s6);
+  border-radius: var(--cl-r-desk);
+  background: var(--cl-action-strong);
+  color: #fff;
+  font-size: var(--cl-body);
+  font-weight: 700;
+}
+
+.cl-intro-cta-lg {
+  min-height: 60px;
+  padding: 0 var(--cl-s8);
+  font-size: var(--cl-subtitle);
+  margin-top: var(--cl-s7);
+}
+
+.cl-intro-hero {
+  /* 읽는 폭은 화면 폭이 아니라 문장 길이가 정합니다. 넓은 화면에서
+     한 줄이 120자가 되면 눈이 다음 줄 첫 글자를 못 찾습니다. */
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto;
+  padding: clamp(var(--cl-s8), 9vw, 96px) clamp(var(--cl-s5), 5vw, var(--cl-s8));
+}
+
+.cl-intro-eyebrow {
+  margin: 0;
+  font-family: var(--cl-font-mono);
+  font-size: var(--cl-caption);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--cl-action-text);
+}
+
+.cl-intro-hero h1 {
+  /* 폰에서 28px, 데스크톱에서 52px까지. 고정값을 쓰면 한쪽이 반드시 깨집니다. */
+  margin: var(--cl-s5) 0 0;
+  font-size: clamp(28px, 5.5vw, 52px);
+  font-weight: 700;
+  line-height: 1.28;
+  letter-spacing: -0.03em;
+}
+
+.cl-intro-lead {
+  margin: var(--cl-s6) 0 0;
+  max-width: 56ch;
+  font-size: clamp(var(--cl-body), 2.2vw, var(--cl-subtitle));
+  line-height: 1.75;
+  color: var(--cl-text-sub);
+}
+
+.cl-intro-note {
+  margin: var(--cl-s5) 0 0;
+  font-size: var(--cl-caption);
+  line-height: 1.7;
+  color: var(--cl-text-muted);
+}
+
+.cl-intro-who {
+  background: var(--cl-bg-sub);
+  border-top: 1px solid var(--cl-line);
+  padding: clamp(var(--cl-s7), 6vw, 72px) clamp(var(--cl-s5), 5vw, var(--cl-s8));
+}
+
+.cl-intro-who > h2,
+.cl-intro-who > .cl-intro-note {
+  /* 그리드와 같은 폭·같은 시작선. 따로 두면 제목만 왼쪽 끝에 붙어
+     카드와 어긋납니다. margin 단축 속성으로 덮어쓰지 마세요. */
+  max-width: 1080px;
+  margin: 0 auto var(--cl-s6);
+}
+
+.cl-intro-who > h2 {
+  font-size: var(--cl-title);
+  font-weight: 700;
+}
+
+.cl-intro-who > .cl-intro-note {
+  margin-top: var(--cl-s6);
+  margin-bottom: 0;
+}
+
+.cl-intro-grid {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: grid;
+  /* 칸 수를 폭이 정하게 둡니다. 미디어 쿼리로 1·2·3단을 손으로 끊으면
+     그 사이 폭에서 어색해집니다. */
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--cl-s5);
+}
+
+.cl-intro-grid article {
+  background: var(--cl-bg);
+  border: 1px solid var(--cl-line);
+  border-radius: var(--cl-r-hero);
+  padding: var(--cl-s6);
+}
+
+.cl-intro-grid h3 {
+  margin: 0 0 var(--cl-s3);
+  font-size: var(--cl-subtitle);
+  font-weight: 700;
+}
+
+.cl-intro-grid p {
+  margin: 0;
+  font-size: var(--cl-body);
+  line-height: 1.7;
+  color: var(--cl-text-sub);
+}
+
+.cl-intro-where {
+  margin-top: var(--cl-s4) !important;
+  font-size: var(--cl-caption) !important;
+  color: var(--cl-text-muted) !important;
+}
+
+.cl-intro-where code {
+  font-family: var(--cl-font-mono);
+  background: var(--cl-bg-sub);
+  border-radius: var(--cl-r-chip);
+  padding: 2px 6px;
+}
+
+.cl-intro-foot {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cl-s4);
+  justify-content: space-between;
+  padding: var(--cl-s6) clamp(var(--cl-s5), 5vw, var(--cl-s8));
+  border-top: 1px solid var(--cl-line);
+  font-size: var(--cl-caption);
+  color: var(--cl-text-muted);
+}

@@ -11,12 +11,14 @@ export default function LoginPage({ searchParams }: { searchParams: { reason?: s
     <div
       style={{
         minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: 'var(--cl-bg-sub)',
+        padding: 'var(--cl-s5)', background: 'var(--cl-bg-sub)',
       }}
     >
       <div
         style={{
-          width: 402, background: 'var(--cl-bg)', border: '1px solid var(--cl-line)',
+          // 고정 폭이면 360px 폰에서 카드가 화면 밖으로 나갑니다.
+          width: '100%', maxWidth: 402,
+          background: 'var(--cl-bg)', border: '1px solid var(--cl-line)',
           borderRadius: 'var(--cl-r-hero)', padding: 'var(--cl-s7)',
         }}
       >

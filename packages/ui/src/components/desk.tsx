@@ -112,7 +112,14 @@ export function Section({
   );
 }
 
-/** DESK 표. 헤더 배경 #F9FAFB, 행 hover #F9FAFB, 1px 라인. */
+/**
+ * DESK 표. 헤더 배경 #F9FAFB, 행 hover #F9FAFB, 1px 라인.
+ *
+ * **표는 자기 안에서 가로 스크롤합니다.** 좁은 화면에서 페이지 전체가
+ * 가로로 밀리면 사이드바까지 화면 밖으로 나가 길을 잃습니다. 열을 숨기거나
+ * 카드로 접지도 않습니다 — 운영자가 표를 보는 이유는 **여러 행을 한눈에
+ * 비교하려는 것**이고, 카드로 접는 순간 그 일을 못 하게 됩니다.
+ */
 export function DataTable({
   columns, children, empty,
 }: {
@@ -122,7 +129,8 @@ export function DataTable({
 }) {
   const hasRows = React.Children.count(children) > 0;
   return (
-    <table style={{ fontSize: 'var(--cl-body)' }}>
+    <div className="cl-table-wrap">
+      <table style={{ fontSize: 'var(--cl-body)', minWidth: 'max-content' }}>
       <thead>
         <tr style={{ background: 'var(--cl-bg-table-head)' }}>
           {columns.map((c) => (
@@ -155,7 +163,8 @@ export function DataTable({
           </tr>
         )}
       </tbody>
-    </table>
+      </table>
+    </div>
   );
 }
 

@@ -7,6 +7,7 @@ import 'screens/role_screen.dart';
 import 'shells/candidate_shell.dart';
 import 'shells/caregiver_shell.dart';
 import 'shells/guardian_shell.dart';
+import 'shells/viewport.dart';
 
 /// CARELINK FIELD 앱 — 후보자 · 간병사 · 보호자.
 ///
@@ -73,7 +74,10 @@ class _CarelinkAppState extends State<CarelinkApp> {
           builder: (context, child) => MediaQuery.withClampedTextScaling(
             minScaleFactor: 1.0,
             maxScaleFactor: 1.6,
-            child: child ?? const SizedBox.shrink(),
+            // 넓은 창에서는 폰 폭으로 가둡니다. FIELD 규격은 한 손으로 쓰는
+            // 폰을 전제로 정한 값이라, 2000px로 늘리면 규격이 아니라 그냥
+            // 큰 글씨가 됩니다 (shells/viewport.dart).
+            child: FieldViewport(child: child ?? const SizedBox.shrink()),
           ),
           home: _home(widget.state),
         ),

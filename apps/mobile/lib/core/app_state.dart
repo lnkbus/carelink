@@ -15,11 +15,11 @@ import 'i18n/strings.dart';
 /// 체류자격이 열리고, 간병사에게는 배정된 병실과 근무 기록이 열립니다.
 /// 근무 기록은 정산 분쟁의 유일한 근거입니다 (docs/11 §5).
 class AppState extends ChangeNotifier {
-  AppState({required this.api, FlutterSecureStorage? storage})
-      : _storage = storage ?? const FlutterSecureStorage();
+  AppState({required this.api, SecureStore? storage})
+      : _storage = storage ?? const _DeviceStore();
 
   final ApiClient api;
-  final FlutterSecureStorage _storage;
+  final SecureStore _storage;
 
   static const _kAccess = 'cl_access';
   static const _kRefresh = 'cl_refresh';
@@ -240,6 +240,31 @@ class AppState extends ChangeNotifier {
   }
 
   String t(String key) => tr(key, _locale);
+}
+
+/// 토큰 저장소.
+///
+/// `FlutterSecureStorage`를 직접 들고 있으면 상태를 테스트할 수 없습니다 —
+/// 플랫폼 채널이 필요해서 위젯 테스트가 통째로 못 뜹니다. 그래서 얇게
+/// 한 겹 둡니다. **구현은 여전히 시큐어 스토리지 하나뿐입니다** —
+/// SharedPreferences는 평문이라 루팅된 기기에서 그대로 읽힙니다.
+abstract class SecureStore {
+  Future<String?> read({required String key});
+  Future<void> write({required String key, required String? value});
+  Future<void> delete({required String key});
+}
+
+class _DeviceStore implements SecureStore {
+  const _DeviceStore();
+  static const _inner = FlutterSecureStorage();
+
+  @override
+  Future<String?> read({required String key}) => _inner.read(key: key);
+  @override
+  Future<void> write({required String key, required String? value}) =>
+      _inner.write(key: key, value: value);
+  @override
+  Future<void> delete({required String key}) => _inner.delete(key: key);
 }
 
 /// 화면들이 상태와 문구에 접근하는 통로.
