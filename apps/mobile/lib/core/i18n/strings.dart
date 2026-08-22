@@ -28,8 +28,8 @@ export 'package:carelink_field_ui/carelink_field_ui.dart' show AppLocale, AppLoc
 const Map<String, Map<AppLocale, String>> _dict = {
   // ── 공통 ────────────────────────────────────────────────────────────────
   'app.name': {
-    AppLocale.ko: 'CARELINK', AppLocale.vi: 'CARELINK',
-    AppLocale.ru: 'CARELINK', AppLocale.en: 'CARELINK',
+    AppLocale.ko: 'CareLink', AppLocale.vi: 'CareLink',
+    AppLocale.ru: 'CareLink', AppLocale.en: 'CareLink',
   },
   'common.next': {
     AppLocale.ko: '다음', AppLocale.vi: 'Tiếp theo',
@@ -79,9 +79,14 @@ const Map<String, Map<AppLocale, String>> _dict = {
     AppLocale.ko: '토큰 확인 중', AppLocale.vi: 'Đang kiểm tra phiên',
     AppLocale.ru: 'Проверка сессии', AppLocale.en: 'Checking session',
   },
+  // 워드마크는 번역하지 않습니다 (D-13).
+  //
+  // 종전에는 `케어링크` · `CARELINK` · `КЕАРЛИНК` · `CareLink` 넷이
+  // 섞여 있었습니다. 브랜드를 음차하면 그 표기로는 아무도 검색하지 못하고,
+  // 인트로에서 앱으로 넘어갈 때 다른 서비스로 온 것처럼 읽힙니다.
   'brand.name': {
-    AppLocale.ko: '케어링크', AppLocale.vi: 'CARELINK',
-    AppLocale.ru: 'КЕАРЛИНК', AppLocale.en: 'CARELINK',
+    AppLocale.ko: 'CareLink', AppLocale.vi: 'CareLink',
+    AppLocale.ru: 'CareLink', AppLocale.en: 'CareLink',
   },
   'role.subtitle': {
     AppLocale.ko: '나중에 언제든 바꿀 수 있습니다.',

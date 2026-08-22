@@ -31,8 +31,9 @@ void main() {
     });
 
     test('한국어 문구를 그대로 복사한 다른 언어가 없다', () {
-      // 브랜드명처럼 번역하지 않는 것은 예외로 둡니다.
-      const untranslated = {'app.name'};
+      // 브랜드명처럼 번역하지 않는 것은 예외로 둡니다 (D-13).
+      // 워드마크를 음차하면 그 표기로는 아무도 검색하지 못합니다.
+      const untranslated = {'app.name', 'brand.name'};
       final copies = <String>[];
       for (final entry in translationTable.entries) {
         if (untranslated.contains(entry.key)) continue;

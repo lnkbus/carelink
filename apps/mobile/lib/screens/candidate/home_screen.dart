@@ -63,7 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final app = AppScope.of(context);
 
     return Scaffold(
-      // 시안(SCR-101)의 앱바 — 26px 브랜드 타일 + '케어링크' + 언어 칩.
+      // 시안(SCR-101)의 앱바 — 26px 브랜드 타일 + 'CareLink' + 언어 칩.
       appBar: AppBar(
         toolbarHeight: 56,
         automaticallyImplyLeading: false,

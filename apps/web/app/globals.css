@@ -101,17 +101,39 @@ html:has(.cl-lp) { scroll-behavior: smooth; }
   font-weight: 600;
 }
 
+/*
+ * 언어 전환 — 링크 4개입니다. JS를 쓰지 않습니다.
+ *
+ * 인트로는 로그인 전 화면이라 클라이언트 상태를 둘 이유가 없고, 링크면
+ * 새 탭·북마크·검색엔진이 전부 그대로 동작합니다.
+ */
 .cl-lp-locale {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  height: 40px;
-  padding: 0 13px;
+  gap: 2px;
+  padding: 3px;
   border: 1px solid var(--cl-line);
   border-radius: 999px;
-  color: var(--cl-text-sub);
-  font-size: 14px;
+  background: var(--cl-bg);
+}
+
+.cl-lp-locale a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 11px;
+  border-radius: 999px;
+  color: var(--cl-text-muted);
+  font-family: var(--cl-font-mono);
+  font-size: 13px;
   font-weight: 600;
+}
+.cl-lp-locale a:hover { background: var(--cl-bg-sub); color: var(--cl-text-sub); }
+
+.cl-lp-locale a.cl-lp-locale-on {
+  background: var(--cl-action-tint);
+  color: var(--cl-action-text);
+  font-weight: 700;
 }
 
 /*
@@ -121,10 +143,30 @@ html:has(.cl-lp) { scroll-behavior: smooth; }
  * 로고와 로그인은 남깁니다 — 그 둘이 헤더의 이유입니다.
  */
 @media (max-width: 640px) {
-  .cl-lp-nav-link,
-  .cl-lp-locale { display: none; }
+  /*
+    앵커만 숨깁니다. **언어 전환은 남깁니다** — 한국어를 못 읽는 사람에게는
+    그게 유일한 문이고, 여기서 막히면 페이지 전체가 읽히지 않습니다.
+  */
+  .cl-lp-nav-link { display: none; }
+  .cl-lp-locale a { padding: 0 9px; }
   /* 손가락으로 누르는 폭에서는 40px이 모자랍니다. */
   .cl-lp-btn-primary { min-height: 44px; }
+}
+
+/*
+ * 480px 아래에서 워드마크 글자를 접고 타일만 남깁니다.
+ *
+ * 로그인 버튼의 라벨 길이가 언어마다 다릅니다 — 한국어 '로그인'은 3자인데
+ * 베트남어 'Đăng nhập'은 9자입니다. 한국어 기준으로 맞춰 두면 그 언어에서만
+ * 헤더가 4px 넘치고, 넘치는 쪽은 대개 아무도 안 봅니다.
+ *
+ * 언어 전환은 절대 접지 않습니다 — 한국어를 못 읽는 사람에게는 그게 유일한
+ * 문입니다. 접을 것이 있다면 워드마크 쪽입니다. 타일이 이미 정체성입니다.
+ */
+@media (max-width: 480px) {
+  .cl-lp-brand { font-size: 0; gap: 0; }
+  .cl-lp-brand-mark { font-size: 16px; }
+  .cl-lp-nav { gap: 8px; }
 }
 
 /* ── 버튼 ─────────────────────────────────────────────────────────────── */
@@ -538,3 +580,142 @@ html:has(.cl-lp) { scroll-behavior: smooth; }
 .cl-lp-footer-links { display: flex; gap: 20px; flex-wrap: wrap; }
 .cl-lp-footer-links a { color: #b0b8c1; font-size: 14px; font-weight: 600; }
 .cl-lp-footer-links a:hover { color: #fff; }
+
+/* ── 지표 주석 ────────────────────────────────────────────────────────── */
+.cl-lp-stat-note {
+  grid-column: 1 / -1;
+  margin: var(--cl-s4) 0 0;
+  font-size: var(--cl-caption);
+  color: var(--cl-text-muted);
+}
+
+/* ── 7. 인력 운영 8단계 (to-be 전체) ─────────────────────────────────── */
+.cl-lp-section-lead {
+  margin: var(--cl-s5) 0 0;
+  max-width: 62ch;
+  font-size: clamp(16px, 1.6vw, 18px);
+  line-height: 1.7;
+  color: var(--cl-text-sub);
+}
+
+.cl-lp-stages { padding-block: clamp(52px, 7vw, 88px); }
+
+.cl-lp-stages h2 {
+  margin: 0;
+  font-size: clamp(24px, 3.2vw, 34px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+/*
+ * 여덟 칸. 한 줄에 8개를 억지로 넣지 않습니다 — 220px 아래로 내려가면
+ * 설명이 네 줄이 되고, 그때부터는 단계가 아니라 벽으로 보입니다.
+ * auto-fit이 폭에 맞춰 4·3·2·1열로 접습니다.
+ */
+.cl-lp-stage-rail {
+  margin: clamp(28px, 4vw, 44px) 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.cl-lp-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 20px;
+  border: 1px solid var(--cl-line);
+  border-radius: 16px;
+  background: var(--cl-bg);
+}
+
+.cl-lp-stage-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: var(--cl-bg-sub);
+  color: var(--cl-text-sub);
+  font-family: var(--cl-font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cl-lp-stage-live .cl-lp-stage-dot { background: var(--cl-signal); color: #fff; }
+
+.cl-lp-stage-t { font-size: 17px; font-weight: 700; }
+.cl-lp-stage-b { font-size: 14px; line-height: 1.6; color: var(--cl-text-muted); flex: 1; }
+
+/* 색만으로 상태를 전달하지 않습니다 — 문자열을 함께 답니다 (docs/09 §4.2). */
+.cl-lp-tag {
+  align-self: flex-start;
+  padding: 4px 9px;
+  border-radius: var(--cl-r-chip);
+  background: var(--cl-bg-sub);
+  color: var(--cl-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.cl-lp-stage-live .cl-lp-tag { background: var(--cl-signal-tint); color: var(--cl-signal); }
+
+/* ── 8. 산업 확장 ────────────────────────────────────────────────────── */
+.cl-lp-vert-band {
+  background: var(--cl-bg-sub);
+  border-top: 1px solid var(--cl-line);
+  border-bottom: 1px solid var(--cl-line);
+}
+
+.cl-lp-vert { padding-block: clamp(52px, 7vw, 88px); }
+
+.cl-lp-vert h2 {
+  margin: 0;
+  font-size: clamp(24px, 3.2vw, 34px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.cl-lp-chips {
+  margin-top: clamp(24px, 3.5vw, 36px);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.cl-lp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 1px dashed var(--cl-line-strong);
+  border-radius: 999px;
+  background: var(--cl-bg);
+  color: var(--cl-text-muted);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* 운영 중은 실선 + 체크. 점선은 '아직 없음'을 형태로 말합니다. */
+.cl-lp-chip-live {
+  border-style: solid;
+  border-color: var(--cl-signal);
+  color: var(--cl-text);
+}
+.cl-lp-chip-live svg { color: var(--cl-signal); }
+
+.cl-lp-chip small {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cl-text-disabled);
+}
+.cl-lp-chip-live small { color: var(--cl-signal); }
+
+/* ── 푸터 안내 ───────────────────────────────────────────────────────── */
+.cl-lp-footer-note {
+  padding-bottom: clamp(24px, 3vw, 36px);
+  font-size: 13px;
+  color: var(--cl-text-disabled);
+}

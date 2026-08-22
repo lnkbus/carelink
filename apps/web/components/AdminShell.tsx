@@ -53,7 +53,7 @@ export async function AdminShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="cl-shell">
       <nav className="cl-sidebar">
-        {/* 시안의 로고 블록 — 24px 검은 타일 + '케어링크' + mono 'ADMIN CONSOLE'. */}
+        {/* 시안의 로고 블록 — 24px 검은 타일 + 'CareLink' + mono 'ADMIN CONSOLE'. */}
         <Link
           href="/admin"
           style={{
@@ -72,7 +72,7 @@ export async function AdminShell({ children }: { children: React.ReactNode }) {
             ♥
           </span>
           <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.25 }}>
-            <span style={{ fontSize: 14, fontWeight: 700 }}>케어링크</span>
+            <span style={{ fontSize: 14, fontWeight: 700 }}>CareLink</span>
             <span style={{ fontFamily: 'var(--cl-font-mono)', fontSize: 'var(--cl-micro)', fontWeight: 500, color: 'var(--cl-text-muted)' }}>
               ADMIN CONSOLE
             </span>

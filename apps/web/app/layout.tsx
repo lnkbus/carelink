@@ -4,7 +4,7 @@ import '@carelink/ui/src/tokens/desk.css';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'CARELINK',
+  title: 'CareLink',
   description: '돌봄·의료 인력 운영 · 기관 콘솔',
 };
 

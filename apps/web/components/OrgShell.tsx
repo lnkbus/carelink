@@ -38,7 +38,7 @@ export async function OrgShell({
             color: 'var(--cl-text)',
           }}
         >
-          CARELINK
+          CareLink
         </Link>
 
         {orgName && (

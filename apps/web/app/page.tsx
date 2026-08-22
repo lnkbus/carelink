@@ -1,175 +1,246 @@
 import Link from 'next/link';
 import { Icon } from '@/components/Icon';
-import { APP_POINTS, FLOW, ROLE_CARDS, STATS } from '@/lib/intro';
+import { APP_POINTS, FLOW, ROLE_CARDS, STAGES, STATS, VERTICALS } from '@/lib/intro';
+import { LOCALES, LOCALE_LABEL, type Locale, makeT, pickLocale } from '@/lib/intro-i18n';
 import { currentUser, landingFor } from '@/lib/session';
 
 /**
- * 인트로 — 공개 랜딩 (`design_handoff_carelink_intro` 최종본).
+ * 인트로 — 공개 랜딩 (`design_handoff_carelink_intro` 최종본 + to-be 2섹션).
  *
- * 8개 섹션 한 페이지 스크롤. **1차 목표는 방문자를 세 갈래로 보내는 것**입니다
- * (§Screens 3) — 간병인 지원자 · 환자·가족 · 병원·요양원 담당자. 그 아래로
- * 지표 → 앱 미리보기 → 진행 절차 → CTA가 이어집니다.
+ * **지금 있는 것이 아니라 만들려는 것 전체를 보여줍니다.** 시안의 8섹션에
+ * '인력 운영 8단계'와 '산업 확장'을 더했습니다 — 이 플랫폼의 값어치는
+ * 화면 하나가 아니라 확보에서 근속까지를 한 기록으로 잇는다는 데 있고,
+ * 그건 단계를 나열해야 보입니다.
  *
- * 종전에는 루트가 곧바로 `/login`으로 튕겼습니다. 주소를 받은 사람은 무엇을
- * 하는 곳인지 모른 채 번호부터 넣어야 했습니다.
+ * 다 된 것처럼 보이지 않게 **운영 중 / 준비 중을 함께 표시**합니다.
+ * 파일럿에서 기대가 어긋나는 것이 못 만든 것보다 비쌉니다.
  *
- * 이미 로그인한 사람에게는 헤더 버튼이 '내 화면으로'가 됩니다. 매번 인트로를
- * 지나게 하면 하루에 수십 번 들어오는 운영자에게는 클릭 한 번이 통행세입니다.
+ * 4개 언어입니다. 로케일은 `?lang=`로 고릅니다 — 라우팅 세그먼트(`/ko/...`)를
+ * 쓰지 않은 이유는 로그인 뒤 화면들이 전부 ko 전용이라, 여기 하나 때문에
+ * 앱 전체의 주소 구조를 바꿀 이유가 없기 때문입니다.
  */
 export const dynamic = 'force-dynamic';
 
-export default async function IntroPage() {
+export default async function IntroPage({
+  searchParams,
+}: {
+  searchParams: { lang?: string | string[] };
+}) {
+  const locale = pickLocale(searchParams.lang);
+  const t = makeT(locale);
   const me = await currentUser();
   const landing = me ? landingFor(me) : null;
 
   return (
-    <div className="cl-lp">
-      <Header landing={landing} />
+    <div className="cl-lp" lang={locale}>
+      <Header t={t} locale={locale} landing={landing} />
 
       {/* ── 2. Hero ── */}
       <section id="top" className="cl-lp-wrap cl-lp-hero">
-        {/*
-          시안 배지는 '서류 접수부터 근무 시작까지 평균 18일'이었습니다.
-          지표 넷과 같은 문제입니다 — 근거가 없고, 공개 페이지에 걸면
-          약속이 됩니다 (D-12). 검증되는 사실로 바꿉니다.
-        */}
         <span className="cl-lp-badge">
-          <Icon name="circleCheck" size={16} />
-          배치 전 6개 항목 확인 · 예외 처리 경로 없음
+          <Icon name="clock" size={16} />
+          {t('hero.badge')}
         </span>
-        <h1>간병 인력, 입국부터 현장까지 한 번에</h1>
-        <p>
-          CareLink는 해외 간병 인력의 서류·비자·매칭·근무 관리를 하나의 흐름으로
-          연결합니다. 지금 어디에 해당하시는지 골라주세요.
-        </p>
+        <h1>{t('hero.title')}</h1>
+        <p>{t('hero.lead')}</p>
       </section>
 
       {/* ── 3. 역할 분기 — 페이지의 핵심 전환 지점 ── */}
       <section id="roles" className="cl-lp-wrap cl-lp-roles">
         {ROLE_CARDS.map((c) => (
-          <Link key={c.key} href={c.href} className="cl-lp-role">
+          <Link key={c.key} href={withLang(c.href, locale)} className="cl-lp-role">
             <span className={`cl-lp-role-icon cl-lp-tone-${c.tone}`}>
               <Icon name={c.icon} size={28} stroke={2.2} />
             </span>
-            <span className="cl-lp-role-title">{c.title}</span>
-            <span className="cl-lp-role-body">{c.body}</span>
+            <span className="cl-lp-role-title">{t(`${c.key}.title`)}</span>
+            <span className="cl-lp-role-body">{t(`${c.key}.body`)}</span>
             <span className="cl-lp-role-cta">
-              {c.cta}
+              {t(`${c.key}.cta`)}
               <Icon name="chevronRight" size={18} stroke={2.4} />
             </span>
           </Link>
         ))}
       </section>
 
-      {/* ── 4. 지표 — 코드에서 확인되는 값만 (lib/intro.ts STATS 주석) ── */}
+      {/* ── 4. 지표 — 목표치입니다 (lib/intro.ts STATS 주석 · docs/17 D-12) ── */}
       <section className="cl-lp-stats-band">
         <div className="cl-lp-wrap cl-lp-stats">
           {STATS.map((s) => (
-            <div key={s.label} className="cl-lp-stat">
+            <div key={s.key} className="cl-lp-stat">
+              {/* 숫자와 단위도 사전에서 옵니다 — `18일`은 러시아어 화면에서
+                  읽히지 않는 글자입니다. 자릿수 구분자도 언어마다 다릅니다. */}
               <span className={s.tone === 'signal' ? 'cl-lp-stat-n cl-lp-stat-signal' : 'cl-lp-stat-n'}>
-                {s.value}
+                {t(`${s.key}.v`)}
               </span>
-              <span className="cl-lp-stat-l">{s.label}</span>
+              <span className="cl-lp-stat-l">{t(s.key)}</span>
             </div>
           ))}
+          {/*
+            숫자만 두면 현재 실적으로 읽힙니다. 파일럿 전이라 실측치가 없고,
+            공개 페이지의 숫자는 곧 주장입니다 — 한 줄로 밝힙니다.
+          */}
+          <p className="cl-lp-stat-note">{t('stat.note')}</p>
         </div>
       </section>
 
       {/* ── 5. 앱 미리보기 ── */}
       <section id="app" className="cl-lp-wrap cl-lp-app">
         <div className="cl-lp-app-copy">
-          <h2>
-            지금 내 서류가 어디까지 갔는지
-            <br />
-            한 화면에서 봅니다
-          </h2>
-          <p>
-            지원·서류·심사·매칭·배치를 다섯 단계로 나누고, 다음에 할 일 하나만
-            크게 보여줍니다. 글을 다 읽지 않아도 색과 아이콘으로 상태가 읽힙니다.
-          </p>
+          <h2>{lines(t('app.title'))}</h2>
+          <p>{t('app.lead')}</p>
           <ul className="cl-lp-checks">
-            {APP_POINTS.map((t) => (
-              <li key={t}>
+            {APP_POINTS.map((k) => (
+              <li key={k}>
                 <Icon name="circleCheck" size={20} stroke={2.1} />
-                {t}
+                {t(k)}
               </li>
             ))}
           </ul>
         </div>
-        <PhoneMock />
+        <PhoneMock t={t} />
       </section>
 
       {/* ── 6. 진행 절차 ── */}
       <section id="flow" className="cl-lp-flow-band">
         <div className="cl-lp-wrap cl-lp-flow">
-          <h2>다섯 단계, 각 단계마다 담당자가 있습니다</h2>
+          <h2>{t('flow.title')}</h2>
           <div className="cl-lp-flow-grid">
             {FLOW.map((s) => (
               <div key={s.n} className="cl-lp-step">
                 <span className={s.done ? 'cl-lp-step-n cl-lp-step-done' : 'cl-lp-step-n'}>{s.n}</span>
-                <span className="cl-lp-step-t">{s.title}</span>
-                <span className="cl-lp-step-b">{s.body}</span>
+                <span className="cl-lp-step-t">{t(`${s.key}.t`)}</span>
+                <span className="cl-lp-step-b">{t(`${s.key}.b`)}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── 7. CTA 밴드 ── */}
+      {/* ── 7. 인력 운영 8단계 (to-be 전체) ── */}
+      <section id="stages" className="cl-lp-wrap cl-lp-stages">
+        <h2>{t('stages.title')}</h2>
+        <p className="cl-lp-section-lead">{t('stages.lead')}</p>
+        <ol className="cl-lp-stage-rail">
+          {STAGES.map((s) => (
+            <li key={s.n} className={s.live ? 'cl-lp-stage cl-lp-stage-live' : 'cl-lp-stage'}>
+              <span className="cl-lp-stage-dot">
+                {s.live ? <Icon name="check" size={14} stroke={3} /> : s.n}
+              </span>
+              <span className="cl-lp-stage-t">{t(`${s.key}.t`)}</span>
+              <span className="cl-lp-stage-b">{t(`${s.key}.b`)}</span>
+              {/* 색만으로 구분하지 않습니다 — 색각 이상 사용자에게는 변화가 없습니다. */}
+              <span className="cl-lp-tag">{s.live ? t('stages.live') : t('stages.soon')}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {/* ── 8. 산업 확장 ── */}
+      <section id="verticals" className="cl-lp-vert-band">
+        <div className="cl-lp-wrap cl-lp-vert">
+          <h2>{t('verticals.title')}</h2>
+          <p className="cl-lp-section-lead">{t('verticals.lead')}</p>
+          <div className="cl-lp-chips">
+            {VERTICALS.map((v) => (
+              <span key={v.key} className={v.live ? 'cl-lp-chip cl-lp-chip-live' : 'cl-lp-chip'}>
+                {v.live && <Icon name="check" size={15} stroke={2.6} />}
+                {t(v.key)}
+                <small>{v.live ? t('verticals.live') : t('verticals.planned')}</small>
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 9. CTA 밴드 ── */}
       <section className="cl-lp-cta-band">
         <div className="cl-lp-wrap cl-lp-cta">
-          <h2>돌봄이 필요한 곳에, 준비된 사람을</h2>
-          <p>지원부터 배치까지 CareLink가 처음부터 끝까지 관리합니다.</p>
+          <h2>{t('cta.title')}</h2>
+          <p>{t('cta.lead')}</p>
           <div className="cl-lp-cta-row">
-            <Link href={ROLE_CARDS[0].href} className="cl-lp-btn-white">
-              간병인으로 지원
+            <Link href={withLang(ROLE_CARDS[0].href, locale)} className="cl-lp-btn-white">
+              {t('cta.primary')}
               <Icon name="chevronRight" size={20} stroke={2.6} />
             </Link>
-            <Link href="/login" className="cl-lp-btn-ghost">
-              기관 문의
+            <Link href={withLang('/login', locale)} className="cl-lp-btn-ghost">
+              {t('cta.secondary')}
             </Link>
           </div>
         </div>
       </section>
 
-      <Footer />
+      <Footer t={t} locale={locale} />
     </div>
   );
+}
+
+/** `\n`이 든 문구를 줄바꿈으로. 언어마다 끊는 자리가 달라 사전에 둡니다. */
+function lines(text: string) {
+  return text.split('\n').map((l, i) => (
+    <span key={l}>
+      {i > 0 && <br />}
+      {l}
+    </span>
+  ));
+}
+
+/**
+ * 링크에 로케일을 붙입니다.
+ *
+ * 외부 주소(앱)에는 붙이지 않습니다 — 앱은 자기 저장소에 언어를 들고 있고,
+ * 쿼리로 덮으면 사용자가 앱에서 고른 언어가 인트로 때문에 바뀝니다.
+ */
+function withLang(href: string, locale: Locale): string {
+  if (!href.startsWith('/') || locale === 'ko') return href;
+  return `${href}?lang=${locale}`;
 }
 
 /**
  * 1. 헤더 (sticky).
  *
- * 앵커 링크는 **640px 아래에서 숨깁니다.** 시안에는 햄버거 메뉴가 없고
- * (핸드오프 Open items 2), 좁은 폭에서 `flex-wrap`으로 두 줄이 되면 헤더가
- * 화면의 4분의 1을 먹습니다. 한 페이지 스크롤이라 앵커는 편의 기능이지
- * 없으면 못 가는 길이 아닙니다 — 스크롤하면 같은 곳에 닿습니다.
+ * 언어 전환이 **실제로 동작합니다.** 링크 4개라 JS가 필요 없고, 서버가
+ * 그 로케일로 렌더합니다 — 인트로는 로그인 전 화면이라 클라이언트 상태를
+ * 둘 이유가 없습니다.
+ *
+ * 앵커 링크는 640px 아래에서 숨깁니다 (핸드오프 Open items 2 — 결정).
+ * 한 페이지 스크롤이라 앵커는 편의 기능이지 없으면 못 가는 길이 아닙니다.
+ * **언어 전환은 남깁니다** — 한국어를 못 읽는 사람에게는 그게 유일한 문입니다.
  */
-function Header({ landing }: { landing: string | null }) {
+function Header({
+  t, locale, landing,
+}: {
+  t: (k: string) => string;
+  locale: Locale;
+  landing: string | null;
+}) {
   return (
     <header className="cl-lp-header">
       <div className="cl-lp-wrap cl-lp-header-in">
-        <Link href="#top" className="cl-lp-brand">
+        <Link href={withLang('/', locale)} className="cl-lp-brand">
           <span className="cl-lp-brand-mark">
             <Icon name="check" size={18} stroke={2.4} />
           </span>
           CareLink
         </Link>
         <nav className="cl-lp-nav">
-          <a href="#roles" className="cl-lp-nav-link">서비스</a>
-          <a href="#app" className="cl-lp-nav-link">앱 화면</a>
-          <a href="#flow" className="cl-lp-nav-link">진행 절차</a>
-          {/*
-            언어 전환은 아직 동작하지 않습니다 — 카피가 ko만 작성돼 있습니다
-            (핸드오프 Open items 4). 자리를 지우면 나중에 넣을 때 헤더를
-            다시 짜야 하므로 표시만 두고 버튼으로 만들지 않았습니다.
-          */}
-          <span className="cl-lp-locale">
-            <Icon name="globe" size={16} stroke={1.8} />
-            KO
+          <a href="#roles" className="cl-lp-nav-link">{t('nav.service')}</a>
+          <a href="#app" className="cl-lp-nav-link">{t('nav.app')}</a>
+          <a href="#stages" className="cl-lp-nav-link">{t('nav.stages')}</a>
+          <span className="cl-lp-locale" role="group" aria-label="Language">
+            {LOCALES.map((l) => (
+              <Link
+                key={l}
+                href={l === 'ko' ? '/' : `/?lang=${l}`}
+                className={l === locale ? 'cl-lp-locale-on' : undefined}
+                aria-current={l === locale ? 'true' : undefined}
+                hrefLang={l}
+              >
+                {LOCALE_LABEL[l]}
+              </Link>
+            ))}
           </span>
-          <Link href={landing ?? '/login'} className="cl-lp-btn-primary">
-            {landing ? '내 화면으로' : '로그인'}
+          <Link href={landing ?? withLang('/login', locale)} className="cl-lp-btn-primary">
+            {landing ? t('nav.mine') : t('nav.login')}
           </Link>
         </nav>
       </div>
@@ -184,7 +255,7 @@ function Header({ landing }: { landing: string | null }) {
  * 따라오지 않습니다 — 따라오게 만들면 공개 페이지가 후보자 데이터를 부르게
  * 되고, 그건 로그인 없이 열리는 화면입니다.
  */
-function PhoneMock() {
+function PhoneMock({ t }: { t: (k: string) => string }) {
   return (
     <div className="cl-lp-mock-wrap">
       <div className="cl-lp-mock">
@@ -193,26 +264,26 @@ function PhoneMock() {
             <Icon name="user" size={24} stroke={2.1} />
           </span>
           <span className="cl-lp-mock-who">
-            <b>흐엉님</b>
-            <span className="cl-mono">#C-10428 · 요양보호사</span>
+            <b>흐엉</b>
+            <span className="cl-mono">#C-10428 · {t('app.mock.role')}</span>
           </span>
         </div>
 
         <div className="cl-lp-mock-action">
           <span className="cl-lp-mock-label">
             <Icon name="clock" size={15} stroke={2.2} />
-            지금 할 일
+            {t('app.mock.todo')}
           </span>
-          <b>건강검진 결과 올리기</b>
+          <b>{t('app.mock.task')}</b>
           <span className="cl-lp-mock-btn">
             <Icon name="camera" size={20} stroke={2.2} />
-            사진 올리기
+            {t('app.mock.upload')}
           </span>
         </div>
 
         <div className="cl-lp-mock-progress">
           <div className="cl-lp-mock-prow">
-            <b>취업 준비 단계</b>
+            <b>{t('app.mock.stage')}</b>
             <span className="cl-mono cl-lp-mock-count">3 / 5</span>
           </div>
           <div className="cl-lp-mock-bars">
@@ -227,7 +298,7 @@ function PhoneMock() {
           */}
           <div className="cl-lp-mock-warn">
             <Icon name="alert" size={20} stroke={2.1} />
-            <span>체류자격 만료</span>
+            <span>{t('app.mock.visa')}</span>
             <b className="cl-mono">D-42</b>
           </div>
         </div>
@@ -236,21 +307,22 @@ function PhoneMock() {
   );
 }
 
-function Footer() {
+function Footer({ t, locale }: { t: (k: string) => string; locale: Locale }) {
   return (
     <footer id="contact" className="cl-lp-footer">
       <div className="cl-lp-wrap cl-lp-footer-in">
         <div className="cl-lp-footer-brand">
           <b>CareLink</b>
-          <span>국제 간병 인력 배치 플랫폼</span>
-          <span className="cl-mono">고객센터 1600-0000 · 평일 09:00–18:00</span>
+          <span>{t('foot.tagline')}</span>
+          <span className="cl-mono">{t('foot.support')}</span>
         </div>
         <div className="cl-lp-footer-links">
-          <Link href="/login">이용약관</Link>
-          <Link href="/login">개인정보처리방침</Link>
-          <Link href="/login">채용</Link>
+          <Link href={withLang('/login', locale)}>{t('foot.terms')}</Link>
+          <Link href={withLang('/login', locale)}>{t('foot.privacy')}</Link>
+          <Link href={withLang('/login', locale)}>{t('foot.careers')}</Link>
         </div>
       </div>
+      <div className="cl-lp-wrap cl-lp-footer-note">{t('foot.preview')}</div>
     </footer>
   );
 }

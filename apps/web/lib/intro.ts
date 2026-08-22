@@ -14,80 +14,68 @@ export const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3300
 /**
  * 지표 4개 (핸드오프 §Screens 4).
  *
- * 시안 값은 `1,240` 등록 인력 · `86` 제휴 기관 · `18일` 평균 배치였고,
- * 핸드오프도 '시안용 샘플'로 못박고 있었습니다 (Open items 3).
- * **셋 다 근거가 없었습니다** — 공개 집계 엔드포인트가 없고, 평균 배치
- * 일수는 파일럿을 돌려 봐야 나옵니다. 로그인 뒤 화면이 아니라 누구나 보는
- * 페이지의 숫자라, 틀리면 화면 오류가 아니라 허위 표시입니다.
+ * **목표치입니다.** 파일럿 전이라 실측치가 없고, 인트로는 지금 있는 것이
+ * 아니라 **만들려는 것 전체**를 보여주는 자리로 정했습니다 (D-12 개정).
+ * 그래서 페이지에 '목표 기준'이라고 함께 적습니다 — 숫자만 두면 현재
+ * 실적으로 읽히고, 그건 화면 오류가 아니라 허위 표시입니다.
  *
- * 그래서 **코드에서 확인되는 값**으로 바꿨습니다 (D-12 결정 2안).
- * 규모 대신 규격을 말합니다 — 이 플랫폼이 파는 것은 인원수가 아니라
- * **막는 능력**이고, 아래 넷이 정확히 그것입니다.
- *
- * 값이 바뀌면 여기도 바뀝니다. 각 항목의 출처를 함께 적어 둡니다:
+ * 값이 확정되면 여기 한 곳만 고칩니다. 라벨은 `intro-i18n.ts`에 있습니다.
  */
-export const STATS: { value: string; label: string; tone?: 'signal' }[] = [
-  // CLAUDE.md §5.11 · quality/state/clearance.state.ts REQUIRED_CLEARANCES
-  // 전부 PASS여야 배치됩니다. 운영자 예외 처리 경로가 없습니다.
-  { value: '6개', label: '배치 전 필수 확인 · 예외 없음' },
-  // CLAUDE.md §5.12-1 · care/state/care.state.ts MIN_REST_HOURS
-  // 상수입니다. 테이블에서 읽지 않습니다 — 낮출 수 있게 만들면 인력이
-  // 부족한 날 낮추게 되고, 그 날이 사고가 나는 날입니다.
-  { value: '11시간', label: '교대 사이 최소 휴식' },
-  // ops/state/ticket.state.ts TICKET_SLA_HOURS · CLAUDE.md §7 ticket-sla 잡
-  // 안전사고·부당대우·업무범위 초과는 4시간 안에 1차 답변합니다.
-  //
-  // 트랙 수(3개)를 넣었다가 뺐습니다 — 그건 상수가 아니라 `tracks` 테이블의
-  // 행 수이고, 농업·미용을 열면 코드 배포 없이 늘어납니다 (§5.8).
-  // 공개 페이지에 박아 두면 그때 조용히 틀린 숫자가 됩니다.
-  { value: '4시간', label: '안전·부당대우 신고 1차 답변' },
-  // packages/field_ui/lib/src/locale.dart — enum AppLocale { ko, vi, ru, en }
-  { value: '4개', label: '지원 언어 (KO·VI·RU·EN)', tone: 'signal' },
+export const STATS: { key: string; tone?: 'signal' }[] = [
+  { key: 'stat.workers' },
+  { key: 'stat.orgs' },
+  { key: 'stat.days' },
+  { key: 'stat.langs', tone: 'signal' },
+];
+
+/**
+ * 인력 운영 8단계 (CLAUDE.md §1).
+ *
+ * 확보 → 검증 → 교육 → 자격 → 매칭 → 배치 → 근무 → 근속.
+ * **지금 열린 단계와 준비 중인 단계를 함께 표시합니다** — 다 된 것처럼
+ * 보이면 파일럿에서 기대가 어긋나고, 안 된 것만 보이면 이 플랫폼이 무엇을
+ * 만들고 있는지 전달되지 않습니다.
+ *
+ * `live` 판정 기준은 V1 구현 여부입니다 (CLAUDE.md §2 · §8).
+ */
+export const STAGES = [
+  { n: 1, key: 'stages.1', live: true },   // recruiting — 채널·파트너·코호트
+  { n: 2, key: 'stages.2', live: true },   // quality — worker_clearances 6종
+  { n: 3, key: 'stages.3', live: true },   // talent — 교육 진도
+  { n: 4, key: 'stages.4', live: true },   // talent — 커리어 여정
+  { n: 5, key: 'stages.5', live: true },   // matching — 룰 엔진 + 근거
+  { n: 6, key: 'stages.6', live: true },   // engagement — 모델·컴플라이언스
+  { n: 7, key: 'stages.7', live: true },   // care — QR 체크인·근무 기록 (V2)
+  { n: 8, key: 'stages.8', live: false },  // 근속 지표는 파일럿 이후
+];
+
+/**
+ * 산업 확장 (CLAUDE.md §5.8 · §5.14).
+ *
+ * 코어(iam·talent·tracks·org·matching·engagement·work-record·billing)는
+ * 산업 중립입니다. 새 산업은 `industries` / `tracks` 행 추가로 열립니다 —
+ * 코드 배포 없이. 그래서 여기 '확장 예정'은 희망이 아니라 구조입니다.
+ */
+export const VERTICALS = [
+  { key: 'vertical.hospital', live: true },
+  { key: 'vertical.care', live: true },
+  { key: 'vertical.medical', live: true },
+  { key: 'vertical.agri', live: false },
+  { key: 'vertical.beauty', live: false },
+  { key: 'vertical.food', live: false },
+  { key: 'vertical.build', live: false },
+  { key: 'vertical.logistics', live: false },
 ];
 
 /** 역할 분기 카드 (핸드오프 §Screens 3). 페이지의 핵심 전환 지점입니다. */
 export const ROLE_CARDS = [
-  {
-    key: 'candidate',
-    icon: 'user' as const,
-    tone: 'action' as const,
-    title: '간병인으로 지원',
-    body: '자격·서류를 등록하고 한국 병원·요양원 일자리에 지원합니다. 한국어·베트남어·러시아어 지원.',
-    cta: '지원 시작',
-    href: APP_URL,
-  },
-  {
-    key: 'guardian',
-    icon: 'heart' as const,
-    tone: 'signal' as const,
-    title: '간병인 찾기',
-    body: '환자·가족을 위한 신청. 필요한 돌봄 조건을 고르면 자격이 확인된 간병인을 추천합니다.',
-    cta: '신청하기',
-    href: APP_URL,
-  },
-  {
-    key: 'org',
-    icon: 'building' as const,
-    tone: 'neutral' as const,
-    title: '기관 채용',
-    body: '병원·요양원 담당자용. 공고 등록, 후보 검토, 비자·서류 진행 상황을 한 화면에서 관리합니다.',
-    cta: '공고 등록',
-    href: '/login',
-  },
+  { key: 'role.candidate', icon: 'user' as const, tone: 'action' as const, href: APP_URL },
+  { key: 'role.guardian', icon: 'heart' as const, tone: 'signal' as const, href: APP_URL },
+  { key: 'role.org', icon: 'building' as const, tone: 'neutral' as const, href: '/login' },
 ];
 
 /** 진행 절차 5단계 (핸드오프 §Screens 6). 1~3은 진행·완료, 4~5는 예정 표현입니다. */
-export const FLOW = [
-  { n: 1, done: true, title: '지원', body: '기본 정보와 자격증을 등록합니다.' },
-  { n: 2, done: true, title: '서류', body: '여권·건강검진·범죄경력을 제출합니다.' },
-  { n: 3, done: true, title: '심사', body: '운영팀이 서류 유효기간과 요건을 확인합니다.' },
-  { n: 4, done: false, title: '매칭', body: '조건이 맞는 기관과 근무 조건을 확정합니다.' },
-  { n: 5, done: false, title: '입국·배치', body: '비자 발급과 입국 일정을 안내하고 배치합니다.' },
-];
+export const FLOW = [1, 2, 3, 4, 5].map((n) => ({ n, done: n <= 3, key: `flow.${n}` }));
 
 /** 앱 미리보기 옆 체크 3줄 (핸드오프 §Screens 5). */
-export const APP_POINTS = [
-  '자격·서류는 운영팀이 직접 확인합니다',
-  '체류자격 만료일은 남은 일수로 알려드립니다',
-  '한국어·베트남어·러시아어로 같은 화면을 씁니다',
-];
+export const APP_POINTS = ['app.point1', 'app.point2', 'app.point3'];
