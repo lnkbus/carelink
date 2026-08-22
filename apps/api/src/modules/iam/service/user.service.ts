@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DomainError } from '../../../core/errors/domain-error';
 import type { ScopeName, Viewer } from '../../../core/scope/scope.types';
-import { ROLES_REQUIRING_ORG_APPROVAL, type UserRole } from '../iam.types';
+import { needsApproval, type UserRole } from '../iam.types';
 import { UserRepository, type UserRoleRow, type UserRow } from '../repository/user.repository';
 import { roleAssignmentMachine, type RoleAssignmentState } from '../state/role-assignment.state';
 import { userStatusMachine, type UserStatus } from '../state/user-status.state';
@@ -111,5 +111,5 @@ export class UserService {
 }
 
 function isEffective(row: UserRoleRow): boolean {
-  return ROLES_REQUIRING_ORG_APPROVAL.includes(row.role) ? row.approved_at !== null : true;
+  return needsApproval(row.role) ? row.approved_at !== null : true;
 }

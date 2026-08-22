@@ -17,6 +17,10 @@ export const DOMAIN_ERRORS = {
   IAM_TOKEN_EXPIRED:          { status: HttpStatus.UNAUTHORIZED, message: 'Token has expired' },
   IAM_ROLE_FORBIDDEN:         { status: HttpStatus.FORBIDDEN,    message: 'Role does not permit this operation' },
   IAM_ROLE_ALREADY_HELD:      { status: HttpStatus.CONFLICT,     message: 'User already holds this role' },
+  IAM_ROLE_REQUEST_NOT_FOUND: { status: HttpStatus.NOT_FOUND,    message: 'No such membership request' },
+  IAM_ROLE_ALREADY_APPROVED:  { status: HttpStatus.CONFLICT,     message: 'This request was already decided' },
+  IAM_ORG_ALREADY_REGISTERED: { status: HttpStatus.CONFLICT,     message: 'This business registration number is already registered' },
+  IAM_REJECT_REASON_REQUIRED: { status: HttpStatus.BAD_REQUEST,  message: 'Rejecting a request requires a reason' },
   IAM_CONSENT_REQUIRED:       { status: HttpStatus.FORBIDDEN,    message: 'A required consent has not been granted' },
   IAM_USER_SUSPENDED:         { status: HttpStatus.FORBIDDEN,    message: 'User account is suspended' },
 

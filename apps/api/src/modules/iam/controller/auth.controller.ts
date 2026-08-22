@@ -12,7 +12,7 @@ import { AuthService } from '../service/auth.service';
 import { ConsentService } from '../service/consent.service';
 import { UserService } from '../service/user.service';
 import type { UserRoleRow, UserRow } from '../repository/user.repository';
-import { ROLES_REQUIRING_ORG_APPROVAL } from '../iam.types';
+import { needsApproval } from '../iam.types';
 import { displayPhone } from '../service/phone';
 
 /**
@@ -139,7 +139,7 @@ export class AuthController {
         role: r.role,
         organizationId: r.organization_id,
         isPrimary: r.is_primary,
-        approved: ROLES_REQUIRING_ORG_APPROVAL.includes(r.role) ? r.approved_at !== null : true,
+        approved: needsApproval(r.role) ? r.approved_at !== null : true,
       }),
     );
     return Object.assign(new MeDto(), {

@@ -44,6 +44,26 @@ export class OrganizationRepository {
     return { items, total: Number(count?.total ?? 0) };
   }
 
+  /**
+   * 사업자등록번호로 찾기.
+   *
+   * 가입 신청에서 씁니다 — 같은 병원을 두 번 등록하면 후보자가 어느 쪽에
+   * 지원했는지 갈리고, 검증도 두 번 받아야 합니다.
+   *
+   * 하이픈 유무를 가리지 않습니다. 사람은 `111-22-33333`으로도
+   * `1112233333`으로도 씁니다.
+   */
+  findByBusinessRegNo(businessRegNo: string): Promise<OrganizationRow | null> {
+    return this.db.one<OrganizationRow>(
+      `SELECT ${COLS} FROM organizations
+        WHERE regexp_replace(coalesce(business_reg_no, ''), '[^0-9]', '', 'g')
+            = regexp_replace($1, '[^0-9]', '', 'g')
+          AND business_reg_no IS NOT NULL
+        LIMIT 1`,
+      [businessRegNo],
+    );
+  }
+
   async create(input: {
     name: string; industryId: string; orgType: string; businessRegNo: string | null;
     address: string | null; region: string | null; contactName: string | null; contactPhone: string | null;

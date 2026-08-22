@@ -28,6 +28,16 @@ export class OrganizationService {
     return this.repo.create(input);
   }
 
+  /**
+   * 사업자등록번호로 찾기 — 가입 신청이 씁니다 (iam).
+   *
+   * iam이 직접 `OrganizationRepository`를 부르면 §5.1이 깨집니다. 기관을
+   * 아는 것은 이 모듈이고, 밖에서는 서비스만 봅니다.
+   */
+  findByBusinessRegNo(businessRegNo: string): Promise<OrganizationRow | null> {
+    return this.repo.findByBusinessRegNo(businessRegNo);
+  }
+
   async update(id: string, patch: Record<string, unknown>, actorUserId: string | null): Promise<OrganizationRow> {
     await this.getById(id);
     await this.repo.update(id, patch);

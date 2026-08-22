@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DomainError } from '../../../core/errors/domain-error';
 import { AuditService } from '../../ops/service/audit.service';
-import { SELF_SELECTABLE_ROLES, SUPPORTED_LOCALES, type Locale, type SelfSelectableRole, type UserRole, ROLES_REQUIRING_ORG_APPROVAL } from '../iam.types';
+import { needsApproval, SELF_SELECTABLE_ROLES, SUPPORTED_LOCALES, type Locale, type SelfSelectableRole, type UserRole } from '../iam.types';
 import { UserRepository, type UserRoleRow, type UserRow } from '../repository/user.repository';
 import { OtpService } from './otp.service';
 import { TokenService, type TokenPair } from './token.service';
@@ -106,13 +106,13 @@ export class AuthService {
     if (!SELF_SELECTABLE_ROLES.includes(role)) {
       throw new DomainError('IAM_ROLE_FORBIDDEN', { role, selectable: SELF_SELECTABLE_ROLES });
     }
-    const needsApproval = ROLES_REQUIRING_ORG_APPROVAL.includes(role as UserRole);
-    if (needsApproval && !organizationId) {
+    const pending = needsApproval(role as UserRole);
+    if (pending && !organizationId) {
       throw new DomainError('IAM_ROLE_FORBIDDEN', { role, reason: 'organizationId is required for organization roles' });
     }
 
     if (makePrimary) await this.users.clearPrimary(userId);
-    const created = await this.users.addRole(userId, role, organizationId, makePrimary, !needsApproval);
+    const created = await this.users.addRole(userId, role, organizationId, makePrimary, !pending);
     if (!created) throw new DomainError('IAM_ROLE_ALREADY_HELD', { role });
 
     await this.audit.record({
@@ -120,7 +120,7 @@ export class AuthService {
       action: 'user.role.add',
       targetType: 'user',
       targetId: userId,
-      after: { role, organizationId, approved: !needsApproval },
+      after: { role, organizationId, approved: !pending },
     });
 
     return this.users.listRoles(userId);

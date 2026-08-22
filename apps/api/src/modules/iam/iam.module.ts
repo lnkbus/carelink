@@ -2,12 +2,15 @@ import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthController } from './controller/auth.controller';
+import { SignupController } from './controller/signup.controller';
 import { UserController } from './controller/user.controller';
 import { ConsentRepository } from './repository/consent.repository';
 import { RefreshTokenRepository } from './repository/refresh-token.repository';
 import { UserRepository } from './repository/user.repository';
 import { AuthService } from './service/auth.service';
 import { ConsentService } from './service/consent.service';
+import { MembershipService } from './service/membership.service';
+import { SignupService } from './service/signup.service';
 import { OtpService } from './service/otp.service';
 import { TokenService } from './service/token.service';
 import { UserService } from './service/user.service';
@@ -23,10 +26,11 @@ import { UserService } from './service/user.service';
       useFactory: (config: ConfigService) => ({ secret: config.get<string>('JWT_SECRET') }),
     }),
   ],
-  controllers: [AuthController, UserController],
+  controllers: [AuthController, UserController, SignupController],
   providers: [
     UserRepository, ConsentRepository, RefreshTokenRepository,
     AuthService, UserService, OtpService, TokenService, ConsentService,
+    SignupService, MembershipService,
   ],
   exports: [UserService, TokenService],
 })
