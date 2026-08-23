@@ -24,7 +24,7 @@ const ko: Dict = {
   'nav.service': '서비스',
   'nav.app': '앱 화면',
   'nav.flow': '진행 절차',
-  'nav.stages': '전체 단계',
+  'nav.industry': '산업',
   'nav.login': '로그인',
   'nav.signup': '가입 신청',
   'nav.mine': '내 화면으로',
@@ -72,12 +72,6 @@ const ko: Dict = {
   'app.mock.visa': '체류자격 만료',
   'app.mock.role': '요양보호사',
 
-  'flow.title': '다섯 단계, 각 단계마다 담당자가 있습니다',
-  'flow.1.t': '지원', 'flow.1.b': '기본 정보와 자격증을 등록합니다.',
-  'flow.2.t': '서류', 'flow.2.b': '여권·건강검진·범죄경력을 제출합니다.',
-  'flow.3.t': '심사', 'flow.3.b': '운영팀이 서류 유효기간과 요건을 확인합니다.',
-  'flow.4.t': '매칭', 'flow.4.b': '조건이 맞는 기관과 근무 조건을 확정합니다.',
-  'flow.5.t': '입국·배치', 'flow.5.b': '비자 발급과 입국 일정을 안내하고 배치합니다.',
 
   'stages.title': '확보에서 근속까지, 여덟 단계를 한 기록으로',
   'stages.lead':
@@ -124,7 +118,7 @@ const vi: Dict = {
   'nav.service': 'Dịch vụ',
   'nav.app': 'Màn hình ứng dụng',
   'nav.flow': 'Quy trình',
-  'nav.stages': 'Toàn bộ giai đoạn',
+  'nav.industry': 'Ngành',
   'nav.login': 'Đăng nhập',
   'nav.signup': 'Đăng ký',
   'nav.mine': 'Vào màn hình của tôi',
@@ -170,12 +164,6 @@ const vi: Dict = {
   'app.mock.visa': 'Hạn tư cách lưu trú',
   'app.mock.role': 'Điều dưỡng viên',
 
-  'flow.title': 'Năm bước, mỗi bước đều có người phụ trách',
-  'flow.1.t': 'Ứng tuyển', 'flow.1.b': 'Đăng ký thông tin cơ bản và chứng chỉ.',
-  'flow.2.t': 'Hồ sơ', 'flow.2.b': 'Nộp hộ chiếu, khám sức khỏe, lý lịch tư pháp.',
-  'flow.3.t': 'Thẩm định', 'flow.3.b': 'Đội vận hành kiểm tra hạn hồ sơ và điều kiện.',
-  'flow.4.t': 'Ghép việc', 'flow.4.b': 'Chốt cơ sở phù hợp và điều kiện làm việc.',
-  'flow.5.t': 'Nhập cảnh · bố trí', 'flow.5.b': 'Hướng dẫn visa, lịch nhập cảnh và bố trí.',
 
   'stages.title': 'Từ tuyển mộ đến gắn bó lâu dài — tám giai đoạn, một hồ sơ',
   'stages.lead':
@@ -222,7 +210,7 @@ const ru: Dict = {
   'nav.service': 'Сервис',
   'nav.app': 'Экраны приложения',
   'nav.flow': 'Как это работает',
-  'nav.stages': 'Все этапы',
+  'nav.industry': 'Отрасли',
   'nav.login': 'Войти',
   'nav.signup': 'Подать заявку',
   'nav.mine': 'К моему экрану',
@@ -268,12 +256,6 @@ const ru: Dict = {
   'app.mock.visa': 'Истечение статуса',
   'app.mock.role': 'Соцработник по уходу',
 
-  'flow.title': 'Пять шагов, у каждого есть ответственный',
-  'flow.1.t': 'Заявка', 'flow.1.b': 'Регистрируете основные данные и сертификаты.',
-  'flow.2.t': 'Документы', 'flow.2.b': 'Паспорт, медосмотр, справка о несудимости.',
-  'flow.3.t': 'Проверка', 'flow.3.b': 'Команда сверяет сроки документов и требования.',
-  'flow.4.t': 'Подбор', 'flow.4.b': 'Согласуем учреждение и условия работы.',
-  'flow.5.t': 'Въезд и размещение', 'flow.5.b': 'Сопровождаем визу, даты въезда и выход на место.',
 
   'stages.title': 'От набора до удержания — восемь этапов, одна запись',
   'stages.lead':
@@ -320,7 +302,7 @@ const en: Dict = {
   'nav.service': 'Service',
   'nav.app': 'App screens',
   'nav.flow': 'How it works',
-  'nav.stages': 'All stages',
+  'nav.industry': 'Industries',
   'nav.login': 'Sign in',
   'nav.signup': 'Apply',
   'nav.mine': 'Go to my screen',
@@ -366,12 +348,6 @@ const en: Dict = {
   'app.mock.visa': 'Visa expires',
   'app.mock.role': 'Care worker',
 
-  'flow.title': 'Five steps, each with someone responsible',
-  'flow.1.t': 'Apply', 'flow.1.b': 'Register your basic details and certificates.',
-  'flow.2.t': 'Documents', 'flow.2.b': 'Submit passport, health check and criminal record.',
-  'flow.3.t': 'Review', 'flow.3.b': 'Our team checks validity dates and requirements.',
-  'flow.4.t': 'Matching', 'flow.4.b': 'We settle the facility and the working terms.',
-  'flow.5.t': 'Arrival', 'flow.5.b': 'We guide the visa and arrival dates, then place you.',
 
   'stages.title': 'From sourcing to retention — eight stages, one record',
   'stages.lead':

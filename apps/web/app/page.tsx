@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Icon } from '@/components/Icon';
-import { APP_POINTS, FLOW, ROLE_CARDS, STAGES, STATS, VERTICALS } from '@/lib/intro';
+import { APP_POINTS, ROLE_CARDS, STAGES, STATS, VERTICALS } from '@/lib/intro';
 import { LOCALES, LOCALE_LABEL, type Locale, makeT, pickLocale } from '@/lib/intro-i18n';
 import { currentUser, landingFor } from '@/lib/session';
 
@@ -100,24 +100,18 @@ export default async function IntroPage({
         <PhoneMock t={t} />
       </section>
 
-      {/* ── 6. 진행 절차 ── */}
-      <section id="flow" className="cl-lp-flow-band">
-        <div className="cl-lp-wrap cl-lp-flow">
-          <h2>{t('flow.title')}</h2>
-          <div className="cl-lp-flow-grid">
-            {FLOW.map((s) => (
-              <div key={s.n} className="cl-lp-step">
-                <span className={s.done ? 'cl-lp-step-n cl-lp-step-done' : 'cl-lp-step-n'}>{s.n}</span>
-                <span className="cl-lp-step-t">{t(`${s.key}.t`)}</span>
-                <span className="cl-lp-step-b">{t(`${s.key}.b`)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/*
+        ── 6. 진행 절차 (인력 운영 8단계) ──
 
-      {/* ── 7. 인력 운영 8단계 (to-be 전체) ── */}
-      <section id="stages" className="cl-lp-wrap cl-lp-stages">
+        종전에는 여기 앞에 '다섯 단계' 섹션이 하나 더 있었습니다. 시안이
+        그것을 걷어냈고, 실제로 중복이었습니다 — 같은 다섯 단계를 바로 위
+        앱 섹션 본문이 이미 말하고("지원·서류·심사·매칭·배치를 다섯 단계로
+        나누고"), 이 여덟 단계가 그것을 포함해 더 자세히 말합니다. 같은
+        이야기를 두 번 하면 읽는 사람은 둘 다 대충 읽습니다.
+
+        앵커는 `flow`입니다 — 내비의 '진행 절차'가 여기로 옵니다.
+      */}
+      <section id="flow" className="cl-lp-wrap cl-lp-stages">
         <h2>{t('stages.title')}</h2>
         <p className="cl-lp-section-lead">{t('stages.lead')}</p>
         <ol className="cl-lp-stage-rail">
@@ -146,7 +140,7 @@ export default async function IntroPage({
       </section>
 
       {/* ── 8. 산업 확장 ── */}
-      <section id="verticals" className="cl-lp-vert-band">
+      <section id="industry" className="cl-lp-vert-band">
         <div className="cl-lp-wrap cl-lp-vert">
           <h2>{t('verticals.title')}</h2>
           <p className="cl-lp-section-lead">{t('verticals.lead')}</p>
@@ -245,7 +239,10 @@ function Header({
         <nav className="cl-lp-nav">
           <a href="#roles" className="cl-lp-nav-link">{t('nav.service')}</a>
           <a href="#app" className="cl-lp-nav-link">{t('nav.app')}</a>
-          <a href="#stages" className="cl-lp-nav-link">{t('nav.stages')}</a>
+          <a href="#flow" className="cl-lp-nav-link">{t('nav.flow')}</a>
+          {/* 산업 섹션이 내비에 없어서 도달할 길이 없었습니다. 페이지에서
+              가장 아래에 있는 섹션이라 스크롤로만 닿습니다. */}
+          <a href="#industry" className="cl-lp-nav-link">{t('nav.industry')}</a>
           <span className="cl-lp-locale" role="group" aria-label="Language">
             {LOCALES.map((l) => (
               <Link

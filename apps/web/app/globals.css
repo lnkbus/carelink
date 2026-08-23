@@ -38,6 +38,20 @@
 .cl-lp [id] { scroll-margin-top: 80px; }
 html:has(.cl-lp) { scroll-behavior: smooth; }
 
+/*
+  움직임을 줄여 달라고 설정한 사용자에게는 줄입니다.
+  전정기관 장애가 있으면 스크롤 애니메이션과 카드가 떠오르는 동작이
+  어지럼증을 일으킵니다 — 시안의 프로덕션 파일이 짚은 항목입니다.
+*/
+@media (prefers-reduced-motion: reduce) {
+  html:has(.cl-lp) { scroll-behavior: auto; }
+  .cl-lp *, .cl-lp *::before, .cl-lp *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
 /* 시안에 포커스 상태가 없었습니다. 키보드 사용자에게는 그게 곧 '길 없음'입니다. */
 .cl-lp a:focus-visible,
 .cl-lp button:focus-visible {
@@ -475,59 +489,6 @@ html:has(.cl-lp) { scroll-behavior: smooth; }
 .cl-lp-mock-warn svg { flex: none; }
 .cl-lp-mock-warn span { flex: 1; font-size: 15px; font-weight: 600; color: var(--cl-text); }
 .cl-lp-mock-warn b { font-size: 17px; font-weight: 700; }
-
-/* ── 6. 진행 절차 ─────────────────────────────────────────────────────── */
-.cl-lp-flow-band {
-  background: var(--cl-bg-sub);
-  border-top: 1px solid var(--cl-line);
-}
-
-.cl-lp-flow {
-  padding-block: clamp(56px, 7vw, 88px);
-  display: flex;
-  flex-direction: column;
-  gap: clamp(26px, 4vw, 44px);
-}
-
-.cl-lp-flow h2 {
-  margin: 0;
-  font-size: clamp(24px, 3.2vw, 34px);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-}
-
-.cl-lp-flow-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 14px;
-}
-
-.cl-lp-step {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  padding: 22px;
-  background: var(--cl-bg);
-  border-radius: 16px;
-}
-
-.cl-lp-step-n {
-  width: 34px;
-  height: 34px;
-  border-radius: 999px;
-  background: var(--cl-line);
-  color: var(--cl-text-sub);
-  font-family: var(--cl-font-mono);
-  font-size: 15px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.cl-lp-step-done { background: var(--cl-action); color: #fff; }
-
-.cl-lp-step-t { font-size: 18px; font-weight: 700; }
-.cl-lp-step-b { font-size: 15px; line-height: 1.6; color: var(--cl-text-muted); }
 
 /* ── 7. CTA 밴드 ──────────────────────────────────────────────────────── */
 .cl-lp-cta-band { background: var(--cl-action); color: #fff; }

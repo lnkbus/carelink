@@ -77,8 +77,5 @@ export const ROLE_CARDS = [
   { key: 'role.org', icon: 'building' as const, tone: 'neutral' as const, href: '/signup/org' },
 ];
 
-/** 진행 절차 5단계 (핸드오프 §Screens 6). 1~3은 진행·완료, 4~5는 예정 표현입니다. */
-export const FLOW = [1, 2, 3, 4, 5].map((n) => ({ n, done: n <= 3, key: `flow.${n}` }));
-
 /** 앱 미리보기 옆 체크 3줄 (핸드오프 §Screens 5). */
 export const APP_POINTS = ['app.point1', 'app.point2', 'app.point3'];
