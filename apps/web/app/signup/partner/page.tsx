@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { LoginRequired, Note, SignupCard } from '../Card';
+import { LoginRequired, Note, Notes, SignupCard } from '../Card';
 import { PartnerRequest } from './PartnerRequest';
 import { currentUser, landingFor } from '@/lib/session';
 
@@ -17,6 +17,8 @@ export default async function PartnerSignupPage() {
       title="파트너 제휴 신청"
       lead="교육기관 · 대학 · 해외 송출기관이 후보자를 보내는 경로입니다."
       back={{ href: '/signup', label: '뒤로' }}
+      landing={landing}
+      caption="문의 1600-0000 · 평일 09:00–18:00"
     >
       {me ? <PartnerRequest /> : <LoginRequired next="/signup/partner" what="파트너 제휴 신청" />}
 

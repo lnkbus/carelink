@@ -716,3 +716,130 @@ html:has(.cl-lp) { scroll-behavior: smooth; }
   font-size: 13px;
   color: var(--cl-text-disabled);
 }
+
+
+/* ══ 공용 헤더 · 가입 흐름 (시안 SCR-002) ═══════════════════════════════
+   시안은 인라인 스타일로 왔습니다. 그대로 옮기면 토큰이 무력해지고 다음
+   변경이 전부 수작업이 됩니다 — 색·간격·radius를 토큰으로 바꿔 옮겼습니다
+   (CLAUDE.md §10-1). 시안의 #2F6BFF·#EFF4FF·#E6F7EF는 이미 토큰에
+   같은 값으로 있습니다. */
+
+.cl-sh { background: var(--cl-bg); border-bottom: 1px solid var(--cl-line); }
+.cl-sh-in {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 clamp(20px, 4vw, 40px);
+  min-height: 68px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.cl-sh-brand {
+  display: flex; align-items: center; gap: 9px;
+  color: var(--cl-text); font-size: 19px; font-weight: 800; letter-spacing: -0.02em;
+}
+.cl-sh-mark {
+  width: 30px; height: 30px; border-radius: 9px; background: var(--cl-action);
+  color: #fff; display: flex; align-items: center; justify-content: center; flex: none;
+}
+.cl-sh-cta {
+  margin-left: auto;
+  height: 40px; padding: 0 18px;
+  display: inline-flex; align-items: center;
+  border-radius: var(--cl-r-pill); background: var(--cl-action);
+  color: #fff; font-size: 15px; font-weight: 700;
+}
+.cl-sh-cta:hover { background: var(--cl-action-strong); color: #fff; }
+
+/* ── 가입 흐름 페이지 뼈대 ─────────────────────────────────────────── */
+.cl-su { min-height: 100vh; display: flex; flex-direction: column; background: var(--cl-bg-sub); }
+.cl-su-main {
+  flex: 1; width: 100%;
+  /* 시안 760px. 종전 560px에서는 카드 안 아이콘+본문이 한 줄에 안 들어갑니다. */
+  max-width: 760px;
+  margin: 0 auto;
+  padding: clamp(28px, 5vw, 64px) clamp(16px, 4vw, 40px) clamp(48px, 7vw, 88px);
+}
+.cl-su-card {
+  background: var(--cl-bg); border: 1px solid var(--cl-line);
+  border-radius: 24px; padding: clamp(24px, 4vw, 44px);
+  display: flex; flex-direction: column; gap: clamp(22px, 3vw, 30px);
+}
+.cl-su-back {
+  display: inline-block; margin-bottom: var(--cl-s5);
+  font-size: var(--cl-caption); color: var(--cl-text-muted);
+}
+.cl-su-head { display: flex; flex-direction: column; gap: 12px; }
+.cl-su-head h1 {
+  margin: 0; font-size: clamp(27px, 4vw, 38px); line-height: 1.22;
+  font-weight: 800; letter-spacing: -0.035em;
+}
+.cl-su-head p {
+  margin: 0; font-size: clamp(16px, 1.7vw, 18px); line-height: 1.6;
+  color: var(--cl-text-sub); max-width: 46ch;
+}
+
+/* ── 경로 카드 (SCR-002-02 · 03) ───────────────────────────────────── */
+.cl-su-paths { display: flex; flex-direction: column; gap: 12px; }
+.cl-su-path {
+  display: flex; align-items: flex-start; gap: 16px;
+  padding: clamp(20px, 2.6vw, 26px);
+  border: 1px solid var(--cl-line); border-radius: 18px;
+  background: var(--cl-bg); color: var(--cl-text);
+  transition: border-color .15s, box-shadow .15s;
+}
+.cl-su-path:hover {
+  border-color: var(--cl-action); color: var(--cl-text);
+  box-shadow: 0 6px 20px rgb(47 107 255 / 10%);
+}
+.cl-su-path-icon {
+  width: 52px; height: 52px; border-radius: 15px;
+  display: flex; align-items: center; justify-content: center; flex: none;
+}
+/* 기관은 파랑, 파트너는 초록 — 시안의 두 타일 색입니다. */
+.cl-su-path-icon-org { background: var(--cl-action-tint); color: var(--cl-action); }
+.cl-su-path-icon-partner { background: var(--cl-signal-tint); color: var(--cl-signal); }
+.cl-su-path-body { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.cl-su-path-title { font-size: 21px; font-weight: 800; letter-spacing: -0.02em; }
+.cl-su-path-who { font-size: 14px; font-weight: 600; color: var(--cl-text-muted); }
+.cl-su-path-desc {
+  font-size: 16px; line-height: 1.6; color: var(--cl-text-muted); margin-top: 2px;
+}
+.cl-su-path-go { flex: none; margin-top: 16px; color: var(--cl-action); }
+
+/* ── 번호 인증 안내 (SCR-002-04) ───────────────────────────────────── */
+.cl-su-auth {
+  display: flex; align-items: center; gap: clamp(14px, 2.4vw, 22px); flex-wrap: wrap;
+  padding: clamp(18px, 2.4vw, 24px); border-radius: 16px;
+  background: var(--cl-action-tint);
+}
+.cl-su-auth p {
+  flex: 1; min-width: min(100%, 260px); margin: 0;
+  font-size: 16px; line-height: 1.6; color: var(--cl-action-text);
+}
+.cl-su-auth-btn {
+  min-height: 48px; padding: 0 20px;
+  display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+  border-radius: 12px; background: var(--cl-action);
+  color: #fff; font-size: 16px; font-weight: 700;
+}
+.cl-su-auth-btn:hover { background: var(--cl-action-strong); color: #fff; }
+
+/* ── 안내 상자 (SCR-002-05 · 06) ───────────────────────────────────── */
+.cl-su-notes { display: flex; flex-direction: column; gap: 14px; }
+.cl-su-note {
+  display: flex; gap: 12px;
+  padding: clamp(16px, 2.2vw, 22px); border-radius: 16px;
+  background: var(--cl-bg-sub);
+  font-size: 16px; line-height: 1.6; color: var(--cl-text-sub);
+}
+.cl-su-note-icon { flex: none; margin-top: 1px; color: var(--cl-text-sub); }
+.cl-su-note b { color: var(--cl-text); font-weight: 800; }
+.cl-su-note code {
+  font-family: var(--cl-font-mono); font-size: 15px; font-weight: 700; color: var(--cl-text);
+}
+.cl-su-caption {
+  margin: 22px 0 0; text-align: center;
+  font-size: 14px; color: var(--cl-text-sub);
+}

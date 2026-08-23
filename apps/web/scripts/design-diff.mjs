@@ -77,6 +77,12 @@ async function shape(page) {
   return page.evaluate(() => {
     const txt = (e) => e.textContent.replace(/\s+/g, ' ').trim();
     return {
+      // 시안이 달아 준 블록 코드. 이게 있으면 '어느 덩어리를 빠뜨렸나'를
+      // 사람이 세지 않아도 됩니다 — 구현에도 같은 코드를 답니다.
+      blocks: [...document.querySelectorAll('[data-block]')].map((e) => e.dataset.block),
+      // 라우팅이 필요한 요소. 시안은 href="#"로 오므로 이 값이 목적지입니다.
+      actions: [...document.querySelectorAll('[data-action]')]
+        .map((e) => `${e.dataset.action}${e.dataset.target ? ' → ' + e.dataset.target : ''}`),
       sections: [...document.querySelectorAll('section[id],footer[id]')].map((e) => e.id),
       headings: [...document.querySelectorAll('h1,h2')].map((e) => txt(e).slice(0, 40)),
       nav: [...document.querySelectorAll('header a, header button, nav a, nav button')]
@@ -119,6 +125,14 @@ for (const [tag, url] of [['시안', specUrl(specArg)], ['실물', liveArg]]) {
 
 console.log('\n══ 구조 대조 ══');
 let diffs = 0;
+// 블록을 먼저 봅니다 — 시안이 코드를 달아 줬다면 이것이 가장 정확합니다.
+if (shapes['시안'].blocks.length) {
+  diffs += diffList('블록', shapes['시안'].blocks, shapes['실물'].blocks);
+}
+if (shapes['시안'].actions.length) {
+  console.log('  액션 (시안이 지정한 목적지):');
+  shapes['시안'].actions.forEach((a) => console.log(`    ${a}`));
+}
 diffs += diffList('섹션', shapes['시안'].sections, shapes['실물'].sections);
 diffs += diffList('제목', shapes['시안'].headings, shapes['실물'].headings);
 diffs += diffList('내비', shapes['시안'].nav, shapes['실물'].nav);

@@ -24,6 +24,13 @@ const PATHS: Record<string, React.ReactNode> = {
       <path d="M12 6v6l4 2" />
     </>
   ),
+  // 시안 SCR-002-05의 휴대폰 — '앱에서 하세요' 안내에 붙습니다.
+  phone: (
+    <>
+      <rect x="6.5" y="2.8" width="11" height="18.4" rx="2.6" />
+      <path d="M10.6 18.3h2.8" />
+    </>
+  ),
   user: (
     <>
       <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />

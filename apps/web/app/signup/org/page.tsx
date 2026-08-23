@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import type { Industry } from '@carelink/shared-types';
-import { LoginRequired, Note, SignupCard } from '../Card';
+import { LoginRequired, Note, Notes, SignupCard } from '../Card';
 import { OrgSignupForm } from './OrgSignupForm';
 import { apiGet } from '@/lib/api';
 import { currentUser, landingFor } from '@/lib/session';
@@ -35,6 +35,8 @@ export default async function OrgSignupPage() {
       title="기관 등록 신청"
       lead="사업자등록번호를 먼저 넣어 주세요. 이미 등록된 기관이면 합류 신청으로 안내합니다."
       back={{ href: '/signup', label: '뒤로' }}
+      landing={landing}
+      caption="문의 1600-0000 · 평일 09:00–18:00"
     >
       {!me ? (
         <LoginRequired next="/signup/org" what="기관 등록 신청" />
